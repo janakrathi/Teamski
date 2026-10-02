@@ -1,0 +1,58 @@
+# ==========================================
+# TEAMSKI - DOCKER COMPOSE
+# ==========================================
+#
+#   cp .env.example .env.local     then fill it in
+#   docker compose --env-file .env.local up -d --build
+#
+# The app is then on http://localhost:3000. Add
+# --profile ollama to also run a local model.
+#
+# The database is your Supabase project; run
+# supabase/migrations/ALL.sql there once first. See
+# docs/SELF_HOSTING.md.
+#
+
+x-teamski: &teamski
+  build:
+    context: .
+    args:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
+  image: teamski
+  env_file: .env.local
+  restart: unless-stopped
+  volumes:
+    - agent-files:/app/agent-files
+
+
+services:
+  web:
+    <<: *teamski
+    ports:
+      - "3000:3000"
+
+  worker:
+    <<: *teamski
+    command: ["npm", "run", "worker"]
+    depends_on:
+      - web
+
+  # Optional: a local model. Set
+  # OLLAMA_HOST=http://ollama:11434 in .env.local,
+  # then pull models with
+  #   docker compose exec ollama ollama pull qwen3:1.7b
+  #   docker compose exec ollama ollama pull nomic-embed-text
+  ollama:
+    image: ollama/ollama
+    profiles: ["ollama"]
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+
+
+volumes:
+  agent-files:
+  ollama:

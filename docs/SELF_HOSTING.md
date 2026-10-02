@@ -97,6 +97,32 @@ ChatGPT, Gemini, Grok or other keys in Settings.
 
 ## 5. Run
 
+### With Docker
+
+```bash
+docker compose --env-file .env.local up -d --build
+```
+
+This builds one image and runs it twice: as the web
+app on port 3000 and as the worker. Files the agents
+write are kept in a Docker volume. `NEXT_PUBLIC_*`
+values are baked in at build time, which is why
+`--env-file .env.local` is passed to compose as well.
+
+To also run Ollama, set
+`OLLAMA_HOST=http://ollama:11434` in `.env.local`,
+then:
+
+```bash
+docker compose --env-file .env.local --profile ollama up -d --build
+docker compose exec ollama ollama pull qwen3:1.7b
+docker compose exec ollama ollama pull nomic-embed-text
+```
+
+Update with `git pull` and the same `up -d --build`.
+
+### Without Docker
+
 Development:
 
 ```bash

@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.claude
+.env*
+!.env.example
+agent-files
+data
+coverage
+*.log
