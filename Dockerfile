@@ -9,6 +9,10 @@
 # code when the app is built, so they are build
 # arguments here - change them and rebuild.
 #
+# Anyone building this image is self-hosting, so
+# NEXT_PUBLIC_SELF_HOSTED defaults to true: every
+# feature on, no billing.
+#
 
 FROM node:24-slim AS deps
 
@@ -27,11 +31,13 @@ ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ARG NEXT_PUBLIC_META_PIXEL_ID=
+ARG NEXT_PUBLIC_SELF_HOSTED=true
 
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_META_PIXEL_ID=$NEXT_PUBLIC_META_PIXEL_ID \
+    NEXT_PUBLIC_SELF_HOSTED=$NEXT_PUBLIC_SELF_HOSTED \
     NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules

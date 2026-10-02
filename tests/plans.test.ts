@@ -7,6 +7,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   DAILY_MESSAGES,
   DailyLimitError,
+  SELF_HOSTED,
+  dailyLimit,
   allows,
   builtinAllowed,
   can,
@@ -144,6 +146,16 @@ test("Team gets more messages than Free", () => {
   // On the top plan there is no higher one to
   // point at.
   assert.match(new DailyLimitError("team").message, /resets/i);
+});
+
+
+test("teamski.in is not self-hosted, and keeps its daily allowances", () => {
+  // These tests run without NEXT_PUBLIC_SELF_HOSTED;
+  // tests/self-hosted.test.ts covers the other side.
+  assert.equal(SELF_HOSTED, false);
+
+  assert.equal(dailyLimit("free"), DAILY_MESSAGES.free);
+  assert.equal(dailyLimit("team"), DAILY_MESSAGES.team);
 });
 
 

@@ -40,8 +40,8 @@ import { projectOverspent } from "../spend.ts";
 import { fallbackOrder, unlessLimited } from "./limits.ts";
 
 import {
-  DAILY_MESSAGES,
   DailyLimitError,
+  dailyLimit,
   allows,
   builtinAllowed,
   ownKeyAllowed,
@@ -468,9 +468,11 @@ export async function streamFor(
   // halfway.
 
   const spendAllowance = async (on: Plan) => {
+    const limit = dailyLimit(on);
+
     if (
-      (await builtinUsedToday(admin, userId)) >=
-      DAILY_MESSAGES[on]
+      limit !== null &&
+      (await builtinUsedToday(admin, userId)) >= limit
     ) {
       throw new DailyLimitError(on);
     }

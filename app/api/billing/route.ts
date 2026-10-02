@@ -4,6 +4,8 @@ import { adminClient } from "@/lib/supabase/admin";
 
 import {
   DAILY_MESSAGES,
+  SELF_HOSTED,
+  dailyLimit,
   OFFERS,
   PLAN_LABELS,
   builtinUsedToday,
@@ -122,6 +124,8 @@ export async function GET(request: Request) {
     user.id
   );
 
+  const todayLimit = dailyLimit(plan);
+
   // When to renew comes from the project inside one,
   // and from your own subscription otherwise.
   const { data: personalSub } = await db
@@ -145,16 +149,20 @@ export async function GET(request: Request) {
 
     project,
 
-    today: {
+    // No daily cap (a self-hosted copy without
+    // DAILY_MESSAGE_LIMIT) means nothing to show.
+    today: todayLimit === null ? null : {
       used: usedToday,
-      limit: DAILY_MESSAGES[plan],
-      planLabel: PLAN_LABELS[plan],
+      limit: todayLimit,
+      planLabel: SELF_HOSTED ? "Self-hosted" : PLAN_LABELS[plan],
 
       // The allowance is counted by UTC day.
       resetsAt: new Date(
         new Date(startOfDay()).getTime() + 86_400_000
       ).toISOString(),
     },
+
+    selfHosted: SELF_HOSTED,
 
     offers: OFFERS.map((offer) => ({
       ...offer,

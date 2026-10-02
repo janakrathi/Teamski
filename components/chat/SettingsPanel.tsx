@@ -22,6 +22,8 @@ import PlanSection from "@/components/settings/PlanSection";
 
 import McpSection from "@/components/settings/McpSection";
 
+import { SELF_HOSTED } from "@/lib/plans";
+
 import type { ChatSettings } from "./useChat";
 
 
@@ -38,12 +40,14 @@ type Tab =
   | "people"
   | "plan";
 
+// A self-hosted copy has no plans to show.
+
 const TABS: { id: Tab; label: string }[] = [
   { id: "account", label: "Account" },
   { id: "ai", label: "AI" },
   { id: "connections", label: "Connections" },
   { id: "people", label: "People" },
-  { id: "plan", label: "Plan" },
+  ...(SELF_HOSTED ? [] : [{ id: "plan" as const, label: "Plan" }]),
 ];
 
 

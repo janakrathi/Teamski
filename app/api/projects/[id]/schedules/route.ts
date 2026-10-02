@@ -4,7 +4,7 @@ import { adminClient } from "@/lib/supabase/admin";
 
 import {
   PLAN_LABELS,
-  SCHEDULES_PER_PROJECT,
+  schedulesLimit,
   can,
   projectOwnerPlan,
   type Plan,
@@ -249,7 +249,7 @@ export async function GET(request: Request, context: RouteContext) {
         can(role as ProjectRole, "manage_schedules"),
     })),
 
-    limit: SCHEDULES_PER_PROJECT[plan],
+    limit: schedulesLimit(plan),
     used: total.count ?? rows.length,
     planLabel: PLAN_LABELS[plan],
   });
@@ -340,7 +340,7 @@ export async function POST(request: Request, context: RouteContext) {
     return Response.json(NEEDS_MIGRATION, { status: 400 });
   }
 
-  const limit = SCHEDULES_PER_PROJECT[plan];
+  const limit = schedulesLimit(plan);
 
   if ((count ?? 0) >= limit) {
     return Response.json(

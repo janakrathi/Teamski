@@ -1,3 +1,5 @@
+import { SELF_HOSTED } from "@/lib/plans";
+
 import { adminClient } from "@/lib/supabase/admin";
 
 import {
@@ -29,6 +31,13 @@ export const dynamic = "force-dynamic";
 //
 
 export async function POST(request: Request) {
+  if (SELF_HOSTED) {
+    return Response.json(
+      { error: "Payments are off on a self-hosted copy." },
+      { status: 404 }
+    );
+  }
+
   // The raw body, for the signature - not the parsed
   // object, which would be a re-serialised copy.
   const raw = await request.text();

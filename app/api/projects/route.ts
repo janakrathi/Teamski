@@ -6,6 +6,8 @@ import { adminClient } from "@/lib/supabase/admin";
 
 import { startTrial } from "@/lib/payments/subscription";
 
+import { SELF_HOSTED } from "@/lib/plans";
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -182,7 +184,8 @@ export async function POST(request: Request) {
     // for two months, then lapses to Free on its own.
     // Best effort - a project with no trial row just runs
     // on Free, so this never fails creation.
-    if (admin) {
+    // A self-hosted copy has everything already.
+    if (admin && !SELF_HOSTED) {
       await startTrial(admin, {
         projectId: project.id,
         ownerId: user.id,

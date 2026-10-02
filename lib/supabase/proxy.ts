@@ -15,6 +15,8 @@ import {
   type Rule,
 } from "@/lib/rate-limit";
 
+import { SELF_HOSTED } from "@/lib/plans";
+
 
 // One counter for the life of the server process.
 // See lib/rate-limit.ts.
@@ -188,7 +190,11 @@ export async function updateSession(
   if (!user && path === "/") {
     const welcome = request.nextUrl.clone();
 
-    welcome.pathname = "/welcome";
+    // A self-hosted copy is somebody's own
+    // workspace, not a product to sell: straight to
+    // sign-in.
+
+    welcome.pathname = SELF_HOSTED ? "/login" : "/welcome";
 
     const rewrite = NextResponse.rewrite(welcome);
 

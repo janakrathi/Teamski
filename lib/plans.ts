@@ -34,6 +34,39 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Plan = "free" | "team";
 
+
+// ------------------------------------------
+// SELF-HOSTED
+// ------------------------------------------
+//
+// Someone running their own copy sets
+// NEXT_PUBLIC_SELF_HOSTED=true. Every project then
+// gets everything, with no trial, billing or
+// upgrade prompts: they run the server and pay for
+// the AI, so there is nothing to sell them.
+// teamski.in never sets it.
+//
+// NEXT_PUBLIC_ because the browser needs it too, to
+// hide the billing screens - so it is read when
+// the app is built. The worker reads .env.local
+// itself and sees the same value.
+//
+// They can still cap built-in AI messages per
+// person per day with DAILY_MESSAGE_LIMIT; without
+// it there is no cap.
+
+export const SELF_HOSTED = /^(1|true|yes|on)$/i.test(
+  process.env.NEXT_PUBLIC_SELF_HOSTED ?? ""
+);
+
+function selfHostedDailyLimit(): number | null {
+  const value = Number(process.env.DAILY_MESSAGE_LIMIT);
+
+  return Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
 export type Feature =
   | "own_keys"
   | "shared_keys"
@@ -329,6 +362,28 @@ export const DAILY_MESSAGES: Record<Plan, number> = {
   team: 100,
 };
 
+
+// Built-in AI messages per person per day where
+// this server runs, or null for no cap (a
+// self-hosted copy without DAILY_MESSAGE_LIMIT).
+
+export function dailyLimit(plan: Plan): number | null {
+  return SELF_HOSTED ? selfHostedDailyLimit() : DAILY_MESSAGES[plan];
+}
+
+
+// Scheduled agents per project where this server
+// runs. Self-hosted copies get Team's number unless
+// they set their own.
+
+export function schedulesLimit(plan: Plan): number {
+  const own = Number(process.env.SCHEDULES_PER_PROJECT);
+
+  return SELF_HOSTED && Number.isFinite(own) && own > 0
+    ? Math.floor(own)
+    : SCHEDULES_PER_PROJECT[plan];
+}
+
 // Which built-in models sit above basic. A local
 // model not named here is basic. A hosted model
 // not named here is not offered built-in at all -
@@ -511,6 +566,10 @@ export async function planOf(
   db: SupabaseClient | null,
   userId: string | null
 ): Promise<Plan> {
+  if (SELF_HOSTED) {
+    return "team";
+  }
+
   if (!db || !userId) {
     return "free";
   }
@@ -557,6 +616,7 @@ export type ProjectPlanInfo = {
   // How the plan was paid for. "promo" is the free
   // launch trial - Team, but never charged - so the UI
   // can say "free trial" rather than "renews".
+  // "self-hosted" is a copy run with SELF_HOSTED.
   provider: string | null;
 };
 
@@ -577,6 +637,15 @@ export async function projectPlan(
     currentPeriodEnd: null,
     provider: null,
   };
+
+  if (SELF_HOSTED) {
+    return {
+      plan: "team",
+      ownerId: null,
+      currentPeriodEnd: null,
+      provider: "self-hosted",
+    };
+  }
 
   if (!admin || !projectId) {
     return free;
@@ -882,13 +951,17 @@ export async function builtinUsedToday(
 
 export class DailyLimitError extends Error {
   constructor(plan: Plan) {
-    const next = (Object.keys(RANK) as Plan[]).find(
-      (candidate) => RANK[candidate] > RANK[plan]
-    );
+    const next = SELF_HOSTED
+      ? undefined
+      : (Object.keys(RANK) as Plan[]).find(
+          (candidate) => RANK[candidate] > RANK[plan]
+        );
 
     super(
       [
-        `You have used today's ${DAILY_MESSAGES[plan]} built-in AI messages on ${PLAN_LABELS[plan]}.`,
+        SELF_HOSTED
+          ? `You have used today's ${dailyLimit(plan)} built-in AI messages.`
+          : `You have used today's ${DAILY_MESSAGES[plan]} built-in AI messages on ${PLAN_LABELS[plan]}.`,
         next
           ? `The project owner can move to ${PLAN_LABELS[next]} for ${DAILY_MESSAGES[next]} a day.`
           : "The allowance resets tomorrow.",

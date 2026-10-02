@@ -167,6 +167,11 @@ npm run worker     # background tasks, in a second terminal
 The full walkthrough covers Supabase, models, sign-in, connections, email, payments
 and running in production: **[docs/SELF_HOSTING.md](docs/SELF_HOSTING.md)**.
 
+> **Self-hosted copies get everything.** With `NEXT_PUBLIC_SELF_HOSTED=true` (the
+> default in `.env.example` and the Docker image), every feature is on and the plan
+> and billing screens are hidden. You run the server and bring your own AI keys, so
+> there's nothing to pay for.
+
 <br/>
 
 ## 🧠 How it works

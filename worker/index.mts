@@ -18,7 +18,7 @@ import { streamFor } from "../lib/ai/providers/index.ts";
 
 import { mcpToolsFor } from "../lib/mcp/client.ts";
 
-import { allows, planHere } from "../lib/plans.ts";
+import { SELF_HOSTED, allows, planHere } from "../lib/plans.ts";
 
 import { describeError, raiseAlert } from "../lib/alerts.ts";
 
@@ -1634,6 +1634,7 @@ async function main() {
         MAX_CONCURRENT_RUNS === 1 ? "" : "s"
       }`,
       `  poll    every ${POLL_INTERVAL_MS}ms`,
+      ...(SELF_HOSTED ? ["  mode    self-hosted (no billing or win-back emails)"] : []),
       "",
       "Waiting for runs. Ctrl+C to stop.",
     ].join("\n")
@@ -1775,7 +1776,12 @@ async function main() {
         await startDueSchedules(db);
       }
 
+      // Billing reminders and win-back emails are
+      // teamski.in's own; a self-hosted copy sends
+      // neither.
+
       if (
+        !SELF_HOSTED &&
         Date.now() - lastReminders >
         REMINDER_POLL_MS
       ) {
@@ -1791,6 +1797,7 @@ async function main() {
       }
 
       if (
+        !SELF_HOSTED &&
         Date.now() - lastWinback >
         WINBACK_POLL_MS
       ) {

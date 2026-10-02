@@ -69,7 +69,35 @@ npm run seal-memory -- --write
 
 (Without `--write` they only count.)
 
-## 4. A model
+## 4. Self-hosted mode
+
+`.env.example` sets `NEXT_PUBLIC_SELF_HOSTED=true`,
+and the Docker image defaults to it. With it on:
+
+- **Every project gets every feature:** connected
+  apps, your own and shared API keys, the spend
+  report, and Team's scheduled agents. There's no
+  trial and nothing to buy.
+- **No plan, billing or upgrade screens.** Checkout,
+  the Razorpay webhook and the contact-sales form
+  are switched off.
+- **No billing reminders or win-back emails** from
+  the worker. Those are teamski.in's own.
+- **Signed-out visitors go straight to sign-in**
+  instead of the teamski.in landing page.
+- **No daily cap on built-in AI messages,** since
+  you pay for the AI. Set `DAILY_MESSAGE_LIMIT` to
+  cap messages per person per day, and
+  `SCHEDULES_PER_PROJECT` to change the number of
+  scheduled agents.
+
+Roles still apply: owners and admins manage
+settings, members use the project.
+
+It's read when the app is built, so rebuild after
+changing it.
+
+## 5. A model
 
 Pick at least one.
 
@@ -95,7 +123,7 @@ Without it, memory falls back to recency.
 Separately, users can always add their own Claude,
 ChatGPT, Gemini, Grok or other keys in Settings.
 
-## 5. Run
+## 6. Run
 
 ### With Docker
 

@@ -1,3 +1,5 @@
+import { SELF_HOSTED } from "@/lib/plans";
+
 import { cleanLead, sheetSafe, type Lead } from "@/lib/enterprise";
 
 import { LEGAL } from "@/lib/legal";
@@ -129,6 +131,13 @@ async function toMeta(lead: Lead, eventId: string, request: Request) {
 
 
 export async function POST(request: Request) {
+  if (SELF_HOSTED) {
+    return Response.json(
+      { error: "Contact sales is off on a self-hosted copy." },
+      { status: 404 }
+    );
+  }
+
   let input: Record<string, unknown>;
 
   try {

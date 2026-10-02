@@ -8,6 +8,7 @@ import {
   can,
   teamMonthlyPriceINR,
   type ProjectRole,
+  SELF_HOSTED,
 } from "@/lib/plans";
 
 import {
@@ -33,6 +34,13 @@ export const dynamic = "force-dynamic";
 //
 
 export async function POST(request: Request) {
+  if (SELF_HOSTED) {
+    return Response.json(
+      { error: "Payments are off on a self-hosted copy: every project already has everything." },
+      { status: 404 }
+    );
+  }
+
   const db = await createClient();
 
   const {
