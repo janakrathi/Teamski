@@ -45,3 +45,4 @@ data/
 # Local editor and assistant settings
 .claude/
 /agent-files/
+/brag-output/

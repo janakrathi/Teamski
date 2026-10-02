@@ -4,6 +4,10 @@
 
 <br/>
 
+<img src="docs/assets/demo.gif" width="100%" alt="Teamski in 15 seconds: a teammate asks the channel's agent to remember the demo date for the whole project and it saves it to project memory; Notion, GitHub and Linear are connected in one click each; then the agent proposes a Linear issue and waits for someone to press Approve."/>
+
+<br/>
+
 ### The AI teammate your whole team shares.
 
 One agent per channel, with memory, connected apps and approvals.<br/>
