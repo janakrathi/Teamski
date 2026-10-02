@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* ==========================================
+   DESIGN TOKENS
+   ==========================================
+
+   One dark, low-contrast surface set, so the
+   chat reads like a terminal rather than a
+   dashboard. Kept as variables so a light
+   theme can be layered on later.
+*/
+
+:root {
+  --bg: #0f0f0e;
+  --bg-panel: #0a0a09;
+  --bg-raised: #161614;
+  --bg-hover: #1a1a17;
+
+  --border: #232320;
+  --border-strong: #32322d;
+
+  --text: #e8e6e3;
+  --text-muted: #8a8782;
+  --text-faint: #5c5a56;
+
+  --accent: #c96442;
+  --accent-soft: #3a241c;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--bg-panel);
+  --color-raised: var(--bg-raised);
+  --color-hover: var(--bg-hover);
+
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+
+  font-family: var(--font-geist-sans), ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ==========================================
+   SCROLLBARS
+   ==========================================
+
+   Thin and only visible against the surface
+   it sits on.
+*/
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #45443d;
+}
+
+
+/* ==========================================
+   FOCUS
+   ==========================================
+
+   Visible for keyboard users, invisible for
+   mouse clicks.
+*/
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}

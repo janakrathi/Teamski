@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#f6f5f2;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1a1a18">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border:1px solid #e6e3dd;border-radius:12px">
+            <tr>
+              <td style="padding:28px 28px 8px;font-size:15px;font-weight:600">Teamski</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 28px 0;font-size:20px;line-height:1.35;font-weight:600">Confirm your new email address</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 28px 0;font-size:14px;line-height:1.6;color:#4a4845"><p style="margin:0 0 10px">You asked to change your Teamski email from {{ .Email }} to {{ .NewEmail }}.</p><p style="margin:0 0 10px">Confirm the change with the button below.</p></td>
+            </tr>
+            <tr>
+              <td style="padding:24px 28px 28px">
+                <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#1a1a18;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 18px;border-radius:8px">Confirm new email</a>
+              </td>
+            </tr>
+          </table>
+          <p style="max-width:480px;margin:16px auto 0;font-size:12px;line-height:1.5;color:#8a8782">If you did not ask for this, ignore this email and contact support@teamski.in.</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

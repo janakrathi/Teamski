@@ -1,0 +1,44 @@
+{
+  "name": "teamski",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "worker": "node --experimental-strip-types worker/index.mts",
+    "test": "node --experimental-strip-types --test",
+    "seal-secrets": "node --experimental-strip-types scripts/seal-secrets.mts",
+    "seal-memory": "node --experimental-strip-types scripts/seal-memory.mts",
+    "winback-test": "node --experimental-strip-types scripts/send-winback.mts",
+    "meta:test": "node --experimental-strip-types scripts/send-meta-test-event.mts",
+    "alert:test": "node --env-file=.env.local --experimental-strip-types scripts/send-test-alert.mts",
+    "memory:backfill": "node --env-file=.env.local --experimental-strip-types scripts/backfill-fact-embeddings.mts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.114.0",
+    "mammoth": "^1.12.2",
+    "next": "16.3.4",
+    "openai": "^7.13.0",
+    "pdf-parse": "^2.4.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
