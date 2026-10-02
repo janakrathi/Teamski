@@ -46,3 +46,4 @@ data/
 .claude/
 /agent-files/
 /brag-output/
+/brag-output-*/
