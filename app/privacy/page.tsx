@@ -4,6 +4,8 @@ import { H2, LegalPage, List } from "@/components/legal/LegalPage";
 
 import { LEGAL } from "@/lib/legal";
 
+import ContactUs from "@/components/landing/ContactUs";
+
 export const metadata: Metadata = {
   title: "Privacy Policy",
   alternates: { canonical: "/privacy" },
@@ -308,13 +310,13 @@ export default function PrivacyPage() {
       <H2>13. Contact</H2>
 
       <p>
-        Questions or requests:{" "}
-        <a
-          href={`mailto:${LEGAL.contactEmail}`}
+        Questions or requests about your data, including access, correction
+        or deletion: use our{" "}
+        <ContactUs
+          label="contact form"
           className="text-[var(--text)] underline underline-offset-2"
-        >
-          {LEGAL.contactEmail}
-        </a>
+        />
+        . You can also delete your account yourself in Settings → Account.
       </p>
     </LegalPage>
   );

@@ -4,6 +4,8 @@ import Logo from "@/components/ui/Logo";
 
 import { LEGAL } from "@/lib/legal";
 
+import ContactUs from "@/components/landing/ContactUs";
+
 
 // ==========================================
 // A PAGE OF LEGAL TEXT
@@ -57,12 +59,7 @@ export function LegalPage({
             Security &amp; data
           </Link>
 
-          <a
-            href={`mailto:${LEGAL.contactEmail}`}
-            className="ml-auto hover:text-[var(--text-muted)]"
-          >
-            {LEGAL.contactEmail}
-          </a>
+          <ContactUs className="ml-auto hover:text-[var(--text-muted)]" />
         </footer>
       </div>
     </main>

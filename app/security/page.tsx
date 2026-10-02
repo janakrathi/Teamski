@@ -6,7 +6,7 @@ import { H2, LegalPage, List } from "@/components/legal/LegalPage";
 
 import { DAILY_MESSAGES } from "@/lib/plans";
 
-import { LEGAL } from "@/lib/legal";
+import ContactUs from "@/components/landing/ContactUs";
 
 export const metadata: Metadata = {
   title: "Security & your data",
@@ -30,11 +30,8 @@ export default function SecurityPage() {
       <p>
         Plain answers to the questions teams ask before they trust a tool
         with their work. Where something isn&apos;t in place yet, we say so.
-        Questions we haven&apos;t covered:{" "}
-        <a href={`mailto:${LEGAL.contactEmail}`} className={linkClass}>
-          {LEGAL.contactEmail}
-        </a>
-        .
+        Questions we haven&apos;t covered? Use our{" "}
+        <ContactUs label="contact form" className={linkClass} />.
       </p>
 
 

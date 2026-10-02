@@ -10,8 +10,9 @@ request goes a long way.
 with what you did, what you expected, and what
 happened. Screenshots and log lines help.
 
-**Security problems:** please email
-support@teamski.in instead of opening a public issue.
+**Security problems:** please use the Contact us
+form at [teamski.in](https://teamski.in) (bottom of
+the page) instead of opening a public issue.
 
 ## Making a change
 

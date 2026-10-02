@@ -20,14 +20,14 @@ export const LEGAL = {
 
   site: "https://teamski.in",
 
-  // TODO: an inbox that actually exists and that
-  // somebody reads. Google and users will write to
-  // it.
-  contactEmail: "support@teamski.in",
+  // No contact email: people reach the team through
+  // the Contact us form (components/landing/ContactUs),
+  // which writes to the Google Sheet and the admins'
+  // inbox.
 
   // TODO: the city whose courts handle disputes,
   // usually where the business is registered.
   courtsCity: "India",
 
-  lastUpdated: "27 September 2026",
+  lastUpdated: "2 October 2026",
 };

@@ -4,6 +4,8 @@ import { H2, LegalPage, List } from "@/components/legal/LegalPage";
 
 import { LEGAL } from "@/lib/legal";
 
+import ContactUs from "@/components/landing/ContactUs";
+
 export const metadata: Metadata = {
   title: "Terms of Service",
   alternates: { canonical: "/terms" },
@@ -216,13 +218,12 @@ export default function TermsPage() {
       <H2>15. Contact</H2>
 
       <p>
-        Questions about these terms:{" "}
-        <a
-          href={`mailto:${LEGAL.contactEmail}`}
+        Questions about these terms: use our{" "}
+        <ContactUs
+          label="contact form"
           className="text-[var(--text)] underline underline-offset-2"
-        >
-          {LEGAL.contactEmail}
-        </a>
+        />
+        .
       </p>
     </LegalPage>
   );

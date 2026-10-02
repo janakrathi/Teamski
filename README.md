@@ -213,7 +213,7 @@ Resend · Razorpay.
 - ✋ **Human approval** before anything changes a connected app.
 
 More at [teamski.in/security](https://teamski.in/security). **Found a vulnerability?**
-Please email **support@teamski.in** rather than opening a public issue.
+Please use the **Contact us** form at [teamski.in](https://teamski.in) (bottom of the page) rather than opening a public issue.
 
 <br/>
 

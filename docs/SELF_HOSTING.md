@@ -207,8 +207,8 @@ Each one switches on when its variables in
 | Meta ads tracking | `NEXT_PUBLIC_META_PIXEL_ID`, `META_CAPI_TOKEN` | Off unless set |
 
 The legal pages read their details (operator name,
-contact email, courts) from `lib/legal.ts`. Change
-them to your own before going live.
+site, courts) from `lib/legal.ts`. Change them to
+your own before going live.
 
 
 ## Operations

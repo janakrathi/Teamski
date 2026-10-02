@@ -8,6 +8,8 @@ import { DAILY_MESSAGES, TRIAL_DAYS } from "@/lib/plans";
 
 import { LEGAL } from "@/lib/legal";
 
+import ContactUs from "@/components/landing/ContactUs";
+
 export const metadata: Metadata = {
   title: { absolute: "Teamski for hackathons" },
   description:
@@ -305,13 +307,12 @@ export default function HackathonsPage() {
 
             <p className="mt-1.5 text-[13px] leading-[1.6] text-[var(--text-muted)]">
               We&apos;re happy to give a short demo at your kickoff and help your
-              participants get set up. Email{" "}
-              <a
-                href={`mailto:${LEGAL.contactEmail}?subject=Teamski%20at%20our%20hackathon`}
+              participants get set up.{" "}
+              <ContactUs
+                label="Get in touch"
+                topic="Partnership or hackathon"
                 className="text-[var(--text)] underline underline-offset-2"
-              >
-                {LEGAL.contactEmail}
-              </a>
+              />
               .
             </p>
           </div>

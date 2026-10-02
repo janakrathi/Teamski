@@ -11,10 +11,10 @@ import { TOPICS } from "@/lib/contact";
 // CONTACT US
 // ==========================================
 //
-// The front page footer's way to reach the team: a
-// short form instead of an email address. What it
-// sends lands in the Google Sheet and the admins'
-// inbox (app/api/contact).
+// The site's way to reach the team: a short form
+// instead of an email address. What it sends lands in
+// the Google Sheet and the admins' inbox
+// (app/api/contact).
 //
 
 const FIELD =
@@ -31,24 +31,43 @@ const EMPTY = {
 };
 
 
-export default function ContactUs({ className = "" }: { className?: string }) {
+// Used wherever the site used to show an email
+// address: a footer link, or a link inside a sentence
+// ("use our contact form"), optionally with the topic
+// already chosen.
+
+export default function ContactUs({
+  className = "",
+  label = "Contact us",
+  topic = "",
+}: {
+  className?: string;
+  label?: string;
+  topic?: (typeof TOPICS)[number] | "";
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={className}>
-        Contact us
+        {label}
       </button>
 
       {/* Closed means unmounted, so it reopens empty. */}
-      {open && <ContactForm onClose={() => setOpen(false)} />}
+      {open && <ContactForm topic={topic} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
 
-function ContactForm({ onClose }: { onClose: () => void }) {
-  const [form, setForm] = useState(EMPTY);
+function ContactForm({
+  topic,
+  onClose,
+}: {
+  topic: string;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({ ...EMPTY, topic });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
