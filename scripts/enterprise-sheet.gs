@@ -1,6 +1,15 @@
 // ==========================================
-// TEAMSKI ENTERPRISE LEADS -> GOOGLE SHEET
+// TEAMSKI ENTERPRISE LEADS + CONTACT -> GOOGLE SHEET
 // ==========================================
+//
+// Contact sales enquiries go to the "Leads" tab and
+// the front page's Contact us messages to "Contact".
+// Both tabs are created on the first message.
+//
+// After changing this script, publish it again:
+// Deploy -> Manage deployments -> edit (pencil) ->
+// Version: New version -> Deploy. The URL stays the
+// same, so nothing changes in .env.local.
 //
 // Paste this into the sheet's Apps Script editor
 // (Extensions -> Apps Script), then:
@@ -44,6 +53,20 @@ function doPost(e) {
       return reply({ ok: false, error: "unauthorised" });
     }
 
+    // The front page's Contact us form uses the same
+    // web app, on its own tab.
+    if (data.kind === "contact") {
+      appendTo("Contact", CONTACT_HEADERS, [
+        data.submittedAt ? new Date(data.submittedAt) : new Date(),
+        data.name || "",
+        data.email || "",
+        data.topic || "",
+        data.message || "",
+      ]);
+
+      return reply({ ok: true });
+    }
+
     var sheet =
       SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Leads") ||
       SpreadsheetApp.getActiveSpreadsheet().insertSheet("Leads");
@@ -72,6 +95,22 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+var CONTACT_HEADERS = ["Submitted at", "Name", "Email", "About", "Message"];
+
+function appendTo(name, headers, row) {
+  var sheet =
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name) ||
+    SpreadsheetApp.getActiveSpreadsheet().insertSheet(name);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+  }
+
+  sheet.appendRow(row);
 }
 
 function reply(body) {

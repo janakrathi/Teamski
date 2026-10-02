@@ -14,6 +14,8 @@ import PlanCards from "@/components/plans/PlanCards";
 
 import ConnectionsOrbit from "@/components/landing/ConnectionsOrbit";
 
+import ContactUs from "@/components/landing/ContactUs";
+
 import { DAILY_MESSAGES, TEAM_PRICE_INR } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -66,7 +68,6 @@ const STRUCTURED_DATA = {
       alternateName: ["Teamski AI", "teamski.in"],
       url: `${SITE}/`,
       logo: `${SITE}/apple-icon.png`,
-      email: LEGAL.contactEmail,
       founder: { "@type": "Person", name: "Janak Rathi" },
     },
     {
@@ -878,12 +879,7 @@ export default function Welcome() {
             Security &amp; data
           </Link>
 
-          <a
-            href={`mailto:${LEGAL.contactEmail}`}
-            className="hover:text-[var(--text-muted)] sm:ml-auto"
-          >
-            {LEGAL.contactEmail}
-          </a>
+          <ContactUs className="hover:text-[var(--text-muted)] sm:ml-auto" />
         </div>
       </footer>
     </main>

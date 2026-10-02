@@ -437,3 +437,70 @@ export function enterpriseLeadEmail(options: {
     ].join("\n"),
   };
 }
+
+
+// The front page's "Contact us" form, as a backup to
+// the Google Sheet. Everything was typed by a stranger,
+// so it is all escaped, and replying goes straight to
+// them.
+
+export function contactMessageEmail(options: {
+  to: string;
+  site: string;
+  message: {
+    name: string;
+    email: string;
+    topic: string;
+    message: string;
+  };
+}): Email {
+  const { message } = options;
+
+  const name = tidy(message.name);
+
+  const rows: [string, string][] = [
+    ["Name", message.name],
+    ["Email", message.email],
+    ["About", message.topic],
+  ];
+
+  const table = rows
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:3px 12px 3px 0;color:#8a8782;white-space:nowrap;vertical-align:top">${escapeHtml(
+          label
+        )}</td><td style="padding:3px 0;color:#1a1a18">${escapeHtml(
+          value
+        )}</td></tr>`
+    )
+    .join("");
+
+  const body = escapeHtml(message.message).replace(/\n/g, "<br>");
+
+  return {
+    to: options.to,
+    subject: `Contact: ${message.topic} from ${name}`,
+    replyTo: message.email,
+
+    html: layout({
+      heading: escapeHtml(`New message from ${name}`),
+
+      body: `<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.5">${table}</table><p style="margin:16px 0 6px;color:#8a8782">Message</p><p style="margin:0">${body}</p>`,
+
+      button: { label: "Open Teamski", url: `${options.site}/admin` },
+
+      footer: escapeHtml(
+        "Sent from the Contact us form on teamski.in. Reply to this email to answer them directly."
+      ),
+    }),
+
+    text: [
+      `New message from ${name}`,
+      "",
+      ...rows.map(([label, value]) => `${label}: ${value}`),
+      "",
+      "Message:",
+      message.message,
+    ].join("\n"),
+  };
+}

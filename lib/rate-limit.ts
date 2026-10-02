@@ -151,6 +151,16 @@ export const RULES: Rule[] = [
     message: "We've already got your message. If you need to add something, wait a few minutes and try again.",
   },
 
+  // The front page's Contact us form: same idea.
+  {
+    id: "contact",
+    methods: ["POST"],
+    path: /^\/api\/contact$/,
+    limit: 5,
+    windowMs: 10 * MINUTE,
+    message: "We've already got your message. If you need to add something, wait a few minutes and try again.",
+  },
+
   // Everything else in the API. Generous, because
   // the app polls for unread counts and activity.
   {

@@ -2,8 +2,6 @@ import { SELF_HOSTED } from "@/lib/plans";
 
 import { cleanLead, sheetSafe, type Lead } from "@/lib/enterprise";
 
-import { LEGAL } from "@/lib/legal";
-
 import { sendEmail } from "@/lib/email/send";
 
 import { enterpriseLeadEmail } from "@/lib/email/templates";
@@ -176,7 +174,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error:
-          `We couldn't send that just now. Please try again in a minute, or email us at ${LEGAL.contactEmail}.`,
+          "We couldn't send that just now. Please try again in a minute.",
       },
       { status: 503 }
     );
