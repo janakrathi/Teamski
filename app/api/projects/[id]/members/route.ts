@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 
 import {
+  TEAM_MAX_MEMBERS,
   can,
+  projectPlan,
   type ProjectRole,
 } from "@/lib/plans";
 
@@ -312,6 +314,40 @@ export async function POST(
       },
       { status: 403 }
     );
+  }
+
+  // Paid Team is for up to five people, counting invites
+  // still waiting to be accepted; a bigger team is
+  // Enterprise. Only the paid plan: the free trial lets a
+  // bigger team try Teamski first, and a self-hosted copy
+  // has no seat limit at all.
+  const counter = adminClient() ?? supabase;
+
+  const billing = await projectPlan(counter, projectId);
+
+  if (billing.plan === "team" && billing.provider === "razorpay") {
+    const [{ count: members }, { count: invited }] = await Promise.all([
+      counter
+        .from("project_members")
+        .select("*", { count: "exact", head: true })
+        .eq("project_id", projectId),
+
+      counter
+        .from("project_invites")
+        .select("*", { count: "exact", head: true })
+        .eq("project_id", projectId)
+        .is("accepted_at", null),
+    ]);
+
+    if ((members ?? 0) + (invited ?? 0) >= TEAM_MAX_MEMBERS) {
+      return Response.json(
+        {
+          error: `Team is for up to ${TEAM_MAX_MEMBERS} people. For a bigger team, contact us about Enterprise.`,
+          enterprise: true,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const body = (await request

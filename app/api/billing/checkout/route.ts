@@ -6,6 +6,7 @@ import {
   DEFAULT_CURRENCY,
   asCurrency,
   can,
+  TEAM_MAX_MEMBERS,
   teamMonthlyPriceINR,
   type ProjectRole,
   SELF_HOSTED,
@@ -116,14 +117,23 @@ export async function POST(request: Request) {
 
   const members = count ?? 1;
 
+  // Team is for up to five people; a bigger team is
+  // Enterprise, arranged by talking to us.
+  if (members > TEAM_MAX_MEMBERS) {
+    return Response.json(
+      {
+        error: `Team is for up to ${TEAM_MAX_MEMBERS} people, and this project has ${members}. For a bigger team, contact us about Enterprise.`,
+        enterprise: true,
+      },
+      { status: 400 }
+    );
+  }
+
   const currency =
     asCurrency(body.currency ?? DEFAULT_CURRENCY) ??
     DEFAULT_CURRENCY;
 
-  const rupees = teamMonthlyPriceINR(
-    members,
-    currency
-  );
+  const rupees = teamMonthlyPriceINR(currency);
 
   const result = await createOrder({
     amountPaise: rupees * 100,

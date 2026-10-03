@@ -176,10 +176,12 @@ export type Currency = (typeof CURRENCIES)[number];
 
 export const DEFAULT_CURRENCY: Currency = "USD";
 
-// People the base price covers before the
-// per-teammate part begins. Same everywhere.
+// Team is for up to this many people. A bigger team is
+// Enterprise - a conversation, not a seat price.
 
 export const INCLUDED_MEMBERS = 5;
+
+export const TEAM_MAX_MEMBERS = INCLUDED_MEMBERS;
 
 // A new project starts on Team free for this long, then
 // lapses to Free on its own. A launch promo, written as
@@ -188,21 +190,17 @@ export const INCLUDED_MEMBERS = 5;
 
 export const TRIAL_DAYS = 60;
 
-// Per month: what covers the first five people,
-// and what each extra teammate adds.
+// Per month, for the whole project (up to five people).
 
-export const TEAM_PRICE: Record<
-  Currency,
-  { base: number; perExtraMember: number }
-> = {
-  INR: { base: 549, perExtraMember: 125 },
-  USD: { base: 19, perExtraMember: 4 },
-  EUR: { base: 19, perExtraMember: 4 },
-  GBP: { base: 15, perExtraMember: 3 },
-  AED: { base: 69, perExtraMember: 15 },
-  CAD: { base: 25, perExtraMember: 5 },
-  AUD: { base: 29, perExtraMember: 6 },
-  SGD: { base: 25, perExtraMember: 5 },
+export const TEAM_PRICE: Record<Currency, { base: number }> = {
+  INR: { base: 1550 },
+  USD: { base: 55 },
+  EUR: { base: 55 },
+  GBP: { base: 45 },
+  AED: { base: 199 },
+  CAD: { base: 69 },
+  AUD: { base: 79 },
+  SGD: { base: 69 },
 };
 
 function isCurrency(value: string): value is Currency {
@@ -218,52 +216,35 @@ function isCurrency(value: string): value is Currency {
 // nothing moves on its own. Adjust these as the
 // exchange rate drifts.
 
-export const TEAM_PRICE_INR: Record<
-  Currency,
-  { base: number; perExtraMember: number }
-> = {
-  INR: { base: 549, perExtraMember: 125 },
-  USD: { base: 1599, perExtraMember: 339 },
-  EUR: { base: 1749, perExtraMember: 369 },
-  GBP: { base: 1599, perExtraMember: 319 },
-  AED: { base: 1575, perExtraMember: 345 },
-  CAD: { base: 1549, perExtraMember: 309 },
-  AUD: { base: 1599, perExtraMember: 329 },
-  SGD: { base: 1575, perExtraMember: 315 },
+export const TEAM_PRICE_INR: Record<Currency, { base: number }> = {
+  INR: { base: 1550 },
+  USD: { base: 4629 },
+  EUR: { base: 5059 },
+  GBP: { base: 4799 },
+  AED: { base: 4549 },
+  CAD: { base: 4279 },
+  AUD: { base: 4359 },
+  SGD: { base: 4349 },
 };
 
 
-// The monthly price for a project on Team with a
-// given number of members, in a currency.
+// The monthly price for a project on Team, in a
+// currency. One price for the project, whoever is in it.
 
-export function teamMonthlyPrice(
-  members: number,
-  currency: Currency = DEFAULT_CURRENCY
-) {
-  const price = TEAM_PRICE[currency];
-
-  const extra = Math.max(0, Math.ceil(members) - INCLUDED_MEMBERS);
-
-  return price.base + extra * price.perExtraMember;
+export function teamMonthlyPrice(currency: Currency = DEFAULT_CURRENCY) {
+  return TEAM_PRICE[currency].base;
 }
 
 
 // The same price, but in the rupees actually
 // charged - what a Razorpay order is created for.
 
-export function teamMonthlyPriceINR(
-  members: number,
-  currency: Currency = DEFAULT_CURRENCY
-) {
-  const price = TEAM_PRICE_INR[currency];
-
-  const extra = Math.max(0, Math.ceil(members) - INCLUDED_MEMBERS);
-
-  return price.base + extra * price.perExtraMember;
+export function teamMonthlyPriceINR(currency: Currency = DEFAULT_CURRENCY) {
+  return TEAM_PRICE_INR[currency].base;
 }
 
 
-// "₹549", "$19", "€19", "AED 69" - whole numbers,
+// "₹1,550", "$55", "€55", "AED 199" - whole numbers,
 // the local symbol, from the browser's own
 // formatter.
 

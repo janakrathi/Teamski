@@ -106,7 +106,7 @@ export function planPrice(plan: string, currency: Currency) {
   return {
     big: formatMoney(currency, TEAM_PRICE[currency].base),
     per: `per month · up to ${INCLUDED_MEMBERS} people`,
-    note: `+ ${formatMoney(currency, TEAM_PRICE[currency].perExtraMember)} / month for each extra teammate`,
+    note: "More than 5 people? See Enterprise.",
     charge,
   };
 }

@@ -104,9 +104,6 @@ export async function sendDueRenewalReminders(
       (row.included_members as number) ??
       INCLUDED_MEMBERS;
 
-    const members =
-      included + ((row.extra_members as number) ?? 0);
-
     const email = renewalReminderEmail({
       to: owner.email as string,
       projectName:
@@ -114,7 +111,7 @@ export async function sendDueRenewalReminders(
       site,
       price: formatMoney(
         "INR",
-        teamMonthlyPriceINR(members, currency)
+        teamMonthlyPriceINR(currency)
       ),
       includedMembers: included,
       renewsOn: new Date(periodEnd).toLocaleDateString(

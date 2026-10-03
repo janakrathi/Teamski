@@ -200,7 +200,7 @@ export function renewalReminderEmail(options: {
   projectName: string;
   site: string;
 
-  // Pre-formatted in the owner's currency, e.g. "₹549".
+  // Pre-formatted in the owner's currency, e.g. "₹1,550".
   price: string;
   includedMembers: number;
 

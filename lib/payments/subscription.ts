@@ -132,12 +132,6 @@ export async function activateTeam(
     from + MONTH_MS
   ).toISOString();
 
-  const extra = Math.max(
-    0,
-    (input.members ?? INCLUDED_MEMBERS) -
-      INCLUDED_MEMBERS
-  );
-
   const { error } = await admin
     .from("project_subscriptions")
     .upsert(
@@ -149,7 +143,7 @@ export async function activateTeam(
         provider: "razorpay",
         provider_subscription_id: input.orderId,
         included_members: INCLUDED_MEMBERS,
-        extra_members: extra,
+        extra_members: 0,
         shown_currency: input.currency ?? null,
         // A fresh reminder window for the new period.
         reminder_sent_at: null,

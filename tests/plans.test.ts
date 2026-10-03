@@ -12,6 +12,7 @@ import {
   allows,
   builtinAllowed,
   can,
+  TEAM_MAX_MEMBERS,
   teamMonthlyPrice,
   teamMonthlyPriceINR,
   formatMoney,
@@ -240,35 +241,26 @@ test("a free Gemini key works on every plan; other keys need Team", () => {
 });
 
 
-test("Team's price covers five, then charges per extra teammate", () => {
-  assert.equal(teamMonthlyPrice(1, "INR"), 549);
-  assert.equal(teamMonthlyPrice(5, "INR"), 549);
-  assert.equal(teamMonthlyPrice(6, "INR"), 674);
-  assert.equal(teamMonthlyPrice(8, "INR"), 549 + 3 * 125);
+test("Team is one price for the project, for up to five people", () => {
+  assert.equal(teamMonthlyPrice("INR"), 1550);
+  assert.equal(TEAM_MAX_MEMBERS, 5);
 });
 
 
 test("dollar pricing is its own numbers, not a rupee conversion", () => {
-  assert.equal(teamMonthlyPrice(5, "USD"), 19);
-  assert.equal(teamMonthlyPrice(6, "USD"), 23);
-  assert.equal(teamMonthlyPrice(5, "INR"), 549);
-  assert.equal(formatMoney("USD", 19), "$19");
-  assert.equal(formatMoney("INR", 549), "₹549");
+  assert.equal(teamMonthlyPrice("USD"), 55);
+  assert.equal(teamMonthlyPrice("INR"), 1550);
+  assert.equal(formatMoney("USD", 55), "$55");
+  assert.equal(formatMoney("INR", 1550), "₹1,550");
 });
 
 
 test("a foreign price is charged as a rupee amount", () => {
   // INR is charged as shown.
-  assert.equal(teamMonthlyPriceINR(5, "INR"), 549);
-  assert.equal(teamMonthlyPriceINR(6, "INR"), 674);
+  assert.equal(teamMonthlyPriceINR("INR"), 1550);
 
-  // A dollar price is charged as its rupee amount,
-  // and per extra seat too.
-  assert.equal(teamMonthlyPriceINR(5, "USD"), 1599);
-  assert.equal(
-    teamMonthlyPriceINR(7, "USD"),
-    1599 + 2 * 339
-  );
+  // A dollar price is charged as its rupee amount.
+  assert.equal(teamMonthlyPriceINR("USD"), 4629);
 });
 
 
