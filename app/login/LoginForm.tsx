@@ -557,7 +557,7 @@ function Form({
         Teamski
       </Link>
 
-      <div className="t-modal relative w-full max-w-[380px] rounded-2xl border border-white/10 bg-black/70 px-6 py-8 shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-md sm:px-7">
+      <div className="t-modal relative w-full max-w-[380px] rounded-2xl border border-white/10 bg-black/85 px-6 py-8 shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:px-7">
 
         {/* ---------------------------- */}
         {/* MASTHEAD                     */}

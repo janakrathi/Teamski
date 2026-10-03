@@ -23,11 +23,9 @@ import {
   at,
 } from "@/components/landing/Site";
 
-import SignalField from "@/components/landing/SignalField";
-
-import Aurora from "@/components/landing/Aurora";
-
 import Reveal from "@/components/landing/Reveal";
+
+import Backdrop from "@/components/landing/Backdrop";
 
 import Faq from "@/components/landing/Faq";
 
@@ -301,8 +299,9 @@ export default function Welcome() {
       style={SITE_THEME}
       className="relative isolate min-h-screen shrink-0 text-[#ededed]"
     >
-      {/* Pastel light drifting behind the whole page. */}
-      <Aurora />
+      {/* Black, a muted drifting colour and the signal
+          lines, behind the whole page. */}
+      <Backdrop />
 
       {/* "<" escaped, as Next.js advises for JSON-LD. */}
       <script
@@ -324,7 +323,6 @@ export default function Welcome() {
       {/* ------------------------------ */}
 
       <section className="relative isolate flex min-h-[max(640px,100svh)] flex-col justify-center overflow-hidden">
-        <SignalField calm="left" />
 
         <div
           aria-hidden="true"
@@ -334,7 +332,7 @@ export default function Welcome() {
         <div className={`${CONTAINER} relative pt-28 pb-20`}>
           <span
             style={at(0)}
-            className="t-text-reveal inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-[13px] text-white/80 backdrop-blur-sm"
+            className="t-text-reveal inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-black/70 px-3.5 py-1.5 text-[13px] text-white/80"
           >
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
@@ -416,7 +414,7 @@ export default function Welcome() {
         </Reveal>
 
         <Reveal className={`${CONTAINER} pb-20 sm:pb-28`}>
-          <div className="t-reveal-item relative mx-auto max-w-[760px]">
+          <div data-signal-clear className="t-reveal-item relative mx-auto max-w-[760px]">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -inset-x-16 -inset-y-10 bg-[radial-gradient(ellipse_at_center,rgba(201,100,66,0.12),transparent_65%)]"
@@ -452,7 +450,7 @@ export default function Welcome() {
                     index % 2 === 0 ? "md:border-r md:pr-10" : "md:pl-10"
                   }`}
                 >
-                  <div className="t-reveal-item flex h-[190px] items-center justify-center">
+                  <div data-signal-clear className="t-reveal-item flex h-[190px] items-center justify-center">
                     {VISUALS[feature.title]}
                   </div>
 
@@ -522,7 +520,7 @@ export default function Welcome() {
           </Reveal>
 
           <Reveal className="mt-14">
-            <div className="t-reveal-item overflow-hidden rounded-2xl border border-white/10 bg-[#050505] md:grid md:grid-cols-[230px_1fr]">
+            <div data-signal-clear className="t-reveal-item overflow-hidden rounded-2xl border border-white/10 bg-[#050505] md:grid md:grid-cols-[230px_1fr]">
               <div className="border-b border-white/10 px-5 py-5 md:border-r md:border-b-0">
                 <p className="text-[13px] font-medium">Website launch</p>
 
@@ -565,7 +563,7 @@ export default function Welcome() {
               </div>
             </div>
 
-            <div style={at(1)} className="t-reveal-item mt-4 grid gap-4 sm:grid-cols-2">
+            <div data-signal-clear style={at(1)} className="t-reveal-item mt-4 grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-white/10 px-5 py-4">
                 <p className="text-[12px] text-white/40">
                   Scheduled · every Monday, 9:00
@@ -674,9 +672,11 @@ export default function Welcome() {
             </p>
           </Reveal>
 
-          <ConnectionsOrbit apps={APPS} />
+          <div data-signal-clear>
+            <ConnectionsOrbit apps={APPS} />
+          </div>
 
-          <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul data-signal-clear className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {APPS.map((app) => (
               <li
                 key={app.id}
@@ -796,7 +796,7 @@ export default function Welcome() {
             </p>
           </Reveal>
 
-          <Reveal className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal clear className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, index) => (
               <div key={step.n} style={at(index)} className="t-reveal-item bg-black p-6">
                 <span className="text-[34px] leading-none font-light tracking-[-0.03em] text-white/25 tabular-nums">
@@ -839,7 +839,6 @@ export default function Welcome() {
         {/* The heading sits on a faint band of the signal
             field, fading out before the plan cards. */}
         <div className="relative isolate overflow-hidden">
-          <SignalField calm="soft" />
 
           <div
             aria-hidden="true"
@@ -863,7 +862,9 @@ export default function Welcome() {
         </div>
 
         <div className={`${CONTAINER} pb-20 sm:pb-28`}>
-          <PlanCards />
+          <div data-signal-clear>
+            <PlanCards />
+          </div>
 
           <p className="mt-4 text-[12px] leading-relaxed text-white/40">
             Messages on your own or a shared API key are billed by that AI
@@ -909,7 +910,6 @@ export default function Welcome() {
       {/* ------------------------------ */}
 
       <section className="relative isolate overflow-hidden border-t border-white/10">
-        <SignalField calm="center" />
 
         <Reveal className={`${CONTAINER} relative flex min-h-[460px] flex-col items-center justify-center py-24 text-center`}>
           <h2 className="t-reveal-item text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[56px]">

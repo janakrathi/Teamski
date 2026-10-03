@@ -47,7 +47,7 @@ export const PRIMARY =
   "t-press inline-flex items-center rounded-[10px] bg-[#ededed] px-5 py-2.5 text-[14px] font-medium text-black shadow-[inset_0_-2px_0_rgba(0,0,0,0.14),0_1px_2px_rgba(0,0,0,0.5)] hover:bg-white";
 
 export const SECONDARY =
-  "t-press inline-flex items-center rounded-[10px] border border-white/15 bg-black/40 px-5 py-2.5 text-[14px] text-[#ededed] backdrop-blur-sm hover:border-white/30 hover:bg-white/[0.04]";
+  "t-press inline-flex items-center rounded-[10px] border border-white/15 bg-black/60 px-5 py-2.5 text-[14px] text-[#ededed] hover:border-white/30 hover:bg-white/[0.04]";
 
 // A small uppercase label above a heading.
 export const EYEBROW = "text-[11px] tracking-[0.12em] text-white/40 uppercase";
@@ -112,7 +112,8 @@ export function SiteHeader({
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10">
+    // Small print: the signal lines stay out from behind it.
+    <footer data-signal-clear className="border-t border-white/10">
       <div className={`${CONTAINER} flex flex-wrap items-center gap-x-5 gap-y-3 py-8 text-[12.5px] text-white/40`}>
         <span className="flex items-center gap-2">
           <Logo size={20} />

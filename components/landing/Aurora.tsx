@@ -7,11 +7,11 @@ import { useEffect, useRef } from "react";
 // THE AURORA
 // ==========================================
 //
-// A quiet second tone behind the landing page's black:
-// a few large, soft pools of muted colour - dusty
-// mauve, smoky sage, cool slate - drifting on their own
-// slow paths. Black stays the background; this is only
-// a low light moving through it.
+// A quiet second tone behind the site's black: a few
+// large, soft pools of light purple - lavender, lilac,
+// soft violet - drifting on their own slow paths. Black
+// stays the background; this is only a light moving
+// through it.
 //
 // Randomised on every visit (which tones, where they
 // start, how they move). Each pool is painted once and
@@ -23,12 +23,11 @@ import { useEffect, useRef } from "react";
 
 type RGB = [number, number, number];
 
-// Muted, low-saturation tones.
+// Light purples only.
 const TONES: RGB[] = [
-  [150, 108, 142], // dusty mauve
-  [124, 92, 128], // plum smoke
-  [112, 132, 118], // smoky sage
-  [128, 136, 152], // cool slate
+  [196, 172, 240], // lavender
+  [178, 150, 226], // lilac
+  [160, 134, 214], // soft violet
 ];
 
 const POOLS = 5;
@@ -133,7 +132,8 @@ export default function Aurora() {
     const loop = (time: number) => {
       frame = requestAnimationFrame(loop);
 
-      if (document.hidden || time - last < 33) {
+      // The pools move slowly; 20 frames a second is plenty.
+      if (document.hidden || time - last < 50) {
         return;
       }
 
@@ -162,11 +162,11 @@ export default function Aurora() {
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
-      <div ref={layerRef} className="absolute inset-0 opacity-[0.62]" />
+      <div ref={layerRef} className="absolute inset-0 opacity-[0.42]" />
 
       {/* Black keeps the upper hand: deepest in the middle,
           where most of the copy sits. */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_45%,rgba(0,0,0,0.45),rgba(0,0,0,0.2)_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_45%,rgba(0,0,0,0.3),rgba(0,0,0,0.08)_70%)]" />
     </div>
   );
 }

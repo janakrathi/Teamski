@@ -286,9 +286,20 @@ export default function ConnectionsOrbit({ apps }: { apps: App[] }) {
       });
     }
 
+    // 30 frames a second is smooth for a slow orbit, and
+    // leaves the rest of the page room to scroll.
+    let last = 0;
+
     function loop(time: number) {
-      draw(time);
       frame = requestAnimationFrame(loop);
+
+      if (time - last < 33) {
+        return;
+      }
+
+      last = time;
+
+      draw(time);
     }
 
     function start() {

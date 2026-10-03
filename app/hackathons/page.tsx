@@ -6,9 +6,9 @@ import { DAILY_MESSAGES, TRIAL_DAYS } from "@/lib/plans";
 
 import ContactUs from "@/components/landing/ContactUs";
 
-import SignalField from "@/components/landing/SignalField";
-
 import Reveal from "@/components/landing/Reveal";
+
+import Backdrop from "@/components/landing/Backdrop";
 
 import {
   CONTAINER,
@@ -104,13 +104,16 @@ const JUDGING = [
 
 export default function HackathonsPage() {
   return (
-    <main style={SITE_THEME} className="min-h-screen shrink-0 bg-black text-[#ededed]">
+    <main style={SITE_THEME} className="relative isolate min-h-screen shrink-0 text-[#ededed]">
+      {/* Black, a muted drifting colour and the signal
+          lines, behind the whole page. */}
+      <Backdrop />
+
       {/* ------------------------------ */}
       {/* INTRO                          */}
       {/* ------------------------------ */}
 
       <section className="relative isolate flex min-h-[max(600px,92svh)] flex-col overflow-hidden">
-        <SignalField calm="left" />
 
         <div
           aria-hidden="true"
@@ -188,7 +191,7 @@ export default function HackathonsPage() {
             </h2>
           </Reveal>
 
-          <Reveal className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal clear className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
             {SETUP.map((step, index) => (
               <div key={step.title} style={at(index)} className="t-reveal-item bg-black p-6">
                 <span className="text-[34px] leading-none font-light tracking-[-0.03em] text-white/25 tabular-nums">
@@ -304,7 +307,7 @@ export default function HackathonsPage() {
               ))}
             </ul>
 
-            <div style={at(JUDGING.length + 1)} className="t-reveal-item mt-10 rounded-2xl border border-white/10 bg-[#050505] px-5 py-4">
+            <div data-signal-clear style={at(JUDGING.length + 1)} className="t-reveal-item mt-10 rounded-2xl border border-white/10 bg-[#050505] px-5 py-4">
               <p className="text-[14px] font-[450]">Play fair</p>
 
               <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">
@@ -323,7 +326,6 @@ export default function HackathonsPage() {
       {/* ------------------------------ */}
 
       <section className="relative isolate overflow-hidden border-t border-white/10">
-        <SignalField calm="center" />
 
         <Reveal className={`${CONTAINER} relative flex min-h-[460px] flex-col items-center justify-center py-24 text-center`}>
           <h2 className="t-reveal-item text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[56px]">
@@ -341,7 +343,7 @@ export default function HackathonsPage() {
             </Link>
           </div>
 
-          <div style={at(3)} className="t-reveal-item mt-12 max-w-[440px] rounded-2xl border border-white/10 bg-black/70 p-5 text-left backdrop-blur-sm">
+          <div style={at(3)} data-signal-clear className="t-reveal-item mt-12 max-w-[440px] rounded-2xl border border-white/10 bg-black/85 p-5 text-left">
             <p className="text-[14px] font-[450]">Running a hackathon?</p>
 
             <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">

@@ -55,11 +55,13 @@ export default function SignalField({
   // readable: "left" keeps the left half quiet (a hero
   // with text on the left), "center" the middle, and
   // "soft" keeps all of it faint - a band behind a
-  // heading.
+  // heading - and "page" is the whole-page backdrop:
+  // soft everywhere, rising to the hero's strength
+  // only while the top of the page is on screen.
   calm = "left",
   className = "",
 }: {
-  calm?: "left" | "center" | "soft";
+  calm?: "left" | "center" | "soft" | "page";
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,8 +85,29 @@ export default function SignalField({
 
     const pointer = { x: -9999, y: -9999 };
 
+    // For "page": how strongly the top and the bottom of
+    // the page show - 1 while the opening (or the closing
+    // call) is on screen, 0 a screen away. In between the
+    // lines are barely there.
+    let topWeight = 0;
+    let bottomWeight = 0;
+
+    // Graphics keep a clear background: anything marked
+    // data-signal-clear has the lines wiped from behind it.
+    let clear: Element[] = [];
+    let clearFound = 0;
+
+    // Fewer frames on phones and small machines - the
+    // drift is slow enough that nobody sees the difference,
+    // and the page scrolls smoother for it.
+    const slow =
+      window.innerWidth < 640 || (navigator.hardwareConcurrency ?? 8) <= 4;
+
+    const interval = slow ? 66 : 42;
+
     const resize = () => {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      // Hairlines don't need a 2x canvas.
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
 
       width = canvas.clientWidth;
       height = canvas.clientHeight;
@@ -95,16 +118,47 @@ export default function SignalField({
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
     };
 
-    // How quiet the field is at x, y: copy sits in the
-    // calm part, and the edges fade out.
+    // How strong the field is at x, y (0 = nothing): copy
+    // sits in the calm part, and the edges fade out.
     const mask = (x: number, y: number) => {
+      const edgeY = Math.max(0, Math.min(1, y / (height * 0.18), (height - y) / (height * 0.28)));
+
+      if (calm === "page") {
+        const phone = width < 640;
+
+        const edgeX = Math.max(0, Math.min(1, x / (width * 0.08), (width - x) / (width * 0.08)));
+
+        const middle = (phone ? 0.1 : 0.14) * edgeX;
+
+        let value = middle;
+
+        if (topWeight > 0) {
+          const hero = phone
+            ? 0.3
+            : Math.max(0, Math.min(1, (x / width - 0.12) * 1.6)) * 0.9 + 0.1;
+
+          value += (hero - middle) * topWeight;
+        }
+
+        if (bottomWeight > 0) {
+          const dx = (x - width / 2) / (width / 2);
+          const dy = (y - height / 2) / (height / 2);
+
+          const closing = phone
+            ? 0.3
+            : Math.max(0, Math.min(1, Math.hypot(dx, dy * 1.4) - 0.25));
+
+          value += (closing - middle) * bottomWeight;
+        }
+
+        return value;
+      }
+
       // On a phone the copy spans the whole width, so
       // the whole field stays faint.
       if (width < 640) {
-        return 0.3 * Math.max(0, Math.min(1, y / (height * 0.18), (height - y) / (height * 0.28)));
+        return 0.3 * edgeY;
       }
-
-      const edgeY = Math.min(1, y / (height * 0.18), (height - y) / (height * 0.28));
 
       if (calm === "soft") {
         const edgeX = Math.min(1, x / (width * 0.12), (width - x) / (width * 0.12));
@@ -116,12 +170,10 @@ export default function SignalField({
         const dx = (x - width / 2) / (width / 2);
         const dy = (y - height / 2) / (height / 2);
 
-        return Math.max(0, Math.min(1, Math.hypot(dx, dy * 1.4) - 0.25)) * Math.max(0, edgeY);
+        return Math.max(0, Math.min(1, Math.hypot(dx, dy * 1.4) - 0.25)) * edgeY;
       }
 
-      const fromLeft = x / width;
-
-      return Math.max(0, Math.min(1, (fromLeft - 0.12) * 1.6)) * Math.max(0, edgeY) * 0.9 + 0.1 * Math.max(0, edgeY);
+      return Math.max(0, Math.min(1, (x / width - 0.12) * 1.6)) * edgeY * 0.9 + 0.1 * edgeY;
     };
 
     const draw = (time: number) => {
@@ -129,16 +181,42 @@ export default function SignalField({
 
       context.clearRect(0, 0, width, height);
 
+      if (calm === "page") {
+        const scrollable = Math.max(1, document.documentElement.scrollHeight - height);
+
+        topWeight = Math.max(0, 1 - window.scrollY / (height * 0.85));
+        bottomWeight = Math.max(0, 1 - (scrollable - window.scrollY) / (height * 0.85));
+
+        // The marked graphics, looked up again now and
+        // then in case the page changed.
+        if (time - clearFound > 1000 || clearFound === 0) {
+          clear = Array.from(document.querySelectorAll("[data-signal-clear]"));
+          clearFound = time || 1;
+        }
+      }
+
       const cols = Math.ceil(width / CELL_X);
       const rows = Math.ceil(height / CELL_Y);
+
+      // One colour, varied with globalAlpha - far cheaper
+      // than a new rgba() string for every dash.
+      context.fillStyle = "#ededed";
 
       for (let col = 0; col < cols; col++) {
         // Each column drifts at its own pace.
         const speed = 0.25 + hash(col, 7) * 0.6;
 
+        const x = col * CELL_X + 4;
+
         for (let row = 0; row < rows; row++) {
-          const x = col * CELL_X + 4;
           const y = row * CELL_Y + 4;
+
+          // Where the field is off, skip the noise too.
+          const strength0 = mask(x, y);
+
+          if (strength0 <= 0.02) {
+            continue;
+          }
 
           const flow = noise(col * 0.11, row * 0.07 - t * speed);
           const swell = noise(col * 0.025 + t * 0.03, row * 0.04);
@@ -146,35 +224,52 @@ export default function SignalField({
           let value = flow * (0.55 + swell * 0.7);
 
           // A soft lift near the pointer.
-          const near = Math.hypot(x - pointer.x, y - pointer.y);
+          const dx = x - pointer.x;
+          const dy = y - pointer.y;
 
-          if (near < 140) {
-            value += (1 - near / 140) * 0.35;
+          if (dx * dx + dy * dy < 19600) {
+            value += (1 - Math.sqrt(dx * dx + dy * dy) / 140) * 0.35;
           }
 
-          const strength = (value - 0.42) * 2.2 * mask(x, y);
+          const strength = (value - 0.42) * 2.2 * strength0;
 
           if (strength <= 0.02) {
             continue;
           }
 
-          const accent = hash(col, row) > 0.988;
-
-          context.fillStyle = accent
-            ? `rgba(201, 100, 66, ${Math.min(1, strength * 1.4)})`
-            : `rgba(237, 237, 237, ${Math.min(0.85, strength * 0.75)})`;
-
           const tall = 2 + Math.round(Math.min(1, strength) * 5);
 
-          context.fillRect(x, y + (7 - tall) / 2, 1.2, tall);
+          if (hash(col, row) > 0.988) {
+            context.fillStyle = "#c96442";
+            context.globalAlpha = Math.min(1, strength * 1.4);
+            context.fillRect(x, y + (7 - tall) / 2, 1.2, tall);
+            context.fillStyle = "#ededed";
+          } else {
+            context.globalAlpha = Math.min(0.85, strength * 0.75);
+            context.fillRect(x, y + (7 - tall) / 2, 1.2, tall);
+          }
         }
+      }
+
+      context.globalAlpha = 1;
+
+      // Wipe the lines from behind the graphics, with a
+      // little room around each.
+      for (const element of clear) {
+        const rect = element.getBoundingClientRect();
+
+        if (rect.bottom < -20 || rect.top > height + 20 || rect.width === 0) {
+          continue;
+        }
+
+        context.clearRect(rect.left - 20, rect.top - 20, rect.width + 40, rect.height + 40);
       }
     };
 
     const loop = (time: number) => {
       frame = requestAnimationFrame(loop);
 
-      if (!visible || document.hidden || time - last < 33) {
+      if (!visible || document.hidden || time - last < interval) {
         return;
       }
 
@@ -213,8 +308,16 @@ export default function SignalField({
 
     observer.observe(canvas);
 
+    // A still page backdrop is redrawn as it scrolls, so
+    // the hero's strength still eases off.
+    const onStillScroll = () => draw(0);
+
     if (still) {
       draw(0);
+
+      if (calm === "page") {
+        window.addEventListener("scroll", onStillScroll, { passive: true });
+      }
     } else {
       window.addEventListener("pointermove", onMove, { passive: true });
       document.addEventListener("pointerleave", onLeave);
@@ -226,6 +329,7 @@ export default function SignalField({
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onStillScroll);
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerleave", onLeave);
     };

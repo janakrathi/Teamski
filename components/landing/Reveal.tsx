@@ -22,10 +22,15 @@ export default function Reveal({
   children,
   className = "",
   id,
+  clear = false,
 }: {
   children: React.ReactNode;
   className?: string;
   id?: string;
+
+  // A graphic: the site's signal lines stay out from
+  // behind it (components/landing/SignalField.tsx).
+  clear?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -73,7 +78,12 @@ export default function Reveal({
   }, []);
 
   return (
-    <div ref={ref} id={id} className={`t-reveal ${className}`}>
+    <div
+      ref={ref}
+      id={id}
+      data-signal-clear={clear ? "" : undefined}
+      className={`t-reveal ${className}`}
+    >
       {children}
     </div>
   );

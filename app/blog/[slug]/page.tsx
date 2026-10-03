@@ -8,9 +8,9 @@ import Article from "@/components/blog/Article";
 
 import { allPosts, postBySlug } from "@/lib/blog/posts";
 
-import SignalField from "@/components/landing/SignalField";
-
 import Reveal from "@/components/landing/Reveal";
+
+import Backdrop from "@/components/landing/Backdrop";
 
 import {
   PRIMARY,
@@ -118,7 +118,11 @@ export default async function PostPage({
   };
 
   return (
-    <main style={SITE_THEME} className="min-h-dvh shrink-0 bg-black text-[#ededed]">
+    <main style={SITE_THEME} className="relative isolate min-h-dvh shrink-0 text-[#ededed]">
+      {/* Black, a muted drifting colour and the signal
+          lines, behind the whole page. */}
+      <Backdrop />
+
       <script
         type="application/ld+json"
         // Structured data is JSON, not user input.
@@ -132,7 +136,6 @@ export default async function PostPage({
       {/* ------------------------------ */}
 
       <section className="relative isolate overflow-hidden border-b border-white/10">
-        <SignalField calm="soft" />
 
         <div
           aria-hidden="true"
@@ -179,7 +182,7 @@ export default async function PostPage({
 
         {/* Call to action */}
         <Reveal className="mt-16">
-          <div className="t-reveal-item relative isolate overflow-hidden rounded-2xl border border-white/10 bg-[#050505] p-7">
+          <div data-signal-clear className="t-reveal-item relative isolate overflow-hidden rounded-2xl border border-white/10 bg-[#050505] p-7">
             <p className="text-[20px] font-[450] tracking-[-0.015em]">
               Try Teamski free{" "}
               <span className="text-white/45">with your whole team.</span>

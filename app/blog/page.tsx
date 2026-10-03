@@ -4,9 +4,9 @@ import Link from "next/link";
 
 import { allPosts } from "@/lib/blog/posts";
 
-import SignalField from "@/components/landing/SignalField";
-
 import Reveal from "@/components/landing/Reveal";
+
+import Backdrop from "@/components/landing/Backdrop";
 
 import {
   CONTAINER,
@@ -39,13 +39,16 @@ export default function BlogIndex() {
   const posts = allPosts();
 
   return (
-    <main style={SITE_THEME} className="min-h-dvh shrink-0 bg-black text-[#ededed]">
+    <main style={SITE_THEME} className="relative isolate min-h-dvh shrink-0 text-[#ededed]">
+      {/* Black, a muted drifting colour and the signal
+          lines, behind the whole page. */}
+      <Backdrop />
+
       {/* ------------------------------ */}
       {/* MASTHEAD                       */}
       {/* ------------------------------ */}
 
       <section className="relative isolate overflow-hidden">
-        <SignalField calm="left" />
 
         <div
           aria-hidden="true"
