@@ -316,7 +316,7 @@ export default function ModelChip({
 
 
       {open && (
-        <div className="absolute right-0 bottom-6 z-30 max-h-[19rem] w-64 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] p-1.5 shadow-2xl">
+        <div data-origin="bottom-right" className="t-dropdown absolute right-0 bottom-6 z-30 max-h-[19rem] w-64 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] p-1.5 shadow-2xl">
           {groups.length === 0 ? (
             <p className="px-2 py-1.5 text-[11.5px] text-[var(--text-faint)]">
               No models available.

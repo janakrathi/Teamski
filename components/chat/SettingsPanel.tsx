@@ -26,6 +26,8 @@ import { SELF_HOSTED } from "@/lib/plans";
 
 import type { ChatSettings } from "./useChat";
 
+import { usePresence } from "@/lib/ui/usePresence";
+
 
 // The panel used to be one long scroll of model
 // options called "Agent settings". Account and
@@ -381,20 +383,25 @@ export default function SettingsPanel({
   }
 
 
-  if (!open) {
+  // Kept on screen for its slide out (lib/ui/usePresence.ts).
+  const presence = usePresence(open, 350);
+
+  if (!presence.mounted) {
     return null;
   }
 
+  const leaving = presence.closing ? " is-closing" : "";
+
   return (
-    <div className="fixed inset-0 z-40 flex justify-end">
+    <div className={`fixed inset-0 z-40 flex justify-end${presence.closing ? " pointer-events-none" : ""}`}>
       <button
         type="button"
         aria-label="Close settings"
         onClick={onClose}
-        className="absolute inset-0 bg-black/50"
+        className={`t-overlay${leaving} absolute inset-0 bg-black/50`}
       />
 
-      <div className="relative flex h-full w-full flex-col border-l sm:w-[420px] border-[var(--border)] bg-[var(--bg-panel)]">
+      <div className={`t-drawer-right${leaving} relative flex h-full w-full flex-col border-l sm:w-[420px] border-[var(--border)] bg-[var(--bg-panel)]`}>
 
         {/* HEADER */}
 

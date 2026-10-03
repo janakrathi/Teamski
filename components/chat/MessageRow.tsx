@@ -62,7 +62,7 @@ function ActivityTrail({
           {activity.map((item) => (
             <div
               key={item.key}
-              className="flex items-center gap-2 text-[12.5px]"
+              className="t-rise flex items-center gap-2 text-[12.5px]"
             >
               {item.status === "done" ? (
                 <span className="text-emerald-500">
@@ -171,6 +171,19 @@ function MessageRow({
 }) {
   const [copied, setCopied] = useState(false);
 
+  // A message that just arrived - sent from here, a reply
+  // being written, or a teammate's from the last few
+  // seconds - rises in. One already in the history when
+  // the channel opened simply appears. Decided once, when
+  // the row first mounts.
+  const [enter] = useState(() =>
+    !message.id ||
+    (message.created_at !== undefined &&
+      Date.now() - Date.parse(message.created_at) < 10_000)
+      ? "t-rise "
+      : ""
+  );
+
   const [editing, setEditing] = useState(false);
 
   const [draft, setDraft] = useState("");
@@ -235,7 +248,7 @@ function MessageRow({
 
     if (editing) {
       return (
-        <div className="flex justify-end">
+        <div className={`${enter}flex justify-end`}>
           <div className="w-full max-w-[min(42rem,92%)] sm:max-w-[min(42rem,85%)]">
             <textarea
               autoFocus
@@ -290,7 +303,7 @@ function MessageRow({
     }
 
     return (
-      <div className="group flex justify-end">
+      <div className={`${enter}group flex justify-end`}>
         <div className="max-w-[min(42rem,92%)] sm:max-w-[min(42rem,85%)]">
           <p className="mb-1 pr-1 text-right text-[10px] tracking-wide text-[var(--text-faint)]">
             You
@@ -374,7 +387,7 @@ function MessageRow({
       message.sender_name || "Teammate";
 
     return (
-      <div className="flex gap-3">
+      <div className={`${enter}flex gap-3`}>
         <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] text-[11px] font-medium text-[var(--text-muted)]">
           {name.charAt(0).toUpperCase()}
         </div>
@@ -414,7 +427,7 @@ function MessageRow({
     message.streaming && !message.error;
 
   return (
-    <div className="group flex gap-3">
+    <div className={`${enter}group flex gap-3`}>
       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-raised)] text-[11px] font-semibold text-[var(--accent)]">
         ✦
       </div>

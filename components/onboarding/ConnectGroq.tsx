@@ -159,8 +159,8 @@ export default function ConnectGroq({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-[420px] rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 shadow-2xl shadow-black/50">
+    <div className="t-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="t-modal w-full max-w-[420px] rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 shadow-2xl shadow-black/50">
         {done ? (
           <>
             <h2 className="text-[18px] font-semibold text-[var(--text)]">

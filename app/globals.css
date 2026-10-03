@@ -107,3 +107,412 @@ body {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
+
+
+/* ==========================================
+   MOTION
+   ==========================================
+
+   One scale for every animation in the app, from
+   transitions.dev's motion tokens: opens are a
+   little slower than closes, surfaces settle with
+   one smooth-out curve, and nothing travels or
+   blurs more than it needs to.
+
+   Surfaces mount and unmount in React, so their
+   entrances are keyframes that run on mount
+   (`.t-modal`, `.t-dropdown`, ...). An exit runs
+   when the component adds `.is-closing` before it
+   unmounts - see lib/ui/usePresence.ts.
+*/
+
+:root {
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  --distance-micro: 4px;
+  --distance-base: 8px;
+  --distance-medium: 12px;
+
+  --scale-large: 0.96;
+  --scale-medium: 0.97;
+  --scale-small: 0.98;
+  --scale-tiny: 0.99;
+
+  --blur-small: 2px;
+  --blur-medium: 3px;
+}
+
+
+/* A backdrop behind a dialog or drawer. */
+
+@keyframes t-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes t-fade-out {
+  to { opacity: 0; }
+}
+
+.t-overlay {
+  animation: t-fade-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+
+.t-overlay.is-closing {
+  animation: t-fade-out var(--duration-quick) var(--ease-smooth-out) both;
+}
+
+
+/* A dialog: scales up from the centre, dips back on close. */
+
+@keyframes t-modal-in {
+  from { opacity: 0; transform: scale(var(--scale-large)); }
+}
+
+@keyframes t-modal-out {
+  to { opacity: 0; transform: scale(var(--scale-large)); }
+}
+
+.t-modal {
+  transform-origin: center;
+  animation: t-modal-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+
+.t-modal.is-closing {
+  animation: t-modal-out var(--duration-quick) var(--ease-smooth-out) both;
+}
+
+
+/* A menu or popover: grows from the side its trigger is on. */
+
+@keyframes t-dropdown-in {
+  from { opacity: 0; transform: scale(var(--scale-medium)); }
+}
+
+@keyframes t-dropdown-out {
+  to { opacity: 0; transform: scale(var(--scale-tiny)); }
+}
+
+.t-dropdown {
+  transform-origin: top left;
+  animation: t-dropdown-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+
+.t-dropdown[data-origin="top-right"] { transform-origin: top right; }
+.t-dropdown[data-origin="top-center"] { transform-origin: top center; }
+.t-dropdown[data-origin="bottom-left"] { transform-origin: bottom left; }
+.t-dropdown[data-origin="bottom-center"] { transform-origin: bottom center; }
+.t-dropdown[data-origin="bottom-right"] { transform-origin: bottom right; }
+
+.t-dropdown.is-closing {
+  animation: t-dropdown-out var(--duration-quick) var(--ease-smooth-out) both;
+}
+
+
+/* A drawer: slides in from its edge with a soft blur. */
+
+@keyframes t-drawer-right-in {
+  from { opacity: 0; transform: translateX(32px); filter: blur(var(--blur-small)); }
+}
+
+@keyframes t-drawer-right-out {
+  to { opacity: 0; transform: translateX(32px); }
+}
+
+@keyframes t-drawer-left-in {
+  from { opacity: 0; transform: translateX(-32px); filter: blur(var(--blur-small)); }
+}
+
+@keyframes t-drawer-left-out {
+  to { opacity: 0; transform: translateX(-32px); }
+}
+
+.t-drawer-right {
+  animation: t-drawer-right-in var(--duration-slow) var(--ease-smooth-out) both;
+}
+
+.t-drawer-right.is-closing {
+  animation: t-drawer-right-out var(--duration-medium) var(--ease-smooth-out) both;
+}
+
+.t-drawer-left {
+  animation: t-drawer-left-in var(--duration-slow) var(--ease-smooth-out) both;
+}
+
+.t-drawer-left.is-closing {
+  animation: t-drawer-left-out var(--duration-medium) var(--ease-smooth-out) both;
+}
+
+
+/* A command palette: drops in from just above. */
+
+@keyframes t-palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--distance-base) * -1)) scale(var(--scale-small));
+  }
+}
+
+.t-palette {
+  transform-origin: top center;
+  animation: t-palette-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+
+.t-palette.is-closing {
+  animation: t-modal-out var(--duration-quick) var(--ease-smooth-out) both;
+}
+
+
+/* Something new in a list - a message just sent, a reply
+   starting - rises a few pixels out of a blur. */
+
+@keyframes t-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-micro));
+    filter: blur(var(--blur-small));
+  }
+}
+
+.t-rise {
+  animation: t-rise-in var(--duration-fast) var(--ease-smooth-out) both;
+}
+
+
+/* Content swapping in place (a settings tab's body). */
+
+.t-swap {
+  animation: t-rise-in var(--duration-fast) ease-in-out both;
+}
+
+
+/* Text that is working on something ("Searching the web")
+   - a highlight band sweeps across it. The same text goes
+   in data-text. */
+
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+}
+
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--text) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer 2000ms linear infinite;
+}
+
+@keyframes t-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+
+/* An expanding section (an FAQ answer). The body grows
+   with grid rows and resolves out of a blur. */
+
+.t-acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-fast) var(--ease-smooth-out);
+}
+
+.t-acc[data-open="true"] .t-acc-panel {
+  grid-template-rows: 1fr;
+}
+
+.t-acc-panel-inner {
+  overflow: hidden;
+  opacity: 0;
+  filter: blur(var(--blur-small));
+  transition:
+    opacity var(--duration-fast) var(--ease-smooth-out),
+    filter var(--duration-fast) var(--ease-smooth-out);
+}
+
+.t-acc[data-open="true"] .t-acc-panel-inner {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.t-acc-icon {
+  transition: transform var(--duration-fast) var(--ease-smooth-out);
+}
+
+.t-acc[data-open="true"] .t-acc-icon {
+  transform: rotate(45deg);
+}
+
+
+/* Scrolling into view on the landing page: lines rise out
+   of a blur, one after another. Hidden only once the page
+   has armed it (components/landing/Reveal.tsx), so the copy
+   is always there without JavaScript. */
+
+.t-reveal[data-reveal="armed"] .t-reveal-item {
+  opacity: 0;
+  transform: translateY(var(--distance-medium));
+  filter: blur(var(--blur-medium));
+}
+
+.t-reveal[data-reveal="in"] .t-reveal-item {
+  transition:
+    opacity var(--duration-very-slow) var(--ease-smooth-out),
+    transform var(--duration-very-slow) var(--ease-smooth-out),
+    filter var(--duration-very-slow) var(--ease-smooth-out);
+  transition-delay: calc(var(--i, 0) * var(--duration-micro));
+}
+
+
+/* Buttons press in, slightly. */
+
+.t-press {
+  transition:
+    transform var(--duration-quick) var(--ease-smooth-out),
+    background-color var(--duration-quick) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out),
+    box-shadow var(--duration-quick) var(--ease-smooth-out),
+    opacity var(--duration-quick) var(--ease-smooth-out);
+}
+
+.t-press:active {
+  transform: scale(var(--scale-medium));
+}
+
+
+/* ==========================================
+   LANDING
+   ==========================================
+
+   The diagrams' motion (components/landing/Diagrams.tsx)
+   and the hero's opening reveal, which runs on load in
+   CSS so it needs no JavaScript.
+*/
+
+@keyframes t-text-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-medium));
+    filter: blur(var(--blur-medium));
+  }
+}
+
+.t-text-reveal {
+  animation: t-text-reveal var(--duration-very-slow) var(--ease-smooth-out) both;
+  animation-delay: calc(120ms + var(--i, 0) * var(--duration-micro));
+}
+
+.lp-flow {
+  stroke-dasharray: 2 10;
+  animation: lp-flow 1.6s linear infinite;
+}
+
+@keyframes lp-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+.lp-spin {
+  animation: lp-spin 9s linear infinite;
+}
+
+@keyframes lp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.lp-blink {
+  animation: lp-blink 1.8s ease-in-out infinite;
+}
+
+@keyframes lp-blink {
+  50% { opacity: 0.25; }
+}
+
+/* A card that lifts toward the pointer. */
+.lp-lift {
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-fast) var(--ease-smooth-out),
+    background-color var(--duration-fast) var(--ease-smooth-out);
+}
+
+.lp-lift:hover {
+  transform: translateY(-2px);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .t-text-reveal,
+  .lp-flow,
+  .lp-spin,
+  .lp-blink {
+    animation: none !important;
+  }
+
+  .lp-flow {
+    stroke-dasharray: none;
+    opacity: 0;
+  }
+
+  .lp-lift,
+  .lp-lift:hover {
+    transition: none !important;
+    transform: none;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .t-overlay,
+  .t-modal,
+  .t-dropdown,
+  .t-drawer-right,
+  .t-drawer-left,
+  .t-palette,
+  .t-rise,
+  .t-swap,
+  .t-shimmer::before {
+    animation: none !important;
+  }
+
+  .t-acc-panel,
+  .t-acc-panel-inner,
+  .t-acc-icon,
+  .t-reveal .t-reveal-item,
+  .t-press {
+    transition: none !important;
+  }
+
+  .t-reveal[data-reveal] .t-reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .t-press:active {
+    transform: none;
+  }
+}

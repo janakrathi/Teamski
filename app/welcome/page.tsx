@@ -16,6 +16,19 @@ import ConnectionsOrbit from "@/components/landing/ConnectionsOrbit";
 
 import ContactUs from "@/components/landing/ContactUs";
 
+import SignalField from "@/components/landing/SignalField";
+
+import Reveal from "@/components/landing/Reveal";
+
+import Faq from "@/components/landing/Faq";
+
+import {
+  ApprovalLog,
+  ChannelTree,
+  ModelRouter,
+  TaskLoop,
+} from "@/components/landing/Diagrams";
+
 import { DAILY_MESSAGES, TEAM_PRICE_INR } from "@/lib/plans";
 
 export const metadata: Metadata = {
@@ -263,9 +276,53 @@ const CANT = [
 ];
 
 
+// The landing page's own surface: pure black, quieter
+// lines, softer text. Set as the app's colour variables,
+// so the shared pieces on this page (plans, contact
+// form) follow it too.
+
+const LANDING_THEME = {
+  "--bg": "#000000",
+  "--bg-panel": "#050505",
+  "--bg-raised": "#0c0c0c",
+  "--bg-hover": "#141414",
+  "--border": "rgba(255,255,255,0.09)",
+  "--border-strong": "rgba(255,255,255,0.16)",
+  "--text": "#ededed",
+  "--text-muted": "#9b9b9b",
+  "--text-faint": "#646464",
+} as React.CSSProperties;
+
+// Place in a reveal's running order (globals.css).
+const at = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
+const CONTAINER = "mx-auto w-full max-w-[1200px] px-6";
+
+const H2 =
+  "text-[30px] leading-[1.1] font-[450] tracking-[-0.025em] sm:text-[40px]";
+
+const PRIMARY =
+  "t-press inline-flex items-center rounded-[10px] bg-[#ededed] px-5 py-2.5 text-[14px] font-medium text-black shadow-[inset_0_-2px_0_rgba(0,0,0,0.14),0_1px_2px_rgba(0,0,0,0.5)] hover:bg-white";
+
+const SECONDARY =
+  "t-press inline-flex items-center rounded-[10px] border border-white/15 bg-black/40 px-5 py-2.5 text-[14px] text-[#ededed] backdrop-blur-sm hover:border-white/30 hover:bg-white/[0.04]";
+
+// The features that have a picture of their own. The
+// rest sit in a quieter row underneath.
+const VISUALS: Record<string, React.ReactNode> = {
+  "A channel, an agent": <ChannelTree />,
+  "Work that keeps going": <TaskLoop />,
+  "Changes wait for you": <ApprovalLog />,
+  "Pick the model": <ModelRouter />,
+};
+
+
 export default function Welcome() {
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <main
+      style={LANDING_THEME}
+      className="min-h-screen shrink-0 bg-black text-[#ededed]"
+    >
       {/* "<" escaped, as Next.js advises for JSON-LD. */}
       <script
         type="application/ld+json"
@@ -278,51 +335,46 @@ export default function Welcome() {
       {/* TOP BAR                        */}
       {/* ------------------------------ */}
 
-      <header className="mx-auto flex max-w-[1080px] items-center gap-3 px-6 py-5">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Logo size={30} />
+      <header className="absolute inset-x-0 top-0 z-20">
+        <div className={`${CONTAINER} flex items-center gap-3 py-5`}>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Logo size={28} />
 
-          <span className="text-[15px] font-semibold tracking-[-0.01em]">
-            Teamski
-          </span>
-        </Link>
-
-        <nav className="ml-auto flex items-center gap-1 text-[13px]">
-          <a
-            href="#plans"
-            className="hidden rounded-md px-3 py-1.5 text-[var(--text-muted)] transition hover:text-[var(--text)] sm:block"
-          >
-            Plans
-          </a>
-
-          <Link
-            href="/blog"
-            className="hidden rounded-md px-3 py-1.5 text-[var(--text-muted)] transition hover:text-[var(--text)] sm:block"
-          >
-            Blog
+            <span className="text-[15px] font-medium tracking-[-0.01em]">
+              Teamski
+            </span>
           </Link>
 
-          <Link
-            href="/hackathons"
-            className="hidden rounded-md px-3 py-1.5 text-[var(--text-muted)] transition hover:text-[var(--text)] sm:block"
-          >
-            Hackathons
-          </Link>
+          <nav className="ml-auto flex items-center gap-1 text-[13px]">
+            {[
+              { href: "#plans", label: "Plans" },
+              { href: "/blog", label: "Blog" },
+              { href: "/hackathons", label: "Hackathons" },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="hidden rounded-md px-3 py-1.5 text-white/60 transition-colors duration-150 hover:text-white sm:block"
+              >
+                {item.label}
+              </Link>
+            ))}
 
-          <Link
-            href="/login"
-            className="rounded-md px-3 py-1.5 text-[var(--text-muted)] transition hover:text-[var(--text)]"
-          >
-            Sign in
-          </Link>
+            <Link
+              href="/login"
+              className="rounded-md px-3 py-1.5 text-white/60 transition-colors duration-150 hover:text-white"
+            >
+              Sign in
+            </Link>
 
-          <Link
-            href="/login?mode=signup"
-            className="rounded-md bg-[var(--text)] px-3 py-1.5 font-medium text-[var(--bg)] transition hover:opacity-90"
-          >
-            Get started
-          </Link>
-        </nav>
+            <Link
+              href="/login?mode=signup"
+              className="t-press ml-1 rounded-[9px] bg-[#ededed] px-3.5 py-1.5 font-medium text-black hover:bg-white"
+            >
+              Get started
+            </Link>
+          </nav>
+        </div>
       </header>
 
 
@@ -330,52 +382,110 @@ export default function Welcome() {
       {/* HERO                           */}
       {/* ------------------------------ */}
 
-      <section className="mx-auto grid max-w-[1080px] items-center gap-12 px-6 pt-12 pb-20 md:grid-cols-[1.05fr_1fr] md:pt-20">
-        <div>
-          <span className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-raised)] px-4 py-2 text-[15px] font-semibold text-[var(--text)] shadow-sm">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
+      <section className="relative isolate flex min-h-[max(640px,100svh)] flex-col justify-center overflow-hidden">
+        <SignalField calm="left" />
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_18%_55%,rgba(0,0,0,0.9),transparent_70%)]"
+        />
+
+        <div className={`${CONTAINER} relative pt-28 pb-20`}>
+          <span
+            style={at(0)}
+            className="t-text-reveal inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-[13px] text-white/80 backdrop-blur-sm"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
             </span>
             Launch offer —{" "}
-            <span className="text-[var(--accent)]">
-              Team free for 2 months
-            </span>
+            <span className="text-[#e08a6a]">Team free for 2 months</span>
           </span>
 
-          <h1 className="text-[40px] leading-[1.08] font-semibold tracking-[-0.03em] sm:text-[52px]">
-            Your team and its AI agents, working in one place.
+          <h1
+            style={at(1)}
+            className="t-text-reveal mt-8 max-w-[780px] text-[42px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[64px]"
+          >
+            Your team and its AI agents,{" "}
+            <span className="text-white/45">working in one place.</span>
           </h1>
 
-          <p className="mt-5 max-w-[480px] text-[16px] leading-[1.6] text-[var(--text-muted)]">
+          <p
+            style={at(2)}
+            className="t-text-reveal mt-6 max-w-[480px] text-[16px] leading-[1.6] text-white/60"
+          >
             Every channel gets its own agent. Talk to it together, hand it
             tasks that run in the background, and connect the tools your
             team already uses.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="/login?mode=signup"
-              className="rounded-lg bg-[var(--text)] px-5 py-2.5 text-[14px] font-medium text-[var(--bg)] transition hover:opacity-90"
-            >
+          <div style={at(3)} className="t-text-reveal mt-9 flex flex-wrap items-center gap-3">
+            <Link href="/login?mode=signup" className={PRIMARY}>
               Get started free
             </Link>
 
-            <Link
-              href="/login"
-              className="rounded-lg border border-[var(--border-strong)] px-5 py-2.5 text-[14px] text-[var(--text)] transition hover:bg-[var(--bg-hover)]"
-            >
-              Sign in
+            <Link href="#example" className={SECONDARY}>
+              See an example
             </Link>
           </div>
 
-          <p className="mt-4 text-[12.5px] text-[var(--text-faint)]">
+          <p style={at(4)} className="t-text-reveal mt-5 text-[12.5px] text-white/40">
             Free plan with unlimited people — and every new project
             gets Team free for its first 2 months.
           </p>
         </div>
+      </section>
 
-        <ChannelPreview />
+
+      {/* ------------------------------ */}
+      {/* WHAT IT IS, AND A LOOK         */}
+      {/* ------------------------------ */}
+
+      <section className="overflow-hidden border-t border-white/10">
+        <Reveal className={`${CONTAINER} grid gap-8 py-20 sm:py-28 md:grid-cols-[1.15fr_1fr] md:items-end`}>
+          <h2 className={`t-reveal-item ${H2}`}>
+            Agents that sit in the room with your team,{" "}
+            <span className="text-white/45">not in a separate tab.</span>
+          </h2>
+
+          <div style={at(1)} className="t-reveal-item">
+            <p className="text-[15px] leading-[1.65] text-white/60">
+              One agent per channel, with its own instructions and memory of
+              the work. Everyone talks to the same agent and sees the same
+              answers - and it asks before it changes anything.
+            </p>
+
+            <Link
+              href="#start"
+              className="group mt-4 inline-flex items-center gap-1.5 text-[13.5px] text-[#ededed]"
+            >
+              <span className="border-b border-white/30 pb-0.5 transition-colors duration-150 group-hover:border-white">
+                How to start
+              </span>
+
+              <span
+                aria-hidden="true"
+                className="transition-transform duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0.5"
+              >
+                →
+              </span>
+            </Link>
+          </div>
+        </Reveal>
+
+        <Reveal className={`${CONTAINER} pb-20 sm:pb-28`}>
+          <div className="t-reveal-item relative mx-auto max-w-[760px]">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-x-16 -inset-y-10 bg-[radial-gradient(ellipse_at_center,rgba(201,100,66,0.12),transparent_65%)]"
+            />
+
+            <div className="relative">
+              <ChannelPreview />
+            </div>
+          </div>
+        </Reveal>
       </section>
 
 
@@ -383,27 +493,59 @@ export default function Welcome() {
       {/* WHAT IT DOES                   */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)]">
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="max-w-[560px] text-[28px] leading-tight font-semibold tracking-[-0.02em]">
-            Agents that sit in the room with your team, not in a separate tab.
-          </h2>
+      <section className="border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal>
+            <h2 className={`t-reveal-item max-w-[720px] ${H2}`}>
+              Built around how teams work,{" "}
+              <span className="text-white/45">not around one person and a chatbot.</span>
+            </h2>
+          </Reveal>
 
-          <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => (
-              <div
-                key={feature.title}
-                className="bg-[var(--bg)] p-6"
-              >
-                <h3 className="text-[15px] font-semibold">
-                  {feature.title}
-                </h3>
+          <div className="mt-14 grid border-t border-white/10 md:grid-cols-2">
+            {FEATURES.filter((feature) => VISUALS[feature.title]).map(
+              (feature, index) => (
+                <Reveal
+                  key={feature.title}
+                  className={`border-b border-white/10 py-10 ${
+                    index % 2 === 0 ? "md:border-r md:pr-10" : "md:pl-10"
+                  }`}
+                >
+                  <div className="t-reveal-item flex h-[190px] items-center justify-center">
+                    {VISUALS[feature.title]}
+                  </div>
 
-                <p className="mt-2 text-[13.5px] leading-[1.6] text-[var(--text-muted)]">
-                  {feature.body}
-                </p>
-              </div>
-            ))}
+                  <h3 style={at(1)} className="t-reveal-item mt-8 text-[20px] font-[450] tracking-[-0.01em]">
+                    {feature.title}
+                  </h3>
+
+                  <p style={at(2)} className="t-reveal-item mt-2 max-w-[460px] text-[14.5px] leading-[1.65] text-white/55">
+                    {feature.body}
+                  </p>
+                </Reveal>
+              )
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-2">
+            {FEATURES.filter((feature) => !VISUALS[feature.title]).map(
+              (feature, index) => (
+                <Reveal
+                  key={feature.title}
+                  className={`border-b border-white/10 py-8 ${
+                    index % 2 === 0 ? "md:border-r md:pr-10" : "md:pl-10"
+                  }`}
+                >
+                  <h3 className="t-reveal-item text-[16px] font-[450]">
+                    {feature.title}
+                  </h3>
+
+                  <p style={at(1)} className="t-reveal-item mt-2 max-w-[460px] text-[14px] leading-[1.65] text-white/55">
+                    {feature.body}
+                  </p>
+                </Reveal>
+              )
+            )}
           </div>
         </div>
       </section>
@@ -418,90 +560,95 @@ export default function Welcome() {
       {/* like, built from the agents    */}
       {/* and features the app has.      */}
 
-      <section
-        id="example"
-        className="scroll-mt-6 border-t border-[var(--border)] bg-[var(--bg-panel)]"
-      >
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <span className="rounded bg-[var(--bg-raised)] px-2 py-1 text-[11px] tracking-[0.08em] text-[var(--text-faint)] uppercase">
-            Example project
-          </span>
+      <section id="example" className="scroll-mt-6 border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+            <div>
+              <span className="t-reveal-item inline-block text-[11px] tracking-[0.12em] text-white/40 uppercase">
+                Example project
+              </span>
 
-          <h2 className="mt-4 max-w-[620px] text-[28px] leading-tight font-semibold tracking-[-0.02em]">
-            A product team launching a new website, in one project.
-          </h2>
+              <h2 style={at(1)} className={`t-reveal-item mt-4 ${H2}`}>
+                A product team launching a website,{" "}
+                <span className="text-white/45">in one project.</span>
+              </h2>
+            </div>
 
-          <p className="mt-2 max-w-[620px] text-[14px] text-[var(--text-muted)]">
-            Four channels, four agents, each with its own job and its own
-            memory of the work. Here&apos;s what one week looks like.
-          </p>
+            <p style={at(2)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+              Four channels, four agents, each with its own job and its own
+              memory of the work. Here&apos;s what one week looks like.
+            </p>
+          </Reveal>
 
-          <div className="mt-10 overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] md:grid md:grid-cols-[220px_1fr]">
-            <div className="border-b border-[var(--border)] px-4 py-4 md:border-r md:border-b-0">
-              <p className="text-[13px] font-semibold">Website launch</p>
+          <Reveal className="mt-14">
+            <div className="t-reveal-item overflow-hidden rounded-2xl border border-white/10 bg-[#050505] md:grid md:grid-cols-[230px_1fr]">
+              <div className="border-b border-white/10 px-5 py-5 md:border-r md:border-b-0">
+                <p className="text-[13px] font-medium">Website launch</p>
 
-              <p className="mt-0.5 text-[11.5px] text-[var(--text-faint)]">
-                5 people · Team
-              </p>
+                <p className="mt-0.5 text-[11.5px] text-white/40">
+                  5 people · Team
+                </p>
 
-              <ul className="mt-4 space-y-1">
+                <ul className="mt-5 space-y-1">
+                  {EXAMPLE_CHANNELS.map((channel) => (
+                    <li
+                      key={channel.name}
+                      className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-[13px] text-white/60"
+                    >
+                      <span># {channel.name}</span>
+
+                      <span className="truncate text-[11px] text-white/35">
+                        {channel.agent}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="grid gap-px bg-white/10 sm:grid-cols-2">
                 {EXAMPLE_CHANNELS.map((channel) => (
-                  <li
-                    key={channel.name}
-                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-[13px] text-[var(--text-muted)]"
-                  >
-                    <span># {channel.name}</span>
+                  <div key={channel.name} className="bg-[#050505] p-6">
+                    <p className="text-[12px] text-white/40">
+                      # {channel.name} · {channel.agent}
+                    </p>
 
-                    <span className="truncate text-[11px] text-[var(--text-faint)]">
-                      {channel.agent}
-                    </span>
-                  </li>
+                    <p className="mt-2.5 text-[14px] leading-[1.55] text-[#ededed]">
+                      {channel.asked}
+                    </p>
+
+                    <p className="mt-2 text-[13.5px] leading-[1.6] text-white/55">
+                      {channel.did}
+                    </p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
 
-            <div className="grid gap-px bg-[var(--border)] sm:grid-cols-2">
-              {EXAMPLE_CHANNELS.map((channel) => (
-                <div key={channel.name} className="bg-[var(--bg)] p-5">
-                  <p className="text-[12px] text-[var(--text-faint)]">
-                    # {channel.name} · {channel.agent}
-                  </p>
+            <div style={at(1)} className="t-reveal-item mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 px-5 py-4">
+                <p className="text-[12px] text-white/40">
+                  Scheduled · every Monday, 9:00
+                </p>
 
-                  <p className="mt-2 text-[13.5px] leading-[1.55] text-[var(--text)]">
-                    {channel.asked}
-                  </p>
+                <p className="mt-1.5 text-[14px] leading-[1.6] text-white/60">
+                  The planning agent posts what the team decided last week and
+                  what is still blocked - before anyone asks.
+                </p>
+              </div>
 
-                  <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-muted)]">
-                    {channel.did}
-                  </p>
-                </div>
-              ))}
+              <div className="rounded-2xl border border-white/15 bg-white/[0.03] px-5 py-4">
+                <p className="flex items-center gap-2 text-[12px] text-[#e08a6a]">
+                  <span className="lp-blink h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  Waiting for approval
+                </p>
+
+                <p className="mt-1.5 text-[14px] leading-[1.6] text-white/60">
+                  Linear: create 6 issues from the launch plan. Nothing changes
+                  in Linear until someone presses Approve.
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3.5">
-              <p className="text-[12px] text-[var(--text-faint)]">
-                Scheduled · every Monday, 9:00
-              </p>
-
-              <p className="mt-1 text-[13.5px] text-[var(--text-muted)]">
-                The planning agent posts what the team decided last week and
-                what is still blocked - before anyone asks.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] px-4 py-3.5">
-              <p className="text-[12px] text-[var(--text-faint)]">
-                Waiting for approval
-              </p>
-
-              <p className="mt-1 text-[13.5px] text-[var(--text-muted)]">
-                Linear: create 6 issues from the launch plan. Nothing changes
-                in Linear until someone presses Approve.
-              </p>
-            </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -510,28 +657,29 @@ export default function Welcome() {
       {/* BEFORE AND AFTER               */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)]">
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em]">
-            Before and after Teamski
-          </h2>
+      <section className="border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal>
+            <h2 className={`t-reveal-item ${H2}`}>
+              Before and after{" "}
+              <span className="text-white/45">Teamski</span>
+            </h2>
+          </Reveal>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-[var(--border)] p-6">
-              <p className="text-[12px] tracking-[0.08em] text-[var(--text-faint)] uppercase">
+          <div className="mt-14 grid border-t border-white/10 md:grid-cols-2">
+            <Reveal className="border-b border-white/10 py-10 md:border-r md:border-b-0 md:pr-10">
+              <p className="t-reveal-item text-[11px] tracking-[0.12em] text-white/40 uppercase">
                 Before
               </p>
 
-              <ul className="mt-4 space-y-3">
-                {BEFORE.map((line) => (
+              <ul className="mt-6 space-y-4">
+                {BEFORE.map((line, index) => (
                   <li
                     key={line}
-                    className="flex gap-3 text-[13.5px] leading-[1.55] text-[var(--text-muted)]"
+                    style={at(index + 1)}
+                    className="t-reveal-item flex gap-3 text-[15px] leading-[1.55] text-white/45"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="mt-[1px] shrink-0 text-[var(--text-faint)]"
-                    >
+                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-white/25">
                       ✕
                     </span>
 
@@ -539,23 +687,21 @@ export default function Welcome() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
 
-            <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6">
-              <p className="text-[12px] tracking-[0.08em] text-[var(--text)] uppercase">
+            <Reveal className="py-10 md:pl-10">
+              <p className="t-reveal-item text-[11px] tracking-[0.12em] text-[#ededed] uppercase">
                 With Teamski
               </p>
 
-              <ul className="mt-4 space-y-3">
-                {AFTER.map((line) => (
+              <ul className="mt-6 space-y-4">
+                {AFTER.map((line, index) => (
                   <li
                     key={line}
-                    className="flex gap-3 text-[13.5px] leading-[1.55] text-[var(--text)]"
+                    style={at(index + 1)}
+                    className="t-reveal-item flex gap-3 text-[15px] leading-[1.55] text-[#ededed]"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="mt-[1px] shrink-0 text-[var(--accent)]"
-                    >
+                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-[var(--accent)]">
                       ✓
                     </span>
 
@@ -563,7 +709,7 @@ export default function Welcome() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -573,16 +719,19 @@ export default function Welcome() {
       {/* CONNECTS TO                    */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)]">
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em]">
-            Works with the tools you already use
-          </h2>
+      <section className="border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+            <h2 className={`t-reveal-item ${H2}`}>
+              Works with the tools{" "}
+              <span className="text-white/45">you already use.</span>
+            </h2>
 
-          <p className="mt-2 max-w-[560px] text-[14px] text-[var(--text-muted)]">
-            Connect an app once and every agent in your project can read from
-            it, and ask before changing anything.
-          </p>
+            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+              Connect an app once and every agent in your project can read
+              from it, and ask before changing anything.
+            </p>
+          </Reveal>
 
           <ConnectionsOrbit apps={APPS} />
 
@@ -590,11 +739,11 @@ export default function Welcome() {
             {APPS.map((app) => (
               <li
                 key={app.id}
-                className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] px-4 py-3.5"
+                className="lp-lift flex items-center gap-3 rounded-xl border border-white/10 bg-[#050505] px-4 py-3.5 hover:border-white/20 hover:bg-white/[0.03]"
               >
                 <BrandIcon
                   id={app.id}
-                  className="h-5 w-5 shrink-0 text-[var(--text)]"
+                  className="h-5 w-5 shrink-0 text-[#ededed]"
                 />
 
                 <span className="truncate text-[13.5px]">{app.name}</span>
@@ -604,11 +753,11 @@ export default function Welcome() {
             {/* Anything else that speaks MCP. */}
 
             <li
-              className={`flex items-center gap-3 rounded-xl border border-dashed border-[var(--border-strong)] px-4 py-3.5 ${FILL_ROW}`}
+              className={`flex items-center gap-3 rounded-xl border border-dashed border-white/15 px-4 py-3.5 ${FILL_ROW}`}
             >
               <span
                 aria-hidden="true"
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[var(--text-muted)] text-[13px] leading-none text-[var(--text-muted)]"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/40 text-[13px] leading-none text-white/60"
               >
                 +
               </span>
@@ -616,7 +765,7 @@ export default function Welcome() {
               <span className="min-w-0">
                 <span className="block text-[13.5px]">Any other app</span>
 
-                <span className="block text-[12px] text-[var(--text-faint)]">
+                <span className="block text-[12px] text-white/40">
                   Add any MCP server by its address on Team
                 </span>
               </span>
@@ -630,30 +779,31 @@ export default function Welcome() {
       {/* WHAT IT CAN AND CAN'T DO       */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)]">
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em]">
-            What the agent can and can&apos;t do
-          </h2>
+      <section className="border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+            <h2 className={`t-reveal-item ${H2}`}>
+              What the agent can{" "}
+              <span className="text-white/45">and can&apos;t do.</span>
+            </h2>
 
-          <p className="mt-2 max-w-[560px] text-[14px] text-[var(--text-muted)]">
-            So you know what to hand it, and what to keep for yourselves.
-          </p>
+            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+              So you know what to hand it, and what to keep for yourselves.
+            </p>
+          </Reveal>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] p-6">
-              <h3 className="text-[15px] font-semibold">It can</h3>
+          <div className="mt-14 grid border-t border-white/10 md:grid-cols-2">
+            <Reveal className="border-b border-white/10 py-10 md:border-r md:border-b-0 md:pr-10">
+              <h3 className="t-reveal-item text-[16px] font-[450]">It can</h3>
 
-              <ul className="mt-4 space-y-2.5">
-                {CAN.map((line) => (
+              <ul className="mt-5 space-y-3">
+                {CAN.map((line, index) => (
                   <li
                     key={line}
-                    className="flex gap-3 text-[13.5px] leading-[1.55] text-[var(--text-muted)]"
+                    style={at(index + 1)}
+                    className="t-reveal-item flex gap-3 text-[14.5px] leading-[1.55] text-white/60"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="mt-[1px] shrink-0 text-[var(--accent)]"
-                    >
+                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-[var(--accent)]">
                       ✓
                     </span>
 
@@ -661,21 +811,19 @@ export default function Welcome() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
 
-            <div className="rounded-xl border border-[var(--border)] p-6">
-              <h3 className="text-[15px] font-semibold">It can&apos;t</h3>
+            <Reveal className="py-10 md:pl-10">
+              <h3 className="t-reveal-item text-[16px] font-[450]">It can&apos;t</h3>
 
-              <ul className="mt-4 space-y-2.5">
-                {CANT.map((line) => (
+              <ul className="mt-5 space-y-3">
+                {CANT.map((line, index) => (
                   <li
                     key={line}
-                    className="flex gap-3 text-[13.5px] leading-[1.55] text-[var(--text-muted)]"
+                    style={at(index + 1)}
+                    className="t-reveal-item flex gap-3 text-[14.5px] leading-[1.55] text-white/60"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="mt-[1px] shrink-0 text-[var(--text-faint)]"
-                    >
+                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-white/25">
                       ✕
                     </span>
 
@@ -683,7 +831,7 @@ export default function Welcome() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -693,50 +841,44 @@ export default function Welcome() {
       {/* CREATE YOUR FIRST PROJECT      */}
       {/* ------------------------------ */}
 
-      <section
-        id="start"
-        className="scroll-mt-6 border-t border-[var(--border)] bg-[var(--bg-panel)]"
-      >
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em]">
-            Create your first project
-          </h2>
+      <section id="start" className="scroll-mt-6 border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+            <h2 className={`t-reveal-item ${H2}`}>
+              Create your first project,{" "}
+              <span className="text-white/45">nothing to set up.</span>
+            </h2>
 
-          <p className="mt-2 max-w-[560px] text-[14px] text-[var(--text-muted)]">
-            No card and nothing to set up - the built-in AI answers from the
-            first message.
-          </p>
+            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+              No card and nothing to set up - the built-in AI answers from the
+              first message.
+            </p>
+          </Reveal>
 
-          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step) => (
-              <div key={step.n}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-strong)] text-[13px] font-semibold">
-                  {step.n}
+          <Reveal className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((step, index) => (
+              <div key={step.n} style={at(index)} className="t-reveal-item bg-black p-6">
+                <span className="text-[34px] leading-none font-light tracking-[-0.03em] text-white/25 tabular-nums">
+                  0{step.n}
                 </span>
 
-                <h3 className="mt-4 text-[16px] font-semibold">
+                <h3 className="mt-6 text-[16px] font-[450]">
                   {step.title}
                 </h3>
 
-                <p className="mt-2 text-[13.5px] leading-[1.6] text-[var(--text-muted)]">
+                <p className="mt-2 text-[13.5px] leading-[1.6] text-white/55">
                   {step.body}
                 </p>
               </div>
             ))}
-          </div>
+          </Reveal>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link
-              href="/login?mode=signup"
-              className="rounded-lg bg-[var(--text)] px-5 py-2.5 text-[14px] font-medium text-[var(--bg)] transition hover:opacity-90"
-            >
+            <Link href="/login?mode=signup" className={PRIMARY}>
               Create your first project
             </Link>
 
-            <Link
-              href="#example"
-              className="text-[13.5px] text-[var(--text-muted)] underline underline-offset-2 transition hover:text-[var(--text)]"
-            >
+            <Link href="#example" className={SECONDARY}>
               See an example project
             </Link>
           </div>
@@ -752,26 +894,26 @@ export default function Welcome() {
       {/* enforces, so the page and the  */}
       {/* limits cannot disagree.        */}
 
-      <section
-        id="plans"
-        className="scroll-mt-6 border-t border-[var(--border)]"
-      >
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em]">
-            Plans
-          </h2>
+      <section id="plans" className="scroll-mt-6 border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+            <h2 className={`t-reveal-item ${H2}`}>
+              Plans{" "}
+              <span className="text-white/45">for the whole team.</span>
+            </h2>
 
-          <p className="mt-2 text-[14px] text-[var(--text-muted)]">
-            Free to start, with your whole team. Team upgrades the whole
-            project — one plan, everyone included.{" "}
-            <span className="text-[var(--text)]">
-              Right now, every new project gets Team free for 2 months.
-            </span>
-          </p>
+            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+              Free to start, with your whole team. Team upgrades the whole
+              project — one plan, everyone included.{" "}
+              <span className="text-[#ededed]">
+                Right now, every new project gets Team free for 2 months.
+              </span>
+            </p>
+          </Reveal>
 
           <PlanCards />
 
-          <p className="mt-4 text-[12px] leading-relaxed text-[var(--text-faint)]">
+          <p className="mt-4 text-[12px] leading-relaxed text-white/40">
             Messages on your own or a shared API key are billed by that AI
             provider and do not count toward the daily allowance. Prices and
             limits may change.
@@ -784,47 +926,28 @@ export default function Welcome() {
       {/* QUESTIONS TEAMS ASK            */}
       {/* ------------------------------ */}
 
-      <section
-        id="faq"
-        className="scroll-mt-6 border-t border-[var(--border)]"
-      >
-        <div className="mx-auto max-w-[1080px] px-6 py-20">
-          <h2 className="text-[28px] font-semibold tracking-[-0.02em]">
-            Questions teams ask
-          </h2>
+      <section id="faq" className="scroll-mt-6 border-t border-white/10">
+        <div className={`${CONTAINER} grid gap-10 py-20 sm:py-28 md:grid-cols-[1fr_1.6fr]`}>
+          <Reveal>
+            <h2 className={`t-reveal-item ${H2}`}>
+              Questions{" "}
+              <span className="text-white/45">teams ask.</span>
+            </h2>
 
-          <p className="mt-2 text-[14px] text-[var(--text-muted)]">
-            The short answers. The full detail - including what isn&apos;t
-            in place yet - is on{" "}
-            <Link
-              href="/security"
-              className="text-[var(--text)] underline underline-offset-2"
-            >
-              Security &amp; your data
-            </Link>
-            .
-          </p>
+            <p style={at(1)} className="t-reveal-item mt-4 max-w-[360px] text-[14.5px] leading-[1.65] text-white/55">
+              The short answers. The full detail - including what isn&apos;t
+              in place yet - is on{" "}
+              <Link
+                href="/security"
+                className="text-[#ededed] underline decoration-white/30 underline-offset-4 transition-colors duration-150 hover:decoration-white"
+              >
+                Security &amp; your data
+              </Link>
+              .
+            </p>
+          </Reveal>
 
-          <div className="mt-8 divide-y divide-[var(--border)] border-y border-[var(--border)]">
-            {FAQ.map((item) => (
-              <details key={item.q} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-medium text-[var(--text)] [&::-webkit-details-marker]:hidden">
-                  {item.q}
-
-                  <span
-                    aria-hidden="true"
-                    className="shrink-0 text-[18px] leading-none text-[var(--text-faint)] transition group-open:rotate-45"
-                  >
-                    +
-                  </span>
-                </summary>
-
-                <p className="mt-2.5 max-w-[760px] text-[14px] leading-[1.65] text-[var(--text-muted)]">
-                  {item.a}
-                </p>
-              </details>
-            ))}
-          </div>
+          <Faq items={FAQ} />
         </div>
       </section>
 
@@ -833,26 +956,29 @@ export default function Welcome() {
       {/* LAST CALL                      */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)] bg-[var(--bg-panel)]">
-        <div className="mx-auto flex max-w-[1080px] flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center">
-          <div className="flex-1">
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em]">
-              Bring your team.
-            </h2>
+      <section className="relative isolate overflow-hidden border-t border-white/10">
+        <SignalField calm="center" />
 
-            <p className="mt-1 text-[14px] text-[var(--text-muted)]">
-              Create a project, invite everyone, and give your first channel
-              a job.
-            </p>
+        <Reveal className={`${CONTAINER} relative flex min-h-[460px] flex-col items-center justify-center py-24 text-center`}>
+          <h2 className="t-reveal-item text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[56px]">
+            Bring your team.
+          </h2>
+
+          <p style={at(1)} className="t-reveal-item mt-4 max-w-[420px] text-[15px] leading-[1.6] text-white/60">
+            Create a project, invite everyone, and give your first channel
+            a job.
+          </p>
+
+          <div style={at(2)} className="t-reveal-item mt-8 flex flex-wrap justify-center gap-3">
+            <Link href="/login?mode=signup" className={PRIMARY}>
+              Get started free
+            </Link>
+
+            <Link href="/login" className={SECONDARY}>
+              Sign in
+            </Link>
           </div>
-
-          <Link
-            href="/login?mode=signup"
-            className="rounded-lg bg-[var(--text)] px-5 py-2.5 text-[14px] font-medium text-[var(--bg)] transition hover:opacity-90"
-          >
-            Get started free
-          </Link>
-        </div>
+        </Reveal>
       </section>
 
 
@@ -860,26 +986,26 @@ export default function Welcome() {
       {/* FOOTER                         */}
       {/* ------------------------------ */}
 
-      <footer className="border-t border-[var(--border)]">
-        <div className="mx-auto flex max-w-[1080px] flex-wrap items-center gap-x-5 gap-y-3 px-6 py-8 text-[12.5px] text-[var(--text-faint)]">
+      <footer className="border-t border-white/10">
+        <div className={`${CONTAINER} flex flex-wrap items-center gap-x-5 gap-y-3 py-8 text-[12.5px] text-white/40`}>
           <span className="flex items-center gap-2">
             <Logo size={20} />
             © 2026 {LEGAL.operator}
           </span>
 
-          <Link href="/privacy" className="hover:text-[var(--text-muted)]">
+          <Link href="/privacy" className="transition-colors duration-150 hover:text-white/70">
             Privacy Policy
           </Link>
 
-          <Link href="/terms" className="hover:text-[var(--text-muted)]">
+          <Link href="/terms" className="transition-colors duration-150 hover:text-white/70">
             Terms of Service
           </Link>
 
-          <Link href="/security" className="hover:text-[var(--text-muted)]">
+          <Link href="/security" className="transition-colors duration-150 hover:text-white/70">
             Security &amp; data
           </Link>
 
-          <ContactUs className="hover:text-[var(--text-muted)] sm:ml-auto" />
+          <ContactUs className="transition-colors duration-150 hover:text-white/70 sm:ml-auto" />
         </div>
       </footer>
     </main>

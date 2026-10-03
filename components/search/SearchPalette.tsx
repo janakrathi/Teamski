@@ -13,6 +13,8 @@ import {
 
 import type { Channel } from "@/components/types";
 
+import { usePresence } from "@/lib/ui/usePresence";
+
 
 // ==========================================
 // SEARCH PALETTE
@@ -212,21 +214,26 @@ export default function SearchPalette({
   }
 
 
-  if (!open) {
+  // Kept on screen for its close (lib/ui/usePresence.ts).
+  const presence = usePresence(open);
+
+  if (!presence.mounted) {
     return null;
   }
 
+  const leaving = presence.closing ? " is-closing" : "";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-3 sm:pt-[12vh]">
+    <div className={`fixed inset-0 z-50 flex items-start justify-center pt-3 sm:pt-[12vh]${presence.closing ? " pointer-events-none" : ""}`}>
       <button
         type="button"
         aria-label="Close search"
         onClick={onClose}
-        className="absolute inset-0 bg-black/60"
+        className={`t-overlay${leaving} absolute inset-0 bg-black/60`}
       />
 
       <div
-        className="relative w-[min(640px,92vw)] overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] shadow-2xl shadow-black/50"
+        className={`t-palette${leaving} relative w-[min(640px,92vw)] overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] shadow-2xl shadow-black/50`}
         onKeyDown={onKeyDown}
       >
         <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-4">

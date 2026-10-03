@@ -303,7 +303,7 @@ export default function Sidebar({
                         }
                       />
 
-                      <div className="absolute top-full right-1 z-20 mt-1 w-32 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] py-1 shadow-xl">
+                      <div data-origin="top-right" className="t-dropdown absolute top-full right-1 z-20 mt-1 w-32 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] py-1 shadow-xl">
                         <button
                           type="button"
                           onClick={() => {

@@ -170,7 +170,7 @@ function PreviewWindow({
       role="dialog"
       aria-modal="true"
       aria-label={`Preview of ${filename}`}
-      className="fixed inset-0 z-[80] flex flex-col bg-black/70 backdrop-blur-sm"
+      className="t-overlay fixed inset-0 z-[80] flex flex-col bg-black/70 backdrop-blur-sm"
     >
       <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--bg-panel)] px-3 py-2 sm:px-4">
         <span className="min-w-0 truncate text-[13px] font-medium text-[var(--text)]">

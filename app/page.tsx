@@ -94,6 +94,8 @@ import {
 
 import MenuButton from "@/components/ui/MenuButton";
 
+import { usePresence } from "@/lib/ui/usePresence";
+
 import type {
   Channel,
   Member,
@@ -375,6 +377,9 @@ export default function Home() {
   // conversation instead, opened from the menu
   // button and closed by choosing anything in it.
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Kept on screen for its slide out.
+  const drawer = usePresence(drawerOpen, 350);
 
   useEffect(() => {
     if (!drawerOpen) {
@@ -1883,9 +1888,9 @@ export default function Home() {
 
       {/* Phones: a drawer over everything. */}
 
-      {drawerOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
-          <div className="h-full w-[min(300px,85vw)] shadow-2xl shadow-black/60">
+      {drawer.mounted && (
+        <div className={`fixed inset-0 z-40 flex md:hidden${drawer.closing ? " pointer-events-none" : ""}`}>
+          <div className={`t-drawer-left${drawer.closing ? " is-closing" : ""} relative z-10 h-full w-[min(300px,85vw)] shadow-2xl shadow-black/60`}>
             {sidebarFor(true)}
           </div>
 
@@ -1893,7 +1898,7 @@ export default function Home() {
             type="button"
             aria-label="Close menu"
             onClick={() => setDrawerOpen(false)}
-            className="flex-1 bg-black/50"
+            className={`t-overlay${drawer.closing ? " is-closing" : ""} flex-1 bg-black/50`}
           />
         </div>
       )}

@@ -9,6 +9,8 @@ import {
 
 import { Close } from "@/components/ui/Icons";
 
+import { usePresence } from "@/lib/ui/usePresence";
+
 
 // ==========================================
 // DIALOG
@@ -136,13 +138,17 @@ export function Dialog({
     };
   }, [open, onClose]);
 
-  if (!open) {
+  const { mounted, closing } = usePresence(open);
+
+  if (!mounted) {
     return null;
   }
 
+  const leaving = closing ? " is-closing pointer-events-none" : "";
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6${leaving}`}
       role="presentation"
       onMouseDown={(event) => {
         // Only the backdrop. Dragging a selection
@@ -153,14 +159,14 @@ export function Dialog({
         }
       }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      <div className={`t-overlay absolute inset-0 bg-black/60 backdrop-blur-[2px]${leaving}`} />
 
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] w-full overflow-y-auto ${
+        className={`t-modal${leaving} relative max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] w-full overflow-y-auto ${
           wide ? "max-w-[580px]" : "max-w-[400px]"
         } rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] shadow-2xl`}
       >

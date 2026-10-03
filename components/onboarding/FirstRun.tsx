@@ -303,7 +303,7 @@ export default function FirstRun({
 
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[var(--bg)]">
+    <div className="t-overlay fixed inset-0 z-50 overflow-y-auto bg-[var(--bg)]">
       <div className="mx-auto flex min-h-full max-w-[600px] flex-col px-6 py-10">
 
         {/* ---------------------------- */}

@@ -232,7 +232,7 @@ export default function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 z-40 mt-2 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] shadow-xl shadow-black/40">
+        <div data-origin="top-right" className="t-dropdown absolute top-full right-0 z-40 mt-2 w-[min(20rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] shadow-xl shadow-black/40">
           <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
             <span className="text-[11px] tracking-[0.12em] text-[var(--text-faint)] uppercase">
               Notifications

@@ -445,7 +445,7 @@ export default function Composer({
         {/* ------------------------------ */}
 
         {suggestions.length > 0 && (
-          <div className="absolute bottom-full left-0 z-30 mb-2 w-64 overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] py-1 shadow-xl shadow-black/40">
+          <div data-origin="bottom-left" className="t-dropdown absolute bottom-full left-0 z-30 mb-2 w-64 overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] py-1 shadow-xl shadow-black/40">
             {suggestions.map((member, index) => (
               <button
                 key={member.id}
@@ -600,7 +600,13 @@ export default function Composer({
             <>
               <span className="h-1 w-1 animate-pulse rounded-full bg-[var(--accent)]" />
 
-              <span className="text-[11px] text-[var(--text-muted)]">
+              {/* A new status swaps in; while it holds, a
+                  highlight sweeps across it. */}
+              <span
+                key={status || "Working"}
+                data-text={status || "Working"}
+                className="t-shimmer t-swap text-[11px] text-[var(--text-muted)]"
+              >
                 {status || "Working"}
               </span>
             </>

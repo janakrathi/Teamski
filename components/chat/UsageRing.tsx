@@ -238,7 +238,7 @@ export default function UsageRing({
       </button>
 
       {open && (
-        <div className="absolute right-0 bottom-8 z-30 w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] py-2 shadow-2xl shadow-black/50">
+        <div data-origin="bottom-right" className="t-dropdown absolute right-0 bottom-8 z-30 w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] py-2 shadow-2xl shadow-black/50">
 
           {/* CONTEXT WINDOW */}
 

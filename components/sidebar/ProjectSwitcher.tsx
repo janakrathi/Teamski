@@ -126,7 +126,7 @@ export default function ProjectSwitcher({
       {/* ---------------------------------- */}
 
       {open && (
-        <div className="absolute inset-x-2 top-full z-30 mt-1 overflow-hidden rounded-lg border border-[var(--border-strong)] bg-[var(--bg-raised)] py-1 shadow-xl shadow-black/40">
+        <div data-origin="top-center" className="t-dropdown absolute inset-x-2 top-full z-30 mt-1 overflow-hidden rounded-lg border border-[var(--border-strong)] bg-[var(--bg-raised)] py-1 shadow-xl shadow-black/40">
           <p className="px-3 py-1.5 text-[10px] tracking-[0.12em] text-[var(--text-faint)] uppercase">
             Projects
           </p>
