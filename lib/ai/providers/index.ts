@@ -38,6 +38,13 @@ import {
 
 import { PRESETS, presetById } from "./compatible.ts";
 
+import {
+  CHATGPT_SERVICE,
+  chatgptPlanAvailable,
+  freshPlanToken,
+  stream as chatgptStream,
+} from "./chatgpt.ts";
+
 import { projectOverspent } from "../spend.ts";
 
 import {
@@ -220,7 +227,9 @@ export async function modelsFor(
   // just is not offered.
 
   const mine = (await credentialsFor(db, userId)).filter(
-    (entry) => ownKeyAllowed(plan, entry.service)
+    (entry) =>
+      ownKeyAllowed(plan, entry.service) &&
+      (entry.service !== CHATGPT_SERVICE || chatgptPlanAvailable())
   );
 
   const has = (service: string) =>
@@ -517,7 +526,11 @@ async function rotationModels(
   const firstModel = new Map<string, string>();
 
   for (const credential of await credentialsFor(db, userId)) {
-    if (!ownKeyAllowed(plan, credential.service) || firstModel.has(credential.service)) {
+    if (
+      !ownKeyAllowed(plan, credential.service) ||
+      firstModel.has(credential.service) ||
+      (credential.service === CHATGPT_SERVICE && !chatgptPlanAvailable())
+    ) {
       continue;
     }
 
@@ -948,6 +961,42 @@ export async function streamFor(
 
     return null;
   };
+
+  // A ChatGPT plan: signed in, not a key. The token is
+  // refreshed when it is close to expiring. Its weekly
+  // cap covers every model alike, so a limit goes
+  // straight to the built-in model (or the next key in
+  // a rotation) rather than another ChatGPT model.
+
+  if (service === CHATGPT_SERVICE) {
+    const token =
+      mine && db && userId && chatgptPlanAvailable()
+        ? await freshPlanToken(db, userId)
+        : null;
+
+    if (!token) {
+      if (options.noFallback) {
+        throw new KeyUnavailable("ChatGPT plan not connected");
+      }
+
+      return limited();
+    }
+
+    const checked = await unlessLimited(
+      chatgptStream({ ...call, credential: { key: token } })
+    );
+
+    if (!checked) {
+      return limited();
+    }
+
+    return {
+      stream: checked,
+      model: options.model,
+      fellBack: false,
+      paidBy,
+    };
+  }
 
   if (service === "anthropic") {
     const checked = await unlessLimited(anthropicProvider.stream(call));

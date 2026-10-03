@@ -158,6 +158,11 @@ export function canReadImages(qualifiedModel: string) {
     return model === AUTO_MODEL || /^(gpt-4o|gpt-4\.1|gpt-5|o3|o4)/.test(model);
   }
 
+  // A ChatGPT plan's models are GPT-5 and later.
+  if (service === "chatgpt") {
+    return model.startsWith("gpt-");
+  }
+
   if (service === "google") {
     return model.startsWith("gemini");
   }

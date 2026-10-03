@@ -123,6 +123,20 @@ Without it, memory falls back to recency.
 Separately, users can always add their own Claude,
 ChatGPT, Gemini, Grok or other keys in Settings.
 
+**A ChatGPT Plus or Pro plan, no API key.** On a
+self-hosted copy, each person can click *Continue
+with ChatGPT* in Settings → Models and let Teamski
+use part of their plan's weekly allowance through
+OpenAI's [Sign in with ChatGPT](https://developers.openai.com/siwc/token-sharing-open-source).
+They choose how much at OpenAI and can change it at
+chatgpt.com/settings/usage. Each person connects
+their own plan for their own messages; it is never
+shared with a project. With Teamski on the same
+machine the sign-in finishes by itself; on a server
+the browser ends on a `http://127.0.0.1` page that
+won't load, and its address is pasted back into
+Teamski. Nothing to configure.
+
 ## 6. Run
 
 ### With Docker

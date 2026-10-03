@@ -15,6 +15,8 @@ import { OPENAI_MODELS } from "@/lib/ai/providers/openai";
 
 import { credentialsFor, usageToday } from "@/lib/ai/providers/keys";
 
+import { CHATGPT_SERVICE, chatgptPlanAvailable } from "@/lib/ai/providers/chatgpt";
+
 import { adminClient } from "@/lib/supabase/admin";
 
 import {
@@ -352,6 +354,13 @@ export async function GET(request: Request) {
     connected,
     usage,
 
+    // A ChatGPT Plus or Pro plan, connected by signing
+    // in rather than with a key (app/api/models/chatgpt).
+    chatgpt: {
+      available: chatgptPlanAvailable(),
+      connected: connected.some((entry) => entry.service === CHATGPT_SERVICE),
+    },
+
     services: [
       // Keep FIRST in the order it is written,
       // then everything else as the presets have
@@ -436,6 +445,15 @@ export async function POST(request: Request) {
   if (!service) {
     return Response.json(
       { error: "Say which service." },
+      { status: 400 }
+    );
+  }
+
+  // A ChatGPT plan is connected by signing in, never
+  // with a key typed here.
+  if (service === CHATGPT_SERVICE) {
+    return Response.json(
+      { error: "Connect a ChatGPT plan with Continue with ChatGPT." },
       { status: 400 }
     );
   }

@@ -133,6 +133,17 @@ export default function ModelKeys({
   // what answers now.
   const [switched, setSwitched] = useState("");
 
+  // A ChatGPT Plus or Pro plan, connected by signing in
+  // (self-hosted Teamski). "waiting": the sign-in tab is
+  // open and comes back here by itself; "paste": Teamski
+  // isn't on this machine, so the address the sign-in
+  // ends on is pasted back.
+  const [chatgpt, setChatgpt] = useState({ available: false, connected: false });
+
+  const [chatgptStep, setChatgptStep] = useState<"waiting" | "paste" | null>(null);
+
+  const [pasted, setPasted] = useState("");
+
 
   // `force` re-reads past the cache, after a change.
   const load = useCallback(
@@ -147,6 +158,7 @@ export default function ModelKeys({
           allowed?: boolean;
           requiredPlan?: string;
           freeServices?: string[];
+          chatgpt?: { available: boolean; connected: boolean };
         };
 
         setServices(list.services ?? []);
@@ -160,6 +172,8 @@ export default function ModelKeys({
         setRequiredPlan(list.requiredPlan ?? "Pro");
 
         setFreeServices(list.freeServices ?? []);
+
+        setChatgpt(list.chatgpt ?? { available: false, connected: false });
       } catch {
         setError("Could not load model services.");
       }
@@ -278,6 +292,103 @@ export default function ModelKeys({
   }
 
 
+  async function connectChatgpt() {
+    setBusy(true);
+    setError("");
+
+    // Opened before the request so a popup blocker
+    // sees it come from the click.
+    const tab = window.open("about:blank", "_blank");
+
+    try {
+      const response = await fetch("/api/models/chatgpt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start", origin: window.location.origin }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Could not start the ChatGPT sign-in.");
+      }
+
+      if (tab) {
+        tab.location.href = data.url;
+      } else {
+        window.location.href = data.url;
+      }
+
+      setChatgptStep(data.paste ? "paste" : "waiting");
+    } catch (cause) {
+      tab?.close();
+
+      setError(cause instanceof Error ? cause.message : "Could not start the ChatGPT sign-in.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function finishChatgpt() {
+    setBusy(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/models/chatgpt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "finish", url: pasted }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "Could not connect ChatGPT.");
+      }
+
+      setChatgptStep(null);
+      setPasted("");
+
+      setSwitched(
+        data.defaultModel
+          ? `ChatGPT connected. New messages are answered by ${data.defaultModel.split("/")[1]}.`
+          : "ChatGPT connected. Pick one of its models in the model picker."
+      );
+
+      await load(true);
+
+      onChanged?.({ defaultModel: data.defaultModel ?? null });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not connect ChatGPT.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Back from the sign-in tab: see whether it worked.
+  useEffect(() => {
+    if (chatgptStep !== "waiting") {
+      return;
+    }
+
+    const check = async () => {
+      await load(true);
+
+      onChanged?.();
+    };
+
+    window.addEventListener("focus", check);
+
+    return () => window.removeEventListener("focus", check);
+  }, [chatgptStep, load, onChanged]);
+
+  useEffect(() => {
+    if (chatgpt.connected && chatgptStep === "waiting") {
+      void Promise.resolve().then(() => setChatgptStep(null));
+    }
+  }, [chatgpt.connected, chatgptStep]);
+
+
   async function remove(service: string) {
     setBusy(true);
 
@@ -393,6 +504,99 @@ export default function ModelKeys({
         <p className="mb-2 rounded-lg border border-emerald-900/50 bg-emerald-950/20 px-3 py-2 text-[11.5px] text-emerald-300">
           {switched}
         </p>
+      )}
+
+      {chatgpt.available && (
+        <div className="mb-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="min-w-0 flex-1 truncate text-[12.5px] text-[var(--text)]">
+              ChatGPT Plus or Pro
+              <span className="ml-1.5 text-[10.5px] text-[var(--text-faint)]">
+                your plan, no API key
+              </span>
+            </span>
+
+            {chatgpt.connected ? (
+              <>
+                <span className="shrink-0 text-[10.5px] text-emerald-400">
+                  connected
+                </span>
+
+                <a
+                  href="https://chatgpt.com/settings/usage"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 rounded px-1.5 py-0.5 text-[10.5px] text-[var(--text-faint)] transition hover:text-[var(--text)]"
+                >
+                  Manage usage
+                </a>
+
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => remove("chatgpt")}
+                  className="shrink-0 rounded px-1.5 py-0.5 text-[10.5px] text-[var(--text-faint)] transition hover:text-red-300 disabled:opacity-40"
+                >
+                  Remove
+                </button>
+              </>
+            ) : chatgptStep ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setChatgptStep(null);
+                  setPasted("");
+                }}
+                className="shrink-0 rounded px-1.5 py-0.5 text-[10.5px] text-[var(--text-muted)] transition hover:text-[var(--text)]"
+              >
+                Cancel
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={connectChatgpt}
+                className="shrink-0 rounded border border-[var(--border)] px-2 py-0.5 text-[10.5px] text-[var(--text)] transition hover:border-[var(--border-strong)] disabled:opacity-40"
+              >
+                Continue with ChatGPT
+              </button>
+            )}
+          </div>
+
+          {chatgptStep === "waiting" && (
+            <p className="mt-2 border-t border-[var(--border)] pt-2 text-[11px] leading-relaxed text-[var(--text-faint)]">
+              Finish signing in on the ChatGPT tab and choose how much of your week Teamski may use. Then come back here.
+            </p>
+          )}
+
+          {chatgptStep === "paste" && (
+            <div className="mt-2 space-y-2 border-t border-[var(--border)] pt-2">
+              <p className="text-[11px] leading-relaxed text-[var(--text-faint)]">
+                Sign in on the ChatGPT tab and choose how much of your week Teamski may use. It then
+                opens a page that won&apos;t load (an address starting with http://127.0.0.1). Copy
+                that whole address and paste it here.
+              </p>
+
+              <div className="flex items-center gap-2">
+                <input
+                  value={pasted}
+                  onChange={(event) => setPasted(event.target.value)}
+                  placeholder="http://127.0.0.1:1455/auth/callback?code=..."
+                  className="min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1 text-[11.5px] text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
+                />
+
+                <button
+                  type="button"
+                  disabled={busy || !pasted.trim()}
+                  onClick={finishChatgpt}
+                  className="shrink-0 rounded border border-[var(--border)] px-2 py-1 text-[10.5px] text-[var(--text)] transition hover:border-[var(--border-strong)] disabled:opacity-40"
+                >
+                  Connect
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="space-y-1.5">

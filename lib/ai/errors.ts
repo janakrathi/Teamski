@@ -135,7 +135,8 @@ function isNetwork(error: unknown): boolean {
 export function friendlyModelError(error: unknown): string {
   if (
     error instanceof Error &&
-    error.name === "DailyLimitError"
+    (error.name === "DailyLimitError" ||
+      error.name === "ChatGPTPlanError")
   ) {
     // The daily-allowance error already carries a
     // sentence written for the person.

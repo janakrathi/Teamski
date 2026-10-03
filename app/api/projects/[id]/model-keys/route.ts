@@ -273,6 +273,15 @@ export async function POST(
     );
   }
 
+  // A ChatGPT plan belongs to one person and is never
+  // shared with a project.
+  if (service === "chatgpt") {
+    return Response.json(
+      { error: "A ChatGPT plan can only be connected by its owner, for themselves." },
+      { status: 400 }
+    );
+  }
+
   const preset = presetById(service);
 
   const typed = (body.models ?? "")
