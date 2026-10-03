@@ -240,6 +240,13 @@ export const PRESETS: Preset[] = [
     note: "One key for hundreds of models, including Nemotron. Models ending in :free cost nothing but are rate limited, and some free providers may log prompts.",
 
     suggested: [
+      // OpenRouter's own router: it picks a model per
+      // request, billed at that model's price with no
+      // extra fee.
+      {
+        id: "openrouter/auto",
+        label: "Auto (OpenRouter picks)",
+      },
       {
         id: "nvidia/nemotron-3.5-lightning",
         label: "Nemotron 3.5 Lightning",

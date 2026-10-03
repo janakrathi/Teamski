@@ -1,3 +1,5 @@
+import { AUTO_INFO, autoAvailable, resolveAuto } from "../router.ts";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
@@ -222,9 +224,11 @@ export async function modelsFor(
       label: credential.label,
       local: false,
 
-      models: (credential.models.length > 0
-        ? credential.models
-        : defaultModelsFor(credential.service)
+      models: withAuto(
+        credential.service,
+        credential.models.length > 0
+          ? credential.models
+          : defaultModelsFor(credential.service)
       ).map((model) => ({
         ...model,
         id: qualify(credential.service, model.id),
@@ -255,10 +259,12 @@ export async function modelsFor(
         continue;
       }
 
-      const models =
+      const models = withAuto(
+        row.service,
         row.models && row.models.length > 0
           ? row.models
-          : defaultModelsFor(row.service);
+          : defaultModelsFor(row.service)
+      );
 
       groups.push({
         service: row.service,
@@ -364,6 +370,16 @@ export async function modelsFor(
 }
 
 
+// The model list for a key, with "Auto" first where the
+// router knows the provider's small and strong models.
+
+function withAuto(service: string, models: ModelInfo[]): ModelInfo[] {
+  return autoAvailable(service) && !models.some((model) => model.id === AUTO_INFO.id)
+    ? [AUTO_INFO, ...models]
+    : models;
+}
+
+
 function defaultModelsFor(
   service: string
 ): ModelInfo[] {
@@ -448,6 +464,15 @@ export async function streamFor(
     admin?: SupabaseClient | null;
   }
 ): Promise<Answered> {
+  // "Auto" becomes a real model here, once per turn.
+  // Steps after the first are passed what answered, so
+  // they stay on it. See lib/ai/router.ts.
+  const routed = resolveAuto(options.model, options);
+
+  if (routed !== options.model) {
+    options = { ...options, model: routed };
+  }
+
   const { service, model } = unqualify(
     options.model
   );
