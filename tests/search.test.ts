@@ -200,3 +200,35 @@ test("a bot-check page counts as a refusal, not as no results", () => {
   // An ordinary empty page is just empty.
   assert.deepEqual(parseDuckDuckGoHtml("<html>No results.</html>"), []);
 });
+
+
+test("by default the free DuckDuckGo routes go first and paid sources only after", async () => {
+  const { __sources } = await import("../lib/ai/search.ts");
+
+  __reset();
+
+  // Every real source fails here, so the order they
+  // were tried in is the order of the failures.
+  const tried: string[] = [];
+  const realFetch = globalThis.fetch;
+
+  process.env.SERPER_API_KEY = "test";
+
+  globalThis.fetch = (async (url: string) => {
+    tried.push(String(url));
+
+    throw new Error("offline");
+  }) as typeof fetch;
+
+  try {
+    await search("order check");
+  } finally {
+    globalThis.fetch = realFetch;
+    delete process.env.SERPER_API_KEY;
+  }
+
+  assert.ok(__sources.duckduckgo);
+  assert.match(tried[0], /html\.duckduckgo\.com/);
+  assert.match(tried[1], /lite\.duckduckgo\.com/);
+  assert.match(tried[2], /serper\.dev/);
+});

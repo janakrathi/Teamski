@@ -6,16 +6,18 @@ import { htmlToText } from "./web.ts";
 // ==========================================
 //
 // Searching has to keep working for a team doing SEO
-// all day, so it is a chain rather than one source:
+// all day, so it is a chain rather than one source.
+// The free ones go first and the paid ones are only
+// spent when those fail:
 //
-//   1. Serper     - real Google results (SERPER_API_KEY)
-//   2. Brave      - its own index (BRAVE_API_KEY)
-//   3. Tavily     - built for AI agents (TAVILY_API_KEY)
-//   4. DuckDuckGo - no key, its HTML page
-//   5. DuckDuckGo - no key, its lite page
+//   1. DuckDuckGo - no key, its HTML page
+//   2. DuckDuckGo - no key, its lite page
+//   3. Serper     - real Google results (SERPER_API_KEY)
+//   4. Brave      - its own index (BRAVE_API_KEY)
+//   5. Tavily     - built for AI agents (TAVILY_API_KEY)
 //
-// Only the ones with a key are tried, in that order,
-// then the two that need none. A source that fails is
+// The paid ones are only tried when they have a key.
+// A source that fails is
 // rested for a while (longer when it says we are
 // sending too much) so every search does not pay for
 // waiting on it again. The same search in the next
@@ -227,9 +229,12 @@ const duckduckgoLite: Provider = {
 };
 
 
-// In order of preference. Tests swap the list.
+// In order of preference: free first. Tests swap the
+// list.
 
-let PROVIDERS: Provider[] = [serper, brave, tavily, duckduckgo, duckduckgoLite];
+const DEFAULT_ORDER: Provider[] = [duckduckgo, duckduckgoLite, serper, brave, tavily];
+
+let PROVIDERS: Provider[] = DEFAULT_ORDER;
 
 
 // ------------------------------------------
@@ -517,7 +522,7 @@ export function __setProviders(list: Provider[]) {
 }
 
 export function __reset() {
-  PROVIDERS = [serper, brave, tavily, duckduckgo, duckduckgoLite];
+  PROVIDERS = DEFAULT_ORDER;
 
   resting.clear();
 

@@ -199,7 +199,7 @@ Each one switches on when its variables in
 | Google's own sign-in button | `GOOGLE_SIGNIN_CLIENT_ID` | Defaults to `GOOGLE_CLIENT_ID`; list your site as an authorized JavaScript origin |
 | Email (invites, reminders, alerts) | `RESEND_API_KEY`, `EMAIL_FROM` | Verify your domain in Resend first. Without email, invite links are shown to copy instead. |
 | Image generation | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Cloudflare Workers AI |
-| Better web search | `SERPER_API_KEY`, `BRAVE_API_KEY`, `TAVILY_API_KEY` | Tried in that order, with DuckDuckGo (no key) as the fallback. A source that fails is rested for a few minutes, and repeat searches are remembered for half an hour. Serper gives real Google rankings, best for SEO |
+| Better web search | `SERPER_API_KEY`, `BRAVE_API_KEY`, `TAVILY_API_KEY` | DuckDuckGo (no key) is tried first; these are only used, in that order, when it fails. A source that fails is rested for a few minutes, and repeat searches are remembered for half an hour. Serper gives real Google rankings, best for SEO |
 | Payments | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Webhook: `<site>/api/webhooks/razorpay`. Without payments, set a project's plan by hand in the `project_subscriptions` table. |
 | Usage dashboard at `/admin` | `ADMIN_EMAILS` | Anyone else gets a 404 |
 | Error alerts by email | `ALERT_EMAILS` (or `ADMIN_EMAILS`) | `npm run alert:test` sends one |
