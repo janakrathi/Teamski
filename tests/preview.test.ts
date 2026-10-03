@@ -59,3 +59,15 @@ test("a huge file is cut to the preview limit", () => {
 
   assert.ok(doc.length < MAX_PREVIEW_BYTES + 1000);
 });
+
+
+test("the storage stand-in and error reporting load before the page's own scripts", () => {
+  const doc = previewDocument("<html><body><script>localStorage.getItem('t')</script></body></html>");
+
+  const helper = doc.indexOf("sessionStorage");
+
+  assert.ok(helper > 0);
+  assert.ok(helper < doc.indexOf("getItem('t')"));
+  assert.ok(doc.indexOf("Content-Security-Policy") < helper);
+  assert.match(doc, /teamskiPreview/);
+});

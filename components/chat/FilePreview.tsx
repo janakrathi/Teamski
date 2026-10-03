@@ -75,8 +75,14 @@ function PreviewWindow({
   onClose: () => void;
 }) {
   const [doc, setDoc] = useState<string | null>(null);
+  const [raw, setRaw] = useState("");
   const [error, setError] = useState("");
   const [phone, setPhone] = useState(false);
+  const [code, setCode] = useState(false);
+
+  // What the page itself reported: a script error, or
+  // that it ended up showing nothing.
+  const [problem, setProblem] = useState("");
 
   // Bumped by Reload, so the iframe is rebuilt even
   // when the page is unchanged.
@@ -87,7 +93,9 @@ function PreviewWindow({
   const apply = useCallback((outcome: Loaded) => {
     if ("doc" in outcome) {
       setError("");
+      setProblem("");
       setDoc(outcome.doc);
+      setRaw(outcome.raw);
       setVersion((current) => current + 1);
     } else {
       setError(outcome.error);
@@ -111,6 +119,28 @@ function PreviewWindow({
   const reload = () => {
     void fetchPreview(url).then(apply);
   };
+
+  // Messages from the preview. Only ever from our own
+  // iframe, and only these two shapes are read.
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { teamskiPreview?: boolean; error?: unknown; empty?: unknown };
+
+      if (!data || data.teamskiPreview !== true || event.origin !== "null") {
+        return;
+      }
+
+      if (typeof data.error === "string") {
+        setProblem(`The page's script stopped with an error: ${data.error.slice(0, 160)}`);
+      } else if (data.empty === true) {
+        setProblem((current) => current || "The page loaded but shows nothing. Check the Code view, or ask the agent to rebuild it.");
+      }
+    };
+
+    window.addEventListener("message", onMessage);
+
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   // Escape closes it, and the chat behind does not
   // scroll while it is open.
@@ -154,18 +184,32 @@ function PreviewWindow({
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-[var(--border)] p-0.5">
           <button
             type="button"
-            onClick={() => setPhone(false)}
-            className={`${toggle} ${!phone ? "bg-[var(--bg-raised)] text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
+            onClick={() => {
+              setPhone(false);
+              setCode(false);
+            }}
+            className={`${toggle} ${!phone && !code ? "bg-[var(--bg-raised)] text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
           >
             Desktop
           </button>
 
           <button
             type="button"
-            onClick={() => setPhone(true)}
-            className={`${toggle} ${phone ? "bg-[var(--bg-raised)] text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
+            onClick={() => {
+              setPhone(true);
+              setCode(false);
+            }}
+            className={`${toggle} ${phone && !code ? "bg-[var(--bg-raised)] text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
           >
             Phone
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCode(true)}
+            className={`${toggle} ${code ? "bg-[var(--bg-raised)] text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
+          >
+            Code
           </button>
         </div>
 
@@ -194,8 +238,21 @@ function PreviewWindow({
         </button>
       </div>
 
+      {problem && !code && (
+        <div className="border-b border-amber-900/40 bg-amber-950/40 px-4 py-2 text-[12.5px] text-amber-200">
+          {problem}{" "}
+          <button type="button" onClick={() => setCode(true)} className="underline underline-offset-2">
+            View code
+          </button>
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 justify-center overflow-auto p-0 sm:p-4">
-        {error ? (
+        {code && doc !== null ? (
+          <pre className="h-full w-full overflow-auto rounded-none bg-[var(--bg-panel)] p-4 text-[12px] leading-[1.55] whitespace-pre-wrap text-[var(--text-muted)] sm:rounded-lg">
+            {raw}
+          </pre>
+        ) : error ? (
           <p className="self-center rounded-lg border border-[var(--border)] bg-[var(--bg-panel)] px-4 py-3 text-[13px] text-[var(--text-muted)]">
             {error}
           </p>
@@ -222,7 +279,7 @@ function PreviewWindow({
 }
 
 
-type Loaded = { doc: string } | { error: string };
+type Loaded = { doc: string; raw: string } | { error: string };
 
 // The file, made safe to show, or why it could not be.
 
@@ -255,7 +312,7 @@ async function fetchPreview(url: string): Promise<Loaded> {
       return { error: "This file doesn't contain a web page. Ask the agent to write it as HTML." };
     }
 
-    return { doc: previewDocument(text) };
+    return { doc: previewDocument(text), raw: text };
   } catch {
     return { error: "The page couldn't be loaded." };
   }

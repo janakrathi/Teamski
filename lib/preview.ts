@@ -48,10 +48,33 @@ export const PREVIEW_CSP = [
   "base-uri 'none'",
 ].join("; ");
 
+// Runs before the page's own scripts:
+//
+// - Fenced in, the page has no localStorage or
+//   sessionStorage (touching them throws), and pages
+//   that save a theme or "seen the banner" flag on load
+//   then crash before they draw anything. A stand-in
+//   that keeps values in memory lets them carry on.
+//
+// - Script errors, and a page that ends up showing
+//   nothing, are reported to the preview window, so it
+//   can say what went wrong instead of staying white.
+//   postMessage is the only thing the page can send,
+//   and only to the window that opened it.
+
+const HELPER = `<script>(function(){
+function mem(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}
+["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(e2){}}});
+function tell(m){try{parent.postMessage(Object.assign({teamskiPreview:true},m),"*")}catch(e){}}
+addEventListener("error",function(e){tell({error:String(e.message||"Script error")})});
+addEventListener("load",function(){setTimeout(function(){var b=document.body;var empty=!b||(!b.innerText.trim()&&!b.querySelector("img,svg,canvas,video,picture"));tell({empty:empty})},1200)});
+})();<\/script>`;
+
 const HEAD_LINES =
   `<meta charset="utf-8">` +
   `<meta http-equiv="Content-Security-Policy" content="${PREVIEW_CSP}">` +
-  `<meta name="referrer" content="no-referrer">`;
+  `<meta name="referrer" content="no-referrer">` +
+  HELPER;
 
 
 // The page with the policy put before everything else.
