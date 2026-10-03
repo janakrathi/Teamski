@@ -45,8 +45,8 @@ type Pool = {
 };
 
 export default function Aurora({
-  // How strong the glow is at the top of the page, and
-  // what it fades to a screen or so further down -
+  // How strong the glow is at the top (and the bottom)
+  // of the page, and what it fades to in between -
   // black takes over as you read.
   top = 0.2,
   rest = 0.125,
@@ -117,10 +117,14 @@ export default function Aurora({
 
       const progress = Math.min(1, window.scrollY / scrollable);
 
-      // Strong at the top, very light once the opening is
-      // scrolled past. Opacity is a compositor change, so
+      // Strong at the top and again at the bottom, very
+      // light in between. Opacity is a compositor change, so
       // this costs nothing to update every frame.
-      const fade = Math.min(1, window.scrollY / (height * 1.1));
+      const fade = Math.min(
+        1,
+        window.scrollY / (height * 1.1),
+        (scrollable - window.scrollY) / (height * 1.1)
+      );
 
       layer.style.opacity = (top + (rest - top) * fade).toFixed(3);
 

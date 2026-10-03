@@ -62,8 +62,8 @@ export default function SignalField({
   className = "",
   // How strong the lines are overall, 1 = as designed.
   intensity = 1,
-  // For "page": how strong the lines at the top of the
-  // page are, 1 = the hero's full strength.
+  // For "page": how strong the lines at the top and the
+  // bottom of the page are, 1 = the hero's full strength.
   topStrength = 1,
 }: {
   calm?: "left" | "center" | "soft" | "page";
@@ -158,9 +158,11 @@ export default function SignalField({
           const dx = (x - width / 2) / (width / 2);
           const dy = (y - height / 2) / (height / 2);
 
-          const closing = phone
-            ? 0.3
-            : Math.max(0, Math.min(1, Math.hypot(dx, dy * 1.4) - 0.25));
+          // The same strength as the top of the page.
+          const closing =
+            (phone
+              ? 0.3
+              : Math.max(0, Math.min(1, Math.hypot(dx, dy * 1.4) - 0.25))) * topStrength;
 
           value += (closing - middle) * bottomWeight;
         }
