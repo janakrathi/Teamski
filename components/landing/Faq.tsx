@@ -22,7 +22,12 @@ export default function Faq({ items }: { items: { q: string; a: string }[] }) {
         const expanded = open === index;
 
         return (
-          <div key={item.q} className="t-acc" data-open={expanded}>
+          <div
+            key={item.q}
+            style={{ "--i": Math.min(index, 8) } as React.CSSProperties}
+            className="t-acc t-reveal-item"
+            data-open={expanded}
+          >
             <h3>
               <button
                 type="button"

@@ -2,6 +2,8 @@ import Aurora from "@/components/landing/Aurora";
 
 import SignalField from "@/components/landing/SignalField";
 
+import Ribbon from "@/components/landing/Ribbon";
+
 
 // ==========================================
 // THE PUBLIC SITE'S BACKDROP
@@ -23,6 +25,9 @@ export default function Backdrop() {
   return (
     <>
       <Aurora />
+
+      {/* A silky band of light flowing through the page. */}
+      <Ribbon />
 
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
         {/* The lines at the top of the page at 80% of

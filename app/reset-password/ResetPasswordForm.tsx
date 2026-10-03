@@ -10,6 +10,8 @@ import Logo from "@/components/ui/Logo";
 
 import Aurora from "@/components/landing/Aurora";
 
+import Ribbon from "@/components/landing/Ribbon";
+
 import SignalField from "@/components/landing/SignalField";
 
 import { SITE_THEME } from "@/components/landing/Site";
@@ -80,6 +82,8 @@ export default function ResetPasswordForm() {
       {/* The same light purple glow and signal lines as
           sign-in, quiet in the middle where the form is. */}
       <Aurora top={0.15} rest={0.15} />
+
+      <Ribbon strength={0.6} />
 
       <SignalField calm="center" intensity={0.5} />
 

@@ -8,6 +8,8 @@ import SignalField from "@/components/landing/SignalField";
 
 import Aurora from "@/components/landing/Aurora";
 
+import Ribbon from "@/components/landing/Ribbon";
+
 import { SITE_THEME } from "@/components/landing/Site";
 
 import GoogleSignIn from "@/components/auth/GoogleSignIn";
@@ -545,6 +547,8 @@ function Form({
       {/* A very light purple glow on black, and the site's
           signal field, quiet in the middle where the form is. */}
       <Aurora top={0.15} rest={0.15} />
+
+      <Ribbon strength={0.6} />
 
       <SignalField calm="center" intensity={0.5} />
 

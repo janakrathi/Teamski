@@ -104,7 +104,7 @@ const JUDGING = [
 
 export default function HackathonsPage() {
   return (
-    <main style={SITE_THEME} className="relative isolate min-h-screen shrink-0 text-[#ededed]">
+    <main style={SITE_THEME} className="relative isolate min-h-screen shrink-0 overflow-x-clip text-[#ededed]">
       {/* Black, a muted drifting colour and the signal
           lines, behind the whole page. */}
       <Backdrop />
@@ -150,7 +150,7 @@ export default function HackathonsPage() {
         </div>
       </section>
 
-      <section className="border-t border-white/10">
+      <section className="lp-section">
         <Reveal className={`${CONTAINER} grid md:grid-cols-3`}>
           {[
             ["Free for every team", "Unlimited teammates, no card."],
@@ -163,7 +163,7 @@ export default function HackathonsPage() {
             <div
               key={title}
               style={at(index)}
-              className={`t-reveal-item border-b border-white/10 py-8 md:border-b-0 ${
+              className={`t-reveal-card border-b border-white/10 py-8 md:border-b-0 ${
                 index < 2 ? "md:border-r md:pr-8" : ""
               } ${index > 0 ? "md:pl-8" : ""}`}
             >
@@ -182,7 +182,9 @@ export default function HackathonsPage() {
       {/* SET UP                         */}
       {/* ------------------------------ */}
 
-      <section id="setup" className="scroll-mt-6 border-t border-white/10">
+      <section id="setup" className="scroll-mt-6 lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "20%" }} />
+
         <div className={`${CONTAINER} py-20 sm:py-28`}>
           <Reveal>
             <h2 className={`t-reveal-item ${H2}`}>
@@ -193,7 +195,7 @@ export default function HackathonsPage() {
 
           <Reveal clear className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
             {SETUP.map((step, index) => (
-              <div key={step.title} style={at(index)} className="t-reveal-item bg-black p-6">
+              <div key={step.title} style={at(index)} className="t-reveal-card lp-card bg-black p-6">
                 <span className="text-[34px] leading-none font-light tracking-[-0.03em] text-white/25 tabular-nums">
                   0{index + 1}
                 </span>
@@ -214,7 +216,7 @@ export default function HackathonsPage() {
       {/* THE CHANNELS                   */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-white/10">
+      <section className="lp-section">
         <div className={`${CONTAINER} py-20 sm:py-28`}>
           <Reveal className="grid gap-5">
             <h2 className={`t-reveal-item ${H2}`}>
@@ -260,7 +262,7 @@ export default function HackathonsPage() {
       {/* DURING AND JUDGING             */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-white/10">
+      <section className="lp-section">
         <div className={`${CONTAINER} grid md:grid-cols-2`}>
           <Reveal className="border-b border-white/10 py-20 md:border-r md:border-b-0 md:pr-10 sm:py-28">
             <h2 className={`t-reveal-item ${H2}`}>
@@ -307,7 +309,7 @@ export default function HackathonsPage() {
               ))}
             </ul>
 
-            <div data-signal-clear style={at(JUDGING.length + 1)} className="t-reveal-item mt-10 rounded-2xl border border-white/10 bg-[#050505] px-5 py-4">
+            <div data-signal-clear style={at(JUDGING.length + 1)} className="t-reveal-card lp-card mt-10 rounded-2xl border border-white/10 bg-[#050505] px-5 py-4">
               <p className="text-[14px] font-[450]">Play fair</p>
 
               <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">
@@ -325,7 +327,7 @@ export default function HackathonsPage() {
       {/* START, AND ORGANISERS          */}
       {/* ------------------------------ */}
 
-      <section className="relative isolate overflow-hidden border-t border-white/10">
+      <section className="relative isolate overflow-hidden lp-section">
 
         <Reveal className={`${CONTAINER} relative flex min-h-[460px] flex-col items-center justify-center py-24 text-center`}>
           <h2 className="t-reveal-item text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[56px]">
@@ -343,7 +345,7 @@ export default function HackathonsPage() {
             </Link>
           </div>
 
-          <div style={at(3)} data-signal-clear className="t-reveal-item mt-12 max-w-[440px] rounded-2xl border border-white/10 bg-black/85 p-5 text-left">
+          <div style={at(3)} data-signal-clear className="t-reveal-card lp-card mt-12 max-w-[440px] rounded-2xl border border-white/10 bg-black/85 p-5 text-left">
             <p className="text-[14px] font-[450]">Running a hackathon?</p>
 
             <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">

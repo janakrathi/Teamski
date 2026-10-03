@@ -117,17 +117,20 @@ export default function PlanCards() {
 
   return (
     <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {OFFERS.map((offer) => {
+      {OFFERS.map((offer, index) => {
         const highlighted = offer.plan === "team";
         const price = planPrice(offer.plan, currency);
 
         return (
           <div
             key={offer.plan}
-            className={`flex flex-col rounded-xl border p-6 ${
+            // Opens with the others on the public site; lifts
+            // and glows on hover (app/globals.css).
+            style={{ "--i": index } as React.CSSProperties}
+            className={`t-reveal-card lp-card flex flex-col rounded-xl border p-6 ${
               highlighted
                 ? "border-[var(--text-muted)] bg-[var(--bg-raised)]"
-                : "border-[var(--border)]"
+                : "border-[var(--border)] bg-[var(--bg-panel)]"
             }`}
           >
             <h3 className="text-[16px] font-semibold">

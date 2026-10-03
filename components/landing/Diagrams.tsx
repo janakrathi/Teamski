@@ -10,6 +10,9 @@
 // screen readers, since the text beside each says it.
 //
 
+// Order in a demo's play-in (app/globals.css, .t-seq).
+const seq = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
 const LINE = "rgba(255,255,255,0.16)";
 const FLOW = "rgba(255,255,255,0.55)";
 
@@ -19,15 +22,17 @@ function Node({
   width,
   label,
   strong = false,
+  order,
 }: {
   x: number;
   y: number;
   width: number;
   label: string;
   strong?: boolean;
+  order?: number;
 }) {
   return (
-    <g>
+    <g className={order === undefined ? undefined : "t-seq"} style={order === undefined ? undefined : seq(order)}>
       <rect
         x={x - width / 2}
         y={y - 13}
@@ -76,10 +81,10 @@ export function ChannelTree() {
         <Wire key={channel.x} d={`M180 38 V72 H${channel.x} V97`} />
       ))}
 
-      <Node x={180} y={25} width={124} label="Website launch" strong />
+      <Node x={180} y={25} width={124} label="Website launch" strong order={0} />
 
-      {channels.map((channel) => (
-        <g key={channel.name}>
+      {channels.map((channel, index) => (
+        <g key={channel.name} className="t-seq" style={seq(index + 1)}>
           <Node x={channel.x} y={110} width={96} label={channel.name} />
 
           <circle cx={channel.x - 30} cy={146} r={2.5} fill="#c96442" className="lp-blink" />
@@ -134,7 +139,7 @@ export function TaskLoop() {
         const y = cy + Math.sin(radians) * r;
 
         return (
-          <g key={stop.label}>
+          <g key={stop.label} className="t-seq" style={seq(stops.indexOf(stop))}>
             <circle cx={x} cy={y} r={4} fill="#0a0a0a" stroke="rgba(255,255,255,0.45)" />
 
             <text x={x + stop.dx} y={y + stop.dy} textAnchor={stop.anchor} fontSize={10} fill="#a3a3a3">
@@ -168,7 +173,7 @@ export function ApprovalLog() {
 
   return (
     <div aria-hidden="true" className="w-full max-w-[330px] overflow-hidden rounded-lg border border-white/10 bg-[#0a0a0a] text-[10.5px]">
-      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-white/50">
+      <div className="t-seq flex items-center gap-2 border-b border-white/10 px-3 py-2 text-white/50" style={seq(0)}>
         <span className="text-white/80"># planning</span>
         <span>activity</span>
         <span className="ml-auto flex items-center gap-1.5 text-[#c96442]">
@@ -178,18 +183,18 @@ export function ApprovalLog() {
       </div>
 
       <div className="divide-y divide-white/5 font-mono">
-        {rows.map((row) => (
-          <div key={row.what} className="flex items-center gap-3 px-3 py-1.5">
+        {rows.map((row, index) => (
+          <div key={row.what} className="t-seq flex items-center gap-3 px-3 py-1.5" style={seq(index + 1)}>
             <span className="text-white/30">{row.time}</span>
             <span className="min-w-0 flex-1 truncate text-white/70">{row.what}</span>
             <span className="text-white/35">✓</span>
           </div>
         ))}
 
-        <div className="flex items-center gap-3 bg-white/[0.03] px-3 py-2">
+        <div className="t-seq flex items-center gap-3 bg-white/[0.03] px-3 py-2" style={seq(rows.length + 1)}>
           <span className="text-white/30">09:13</span>
           <span className="min-w-0 flex-1 truncate text-white/90">Linear: create 6 issues</span>
-          <span className="rounded bg-[#ededed] px-1.5 py-0.5 font-sans text-[9.5px] font-medium text-black">
+          <span className="lp-pulse rounded bg-[#ededed] px-1.5 py-0.5 font-sans text-[9.5px] font-medium text-black">
             Approve
           </span>
         </div>
@@ -215,10 +220,10 @@ export function ModelRouter() {
         <Wire key={model.x} d={`M180 51 V82 H${model.x} V113`} />
       ))}
 
-      <Node x={180} y={38} width={132} label="Each channel picks" strong />
+      <Node x={180} y={38} width={132} label="Each channel picks" strong order={0} />
 
-      {models.map((model) => (
-        <g key={model.name}>
+      {models.map((model, index) => (
+        <g key={model.name} className="t-seq" style={seq(index + 1)}>
           <Node x={model.x} y={126} width={74} label={model.name} />
 
           <text x={model.x} y={156} textAnchor="middle" fontSize={9} fill="#6f6f6f">

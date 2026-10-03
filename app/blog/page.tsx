@@ -39,7 +39,7 @@ export default function BlogIndex() {
   const posts = allPosts();
 
   return (
-    <main style={SITE_THEME} className="relative isolate min-h-dvh shrink-0 text-[#ededed]">
+    <main style={SITE_THEME} className="relative isolate min-h-dvh shrink-0 overflow-x-clip text-[#ededed]">
       {/* Black, a muted drifting colour and the signal
           lines, behind the whole page. */}
       <Backdrop />
@@ -79,7 +79,9 @@ export default function BlogIndex() {
       {/* POSTS                          */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-white/10">
+      <section className="lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "8%" }} />
+
         <div className={`${CONTAINER} pb-20 sm:pb-28`}>
           {posts.map((post) => (
             <Reveal key={post.slug} className="border-b border-white/10">

@@ -202,7 +202,7 @@ export default function Welcome() {
   return (
     <main
       style={SITE_THEME}
-      className="relative isolate min-h-screen shrink-0 text-[#ededed]"
+      className="relative isolate min-h-screen shrink-0 overflow-x-clip text-[#ededed]"
     >
       {/* Black, a muted drifting colour and the signal
           lines, behind the whole page. */}
@@ -286,7 +286,9 @@ export default function Welcome() {
       {/* WHAT IT IS, AND A LOOK         */}
       {/* ------------------------------ */}
 
-      <section className="overflow-hidden border-t border-white/10">
+      <section className="overflow-hidden lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "30%" }} />
+
         <Reveal className={`${CONTAINER} grid gap-5 py-20 sm:py-28`}>
           <h2 className={`t-reveal-item ${H2}`}>
             Agents that sit in the room with your team,{" "}
@@ -319,7 +321,7 @@ export default function Welcome() {
         </Reveal>
 
         <Reveal className={`${CONTAINER} pb-20 sm:pb-28`}>
-          <div data-signal-clear className="t-reveal-item relative mx-auto max-w-[760px]">
+          <div data-signal-clear className="t-reveal-card relative mx-auto max-w-[760px]">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -inset-x-16 -inset-y-10 bg-[radial-gradient(ellipse_at_center,rgba(201,100,66,0.12),transparent_65%)]"
@@ -337,7 +339,9 @@ export default function Welcome() {
       {/* WHAT IT DOES                   */}
       {/* ------------------------------ */}
 
-      <section id="features" className="scroll-mt-6 border-t border-white/10">
+      <section id="features" className="scroll-mt-6 lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "18%" }} />
+
         <div className={`${CONTAINER} py-20 sm:py-28`}>
           <Reveal>
             <h2 className={`t-reveal-item max-w-[720px] ${H2}`}>
@@ -349,7 +353,7 @@ export default function Welcome() {
           {/* The four ideas in a window of their own that
               scrolls - one at a time, snapping into place. */}
           <Reveal clear className="mt-14">
-            <div className="t-reveal-item overflow-hidden rounded-2xl border border-white/10 bg-[#050505] shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+            <div className="t-reveal-card lp-glow overflow-hidden rounded-2xl border border-white/10 bg-[#050505] shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
               <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
                 <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
@@ -372,15 +376,15 @@ export default function Welcome() {
               >
                 {FEATURES.filter((feature) => VISUALS[feature.title]).map(
                   (feature, index, shown) => (
-                    <div
+                    <Reveal
                       key={feature.title}
                       className="flex min-h-full snap-start flex-col items-center justify-center gap-8 border-b border-white/5 px-6 py-10 last:border-b-0 md:flex-row md:gap-14 md:px-14"
                     >
-                      <div className="flex h-[190px] w-full max-w-[380px] shrink-0 items-center justify-center">
+                      <div className="t-reveal-card flex h-[190px] w-full max-w-[380px] shrink-0 items-center justify-center">
                         {VISUALS[feature.title]}
                       </div>
 
-                      <div className="w-full max-w-[440px]">
+                      <div style={at(1)} className="t-reveal-item w-full max-w-[440px]">
                         <p className="text-[11px] tracking-[0.12em] text-white/35 uppercase tabular-nums">
                           0{index + 1} / 0{shown.length}
                         </p>
@@ -393,7 +397,7 @@ export default function Welcome() {
                           {feature.body}
                         </p>
                       </div>
-                    </div>
+                    </Reveal>
                   )
                 )}
               </div>
@@ -428,7 +432,9 @@ export default function Welcome() {
       {/* CONNECTS TO                    */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-white/10">
+      <section className="lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "35%" }} />
+
         <div className={`${CONTAINER} py-20 sm:py-28`}>
           <Reveal className="grid gap-5">
             <h2 className={`t-reveal-item ${H2}`}>
@@ -442,15 +448,19 @@ export default function Welcome() {
             </p>
           </Reveal>
 
-          <div data-signal-clear>
-            <ConnectionsOrbit apps={APPS} />
-          </div>
+          <Reveal clear>
+            <div className="t-reveal-card">
+              <ConnectionsOrbit apps={APPS} />
+            </div>
+          </Reveal>
 
-          <ul data-signal-clear className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {APPS.map((app) => (
+          <Reveal clear>
+          <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {APPS.map((app, index) => (
               <li
                 key={app.id}
-                className="lp-lift flex items-center gap-3 rounded-xl border border-white/10 bg-[#050505] px-4 py-3.5 hover:border-white/20 hover:bg-white/[0.03]"
+                style={at(Math.min(index, 10))}
+                className="t-reveal-card lp-card flex items-center gap-3 rounded-xl border border-white/10 bg-[#050505] px-4 py-3.5"
               >
                 <BrandIcon
                   id={app.id}
@@ -465,7 +475,8 @@ export default function Welcome() {
             {/* Anything else that speaks MCP. */}
 
             <li
-              className={`flex items-center gap-3 rounded-xl border border-dashed border-white/15 px-4 py-3.5 ${FILL_ROW}`}
+              style={at(Math.min(APPS.length, 11))}
+              className={`t-reveal-card flex items-center gap-3 rounded-xl border border-dashed border-white/15 px-4 py-3.5 ${FILL_ROW}`}
             >
               <span
                 aria-hidden="true"
@@ -483,6 +494,7 @@ export default function Welcome() {
               </span>
             </li>
           </ul>
+          </Reveal>
         </div>
       </section>
 
@@ -495,7 +507,9 @@ export default function Welcome() {
       {/* enforces, so the page and the  */}
       {/* limits cannot disagree.        */}
 
-      <section id="plans" className="scroll-mt-6 border-t border-white/10">
+      <section id="plans" className="scroll-mt-6 lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "40%" }} />
+
         {/* The heading sits on a faint band of the signal
             field, fading out before the plan cards. */}
         <div className="relative isolate overflow-hidden">
@@ -522,9 +536,9 @@ export default function Welcome() {
         </div>
 
         <div className={`${CONTAINER} pb-20 sm:pb-28`}>
-          <div data-signal-clear>
+          <Reveal clear>
             <PlanCards />
-          </div>
+          </Reveal>
 
           <p className="mt-4 text-[12px] leading-relaxed text-white/40">
             Messages on your own or a shared API key are billed by that AI
@@ -539,7 +553,9 @@ export default function Welcome() {
       {/* QUESTIONS TEAMS ASK            */}
       {/* ------------------------------ */}
 
-      <section id="faq" className="scroll-mt-6 border-t border-white/10">
+      <section id="faq" className="scroll-mt-6 lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "5%" }} />
+
         <div className={`${CONTAINER} grid gap-10 py-20 sm:py-28 md:grid-cols-[1fr_1.6fr]`}>
           <Reveal>
             <h2 className={`t-reveal-item ${H2}`}>
@@ -560,7 +576,9 @@ export default function Welcome() {
             </p>
           </Reveal>
 
-          <Faq items={FAQ} />
+          <Reveal>
+            <Faq items={FAQ} />
+          </Reveal>
         </div>
       </section>
 
@@ -569,7 +587,9 @@ export default function Welcome() {
       {/* LAST CALL                      */}
       {/* ------------------------------ */}
 
-      <section className="relative isolate overflow-hidden border-t border-white/10">
+      <section className="relative isolate overflow-hidden lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "15%" }} />
+
 
         <Reveal className={`${CONTAINER} relative flex min-h-[460px] flex-col items-center justify-center py-24 text-center`}>
           <h2 className="t-reveal-item text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[56px]">
@@ -641,7 +661,7 @@ function ChannelPreview() {
       </div>
 
       <div className="space-y-4 px-4 py-5 text-[13px] leading-[1.55]">
-        <div>
+        <div className="t-seq" style={at(0)}>
           <p className="text-[11.5px] text-[var(--text-faint)]">Riya</p>
 
           <p className="mt-0.5 text-[var(--text)]">
@@ -651,21 +671,21 @@ function ChannelPreview() {
         </div>
 
         <div>
-          <p className="flex items-center gap-1.5 text-[11.5px] text-[var(--text-faint)]">
+          <p className="t-seq flex items-center gap-1.5 text-[11.5px] text-[var(--text-faint)]" style={at(1)}>
             <Logo size={14} />
             Planning agent
           </p>
 
           <div className="mt-1.5 space-y-1 rounded-lg border border-[var(--border)] px-3 py-2 text-[11.5px] text-[var(--text-faint)]">
-            <p>✓ Read plan.md</p>
-            <p>✓ Linear: list projects</p>
+            <p className="t-seq" style={at(2)}>✓ Read plan.md</p>
+            <p className="t-seq" style={at(3)}>✓ Linear: list projects</p>
           </div>
 
-          <p className="mt-2 text-[var(--text-muted)]">
+          <p className="t-seq mt-2 text-[var(--text-muted)]" style={at(4)}>
             Six tasks, riskiest first:
           </p>
 
-          <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-[var(--text-muted)]">
+          <ol className="t-seq mt-1 list-decimal space-y-0.5 pl-5 text-[var(--text-muted)]" style={at(5)}>
             <li>Final copy review · Aman · Mon</li>
             <li>Payment page QA · Sam · Tue</li>
             <li>DNS and HTTPS · Riya · Tue</li>
@@ -676,7 +696,7 @@ function ChannelPreview() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-[var(--border-strong)] bg-[var(--bg-raised)] px-3 py-2.5">
+        <div className="t-seq rounded-lg border border-[var(--border-strong)] bg-[var(--bg-raised)] px-3 py-2.5" style={at(6)}>
           <p className="text-[12px] text-[var(--text)]">
             Linear: create 6 issues
           </p>
@@ -686,7 +706,7 @@ function ChannelPreview() {
           </p>
 
           <div className="mt-2 flex gap-2">
-            <span className="rounded-md bg-[var(--text)] px-2.5 py-1 text-[11.5px] font-medium text-[var(--bg)]">
+            <span className="lp-pulse rounded-md bg-[var(--text)] px-2.5 py-1 text-[11.5px] font-medium text-[var(--bg)]">
               Approve
             </span>
 

@@ -27,7 +27,7 @@ export function LegalPage({
   children: React.ReactNode;
 }) {
   return (
-    <main style={SITE_THEME} className="relative isolate min-h-screen shrink-0 text-[#ededed]">
+    <main style={SITE_THEME} className="relative isolate min-h-screen shrink-0 overflow-x-clip text-[#ededed]">
       {/* The public site's backdrop: black, a light purple
           glow and the signal lines. */}
       <Backdrop />
