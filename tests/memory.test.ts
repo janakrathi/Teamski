@@ -92,3 +92,25 @@ test("outside a channel, memory is one list as before", () => {
   assert.match(prompt, /Things you remember about this project and the people in it:\n- Team of four/);
   assert.doesNotMatch(prompt, /Shared memory for the whole project/);
 });
+
+
+test("the design brief is only in the prompt when building a web page", async () => {
+  const { buildSystemPrompt } = await import("../lib/ai/memory.ts");
+
+  const base = { summary: "", facts: [], toolsAvailable: true };
+
+  assert.doesNotMatch(buildSystemPrompt(base), /quality bar/);
+
+  const free = buildSystemPrompt({ ...base, webPage: { compact: true } });
+  const paid = buildSystemPrompt({ ...base, webPage: { compact: false } });
+
+  for (const prompt of [free, paid]) {
+    assert.match(prompt, /quality bar/);
+    assert.match(prompt, /create_file/);
+    assert.match(prompt, /Never invent testimonials/);
+  }
+
+  // Only the tight free model is told to keep it compact.
+  assert.match(free, /Room is limited/);
+  assert.doesNotMatch(paid, /Room is limited/);
+});

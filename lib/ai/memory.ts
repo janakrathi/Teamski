@@ -811,6 +811,11 @@ export function buildSystemPrompt(options: {
   customInstructions?: string;
   toolsAvailable: boolean;
   webAvailable?: boolean;
+
+  // Building a web page this turn: add the design brief.
+  // "compact" when the model's room is tight (the free
+  // shared key), so it writes tighter CSS.
+  webPage?: { compact: boolean };
 }) {
   const parts: string[] = [];
 
@@ -840,13 +845,7 @@ export function buildSystemPrompt(options: {
         "Tools:",
         "- You can create, read, edit, delete and list files that belong to this project.",
         "- After a tool runs, tell the user what changed in one or two sentences.",
-        "",
-        "Web pages:",
-        "- When asked to build or design a landing page, website, web page or HTML, save it with create_file as ONE self-contained .html file (all CSS inside a <style> tag, any JavaScript inline). Do not paste the code into the chat - the team previews the file right in the chat.",
-        "- Don't ask about tone, colours or sections first: make good choices yourself, build it, then offer to adjust.",
-        "- Make it look professional: a hero, clear sections, a call to action, responsive on phones, modern fonts from Google Fonts.",
-        "- Don't point at image files that don't exist (like images/hat.jpg). Use CSS gradients, shapes, emoji or inline SVG for visuals.",
-        "- To change a page that already exists, edit that same file rather than making a new one.",
+
         "",
         "When NOT to use a tool:",
         "- Only touch a file when the user asks you to, in words, in their latest message - or in the one just before it, when their latest message answers a question you asked about that request.",
@@ -861,6 +860,25 @@ export function buildSystemPrompt(options: {
         'User: "save that to notes.md" -> create_file.',
         'User: "build me a landing page for a bakery" -> create_file landing.html, then one short sentence.',
         'User: "what files are there?" -> list_files.',
+      ].join("\n")
+    );
+  }
+
+  if (options.webPage && options.toolsAvailable) {
+    parts.push(
+      [
+        "Building a web page - this is the quality bar:",
+        "- Save it with create_file as ONE complete, self-contained .html file (CSS in a <style> tag, JavaScript inline). Never paste the code into the chat; the team previews the file in the chat. To change an existing page, edit that same file.",
+        "- Don't ask about tone, colours or sections first. Make strong choices, build it, then offer to adjust.",
+        "- Sections: a sticky nav (name + 3-4 links + a button); a hero with a bold headline, a one-line subhead, a primary and a secondary button and a visual; 3-6 feature cards with inline SVG icons; how it works (3 steps); offerings or pricing; an FAQ using <details>; a closing call-to-action band; a footer.",
+        "- Design: a palette that fits the business (one main colour, one accent, neutrals) as CSS variables; two Google Fonts (a characterful display font for headings, a clean sans for text); generous spacing and a centred max-width container; rounded corners, soft layered shadows, subtle gradient backgrounds; hover states on buttons and cards; a gentle fade-in on scroll with IntersectionObserver.",
+        "- Responsive: grid and flex, mobile-first media queries; nothing overflows on a 375px phone.",
+        "- Visuals: no image files (they won't exist). Use inline SVG illustrations and icons, CSS shapes, gradients and emoji.",
+        "- Copy: specific to this business, benefit-led, no lorem ipsum. Never invent testimonials, reviews, customer names, stats, awards or logos - use clearly marked placeholders like [Customer quote].",
+        options.webPage.compact
+          ? "- Room is limited: keep the CSS compact (variables, shared classes, no repetition) so the whole page fits, and finish the file - a page cut off half-way is worse than a shorter complete one."
+          : "- Write the whole page; don't stop half-way.",
+        "- After saving, reply with one or two sentences: what you built and what they could ask you to change.",
       ].join("\n")
     );
   }
@@ -967,6 +985,7 @@ export async function buildContext(options: {
   customInstructions?: string;
   toolsAvailable: boolean;
   webAvailable?: boolean;
+  webPage?: { compact: boolean };
   useMemory: boolean;
 
   // A per-request ceiling, for a model whose free
@@ -1046,6 +1065,7 @@ export async function buildContext(options: {
       options.customInstructions,
     toolsAvailable: options.toolsAvailable,
     webAvailable: options.webAvailable,
+    webPage: options.webPage,
   });
 
   const messages: OllamaMessage[] = [

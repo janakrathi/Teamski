@@ -49,6 +49,7 @@ import {
   mightUseTools,
   shouldThink,
   wantsFiles,
+  wantsWebPage,
   wantsImage,
 } from "@/lib/ai/think";
 
@@ -285,6 +286,13 @@ export async function POST(request: Request) {
   const fileTools =
     useTools &&
     (wantsFiles(latestUserMessage) || wantsFiles(previousUserMessage));
+
+  // Building a web page: the design brief comes into
+  // the prompt, and on the free shared model most of the
+  // request's room goes to the page (see contextLimits).
+  const buildingPage =
+    fileTools &&
+    (wantsWebPage(latestUserMessage) || wantsWebPage(previousUserMessage));
 
   // The image generator only when the message reads
   // like a request for a picture.
@@ -536,11 +544,20 @@ export async function POST(request: Request) {
             maxFacts: 2,
             summaryTokens: 200,
           }
-        : {
-            historyTokens: 3000,
-            maxFacts: 10,
-            summaryTokens: 1200,
-          }
+        : buildingPage
+          ? // A page is 5-12K tokens of HTML. Of the 8K a
+            // minute, history and memory get a sliver so
+            // the page has room to be finished.
+            {
+              historyTokens: 600,
+              maxFacts: 3,
+              summaryTokens: 250,
+            }
+          : {
+              historyTokens: 3000,
+              maxFacts: 10,
+              summaryTokens: 1200,
+            }
       : undefined;
 
   const context = await buildContext({
@@ -571,6 +588,7 @@ export async function POST(request: Request) {
       .join("\n\n"),
     toolsAvailable: fileTools,
     webAvailable: useWeb,
+    webPage: buildingPage ? { compact: onSharedFree } : undefined,
     useMemory,
   });
 

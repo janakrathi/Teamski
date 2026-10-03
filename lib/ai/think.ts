@@ -102,6 +102,18 @@ export function wantsFiles(message: string) {
 }
 
 
+// A web page to build. These turns get the design brief
+// (lib/ai/memory.ts) and, on the free shared model, most
+// of the request's room for the page itself.
+
+const WEB_PAGE_WORDS =
+  /\b(landing[ -]?pages?|web[ -]?pages?|websites?|home[ -]?pages?|microsites?|one[ -]?pager|html|css)\b/i;
+
+export function wantsWebPage(message: string) {
+  return WEB_PAGE_WORDS.test(message);
+}
+
+
 // ==========================================
 // WHEN TO OFFER THE IMAGE GENERATOR
 // ==========================================

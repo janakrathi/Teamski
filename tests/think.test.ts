@@ -104,3 +104,16 @@ test("the image generator is offered only when a picture is asked for", () => {
     assert.equal(wantsImage(message), false, message);
   }
 });
+
+
+test("web page requests are recognised, ordinary messages are not", async () => {
+  const { wantsWebPage } = await import("../lib/ai/think.ts");
+
+  for (const message of ["build me a landing page for a crochet company", "redo our website", "make the homepage bolder", "write HTML for a pricing table"]) {
+    assert.equal(wantsWebPage(message), true, message);
+  }
+
+  for (const message of ["save this to notes.md", "how many pages should the deck have?", "research our competitors"]) {
+    assert.equal(wantsWebPage(message), false, message);
+  }
+});
