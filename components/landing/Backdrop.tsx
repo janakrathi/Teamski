@@ -25,9 +25,9 @@ export default function Backdrop() {
       <Aurora />
 
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-        {/* The lines at the top of the page at a quarter of
-            the hero's strength - present, not loud. */}
-        <SignalField calm="page" topStrength={0.25} />
+        {/* The lines at the top of the page at 80% of
+            the hero's strength. */}
+        <SignalField calm="page" topStrength={0.8} />
       </div>
     </>
   );
