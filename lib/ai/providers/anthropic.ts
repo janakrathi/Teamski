@@ -38,12 +38,31 @@ import {
 const MAX_TOKENS = 16000;
 
 
+function isHaiku(model: string) {
+  return /haiku/i.test(model);
+}
+
+
 export function anthropicKey() {
   return process.env.ANTHROPIC_API_KEY || null;
 }
 
 
 export const ANTHROPIC_MODELS = [
+  {
+    id: "claude-opus-5-5",
+    contextWindow: 1000000,
+    label: "Claude Opus 5.5",
+    costPerMTokIn: 4,
+    costPerMTokOut: 20,
+  },
+  {
+    id: "claude-sonnet-5-5",
+    contextWindow: 1000000,
+    label: "Claude Sonnet 5.5",
+    costPerMTokIn: 2,
+    costPerMTokOut: 10,
+  },
   {
     id: "claude-opus-5",
     contextWindow: 1000000,
@@ -86,7 +105,7 @@ async function* stream(
 
   const client = new Anthropic({ apiKey: key });
 
-  const { system, rest } = splitSystem(
+  const { stable, volatile, rest } = splitSystem(
     options.messages
   );
 
@@ -137,23 +156,61 @@ async function* stream(
       }))
     : undefined;
 
+  // Prompt caching. An agent turn sends the whole prompt
+  // again at every tool step, and most of it - the tools,
+  // the rules, the conversation so far - is the same as
+  // last time. Cached input costs a tenth of the normal
+  // price (writing it costs 1.25x, once), so:
+  //
+  //   - the stable part of the system prompt is marked,
+  //     which caches the tools and rules ahead of it;
+  //   - what changes every turn (summary, memory found
+  //     for this message) comes after that mark;
+  //   - top-level caching covers the growing
+  //     conversation, so step two of a turn reads step
+  //     one's prompt from the cache.
+  //
+  // Short prompts below the model's minimum simply
+  // aren't cached - no error, no charge.
+
+  const system: Anthropic.TextBlockParam[] = [];
+
+  if (stable) {
+    system.push({
+      type: "text",
+      text: stable,
+      cache_control: { type: "ephemeral" },
+    });
+  }
+
+  if (volatile) {
+    system.push({ type: "text", text: volatile });
+  }
+
   const live = client.messages.stream(
     {
       model: options.model,
       max_tokens: MAX_TOKENS,
-      system: system || undefined,
+      system: system.length ? system : undefined,
       messages,
       tools: tools?.length ? tools : undefined,
+      cache_control: { type: "ephemeral" },
 
       // Adaptive is the only on-mode on current
       // models. summarized because the app has a
       // reasoning panel to put it in; the default
       // returns empty thinking blocks and looks
-      // like a long pause.
-      thinking: {
-        type: "adaptive",
-        display: "summarized",
-      },
+      // like a long pause. Haiku 4.5 predates
+      // adaptive thinking and refuses it, so it runs
+      // without.
+      ...(isHaiku(options.model)
+        ? {}
+        : {
+            thinking: {
+              type: "adaptive" as const,
+              display: "summarized" as const,
+            },
+          }),
     },
     { signal: options.signal }
   );
@@ -236,8 +293,23 @@ async function* stream(
     }
 
     if (event.type === "message_start") {
-      promptTokens =
-        event.message.usage.input_tokens ?? 0;
+      const usage = event.message.usage;
+
+      const fresh = usage.input_tokens ?? 0;
+      const written = usage.cache_creation_input_tokens ?? 0;
+      const read = usage.cache_read_input_tokens ?? 0;
+
+      // input_tokens counts only what came after the
+      // last cache mark. The spend report counts the
+      // whole prompt at what it actually cost: fresh at
+      // full price, cache writes at 1.25x, reads at 0.1x.
+      promptTokens = Math.round(fresh + written * 1.25 + read * 0.1);
+
+      if (read > 0 || written > 0) {
+        console.log(
+          `[cache] ${options.model}: ${read} read, ${written} written, ${fresh} fresh`
+        );
+      }
     }
 
     if (event.type === "message_delta") {

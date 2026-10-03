@@ -90,6 +90,12 @@ export type StreamOptions = {
   think?: boolean;
   options?: GenerationOptions;
   signal?: AbortSignal;
+
+  // Groups requests that share a prompt prefix (one
+  // channel's conversation), so a provider that routes
+  // by it (OpenAI's prompt_cache_key) lands them on the
+  // same cache.
+  cacheKey?: string;
 };
 
 
@@ -109,18 +115,39 @@ export type StreamOptions = {
 // the same rearranging twice.
 //
 
+// Where a system prompt turns from what stays the same
+// every turn (rules, tools, the channel's instructions)
+// to what changes (the summary, the facts memory found
+// for this message). Providers cache a prompt by its
+// beginning: Claude is told to cache up to here, and
+// for everyone else the marker becomes a blank line and
+// the unchanged opening is cached on their side.
+
+export const SYSTEM_VOLATILE_MARKER = "\n\n<!-- teamski: per-turn context -->\n\n";
+
+export function plainSystem(text: string) {
+  return text.split(SYSTEM_VOLATILE_MARKER).join("\n\n");
+}
+
 export function splitSystem(
   messages: OllamaMessage[]
 ) {
-  const system = messages
+  const joined = messages
     .filter((message) => message.role === "system")
     .map((message) => message.content)
     .filter(Boolean)
     .join("\n\n");
 
+  const at = joined.indexOf(SYSTEM_VOLATILE_MARKER);
+
+  const stable = at === -1 ? joined : joined.slice(0, at);
+
+  const volatile =
+    at === -1 ? "" : joined.slice(at + SYSTEM_VOLATILE_MARKER.length);
+
   const rest = messages.filter(
     (message) => message.role !== "system"
   );
 
-  return { system, rest };
+  return { system: plainSystem(joined), stable, volatile, rest };
 }

@@ -2,9 +2,10 @@ import OpenAI from "openai";
 
 import type { ChatChunk, ToolCall } from "../ollama.ts";
 
-import type {
-  Provider,
-  StreamOptions,
+import {
+  plainSystem,
+  type Provider,
+  type StreamOptions,
 } from "./types.ts";
 
 
@@ -139,7 +140,10 @@ async function* stream(
 
       return {
         role: message.role,
-        content: message.content,
+        content:
+          message.role === "system"
+            ? plainSystem(message.content)
+            : message.content,
       } as OpenAI.Chat.ChatCompletionMessageParam;
     });
 
@@ -193,6 +197,15 @@ async function* stream(
       // Usage is not streamed unless asked for,
       // and the app shows token counts.
       stream_options: { include_usage: true },
+
+      // OpenAI caches the unchanged opening of a prompt
+      // on its own; this routes one channel's requests to
+      // the same cache. Only OpenAI itself takes it - the
+      // other OpenAI-style providers cache without it and
+      // some refuse fields they don't know.
+      ...(!baseURL && options.cacheKey
+        ? { prompt_cache_key: options.cacheKey.slice(0, 64) }
+        : {}),
     },
     { signal: options.signal }
   );
@@ -211,7 +224,28 @@ async function* stream(
 
   for await (const part of live) {
     if (part.usage) {
-      promptTokens = part.usage.prompt_tokens ?? 0;
+      const total = part.usage.prompt_tokens ?? 0;
+
+      // Tokens served from the provider's cache, under
+      // the names OpenAI (and Groq, xAI...) and DeepSeek
+      // use for them.
+      const cached =
+        part.usage.prompt_tokens_details?.cached_tokens ??
+        (part.usage as { prompt_cache_hit_tokens?: number })
+          .prompt_cache_hit_tokens ??
+        0;
+
+      // What the spend report counts: cached input at
+      // its discounted price (see cachedInputRate).
+      promptTokens = Math.round(
+        total - cached * (1 - cachedInputRate(options.model, baseURL))
+      );
+
+      if (cached > 0) {
+        console.log(
+          `[cache] ${options.model}: ${cached} of ${total} prompt tokens from cache`
+        );
+      }
 
       responseTokens =
         part.usage.completion_tokens ?? 0;
@@ -291,6 +325,27 @@ async function* stream(
     prompt_eval_count: promptTokens,
     eval_count: responseTokens,
   };
+}
+
+
+// What a cached input token costs, as a share of the
+// normal price. OpenAI's newer models discount cached
+// input by 75-90%; elsewhere (Groq, DeepSeek, others)
+// half is assumed - a cautious figure, so a spending
+// cap is never reached later than it should be.
+
+export function cachedInputRate(model: string, baseURL?: string) {
+  if (!baseURL) {
+    if (/^(gpt-5|o3|o4)/.test(model)) {
+      return 0.1;
+    }
+
+    if (/^gpt-4\.1/.test(model)) {
+      return 0.25;
+    }
+  }
+
+  return 0.5;
 }
 
 

@@ -529,6 +529,10 @@ async function runStep(
       projectId,
       admin: db,
 
+      // Every step of a run shares its prompt's opening,
+      // so the run is its own cache group.
+      cacheKey: `run:${projectId ?? "none"}`,
+
       messages,
       tools,
       think: true,

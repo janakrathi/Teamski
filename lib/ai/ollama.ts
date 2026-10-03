@@ -1,3 +1,5 @@
+import { plainSystem } from "./providers/types.ts";
+
 // ==========================================
 // OLLAMA CLIENT
 // ==========================================
@@ -314,7 +316,14 @@ async function* streamChatInner(options: {
 
         body: JSON.stringify({
           model: options.model || DEFAULT_MODEL,
-          messages: options.messages,
+          // The marker that sets off the per-turn part of
+          // the system prompt is for providers that cache;
+          // here it is just a blank line.
+          messages: options.messages.map((message) =>
+            message.role === "system"
+              ? { ...message, content: plainSystem(message.content) }
+              : message
+          ),
           tools: options.tools,
 
           // Thinking is off unless asked for. It

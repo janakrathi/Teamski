@@ -969,6 +969,10 @@ export async function POST(request: Request) {
               projectId,
               admin: adminClient(),
 
+              // One cache per conversation, for providers
+              // that route by it.
+              cacheKey: `${projectId}:${scope.channelId ?? "project"}`,
+
               messages: msgs,
               tools,
 

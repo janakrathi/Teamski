@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { SYSTEM_VOLATILE_MARKER } from "./providers/types.ts";
+
 import {
   NUM_CTX,
   completeJson,
@@ -803,6 +805,13 @@ export function windowHistory(
 // BUILD THE SYSTEM PROMPT
 // ==========================================
 
+// Where the system prompt turns from what stays the same
+// every turn to what changes. Defined beside the
+// providers that read it (lib/ai/providers/types.ts).
+
+export { SYSTEM_VOLATILE_MARKER };
+
+
 export function buildSystemPrompt(options: {
   projectName?: string | null;
   channelName?: string | null;
@@ -911,48 +920,6 @@ export function buildSystemPrompt(options: {
     );
   }
 
-  if (options.summary.trim()) {
-    parts.push(
-      [
-        "Summary of earlier conversation (older turns, condensed):",
-        options.summary.trim(),
-      ].join("\n")
-    );
-  }
-
-  // In a channel, memory comes in two layers: what the
-  // whole project shares with every channel, and what
-  // this channel has learned. Outside a channel it is
-  // all project memory, as before.
-  const shared = options.facts.filter((fact) => fact.shared);
-  const own = options.facts.filter((fact) => !fact.shared);
-
-  if (options.channelName && shared.length > 0) {
-    parts.push(
-      [
-        "Shared memory for the whole project (every channel's agent knows these - the brief, goals, decisions, deadlines):",
-        ...shared.map((fact) => `- ${fact.content}`),
-      ].join("\n")
-    );
-  }
-
-  if (own.length > 0 || (!options.channelName && shared.length > 0)) {
-    const list = options.channelName ? own : options.facts;
-
-    parts.push(
-      [
-        options.channelName
-          ? `What you remember from #${options.channelName}:`
-          : "Things you remember about this project and the people in it:",
-        ...list.map((fact) => `- ${fact.content}`),
-      ].join("\n")
-    );
-  }
-
-  if (options.facts.length > 0) {
-    parts.push("Use what you remember naturally. Do not list it back unless asked.");
-  }
-
   if (options.channelName) {
     parts.push(
       "When someone asks you to remember something for the whole project or team, it is saved to the shared memory every channel's agent reads - confirm that in a few words. Big team decisions, the brief, deadlines and roles are shared automatically."
@@ -968,7 +935,63 @@ export function buildSystemPrompt(options: {
     );
   }
 
-  return parts.join("\n\n");
+  // Everything above stays the same from one turn to the
+  // next; what follows (the summary, and what memory
+  // found for this message) changes. Providers cache a
+  // prompt by its beginning, so the stable part comes
+  // first and the marker sets the rest apart - Claude
+  // caches up to it explicitly, and OpenAI-style
+  // providers cache the unchanged opening on their own.
+
+  const volatile: string[] = [];
+
+  if (options.summary.trim()) {
+    volatile.push(
+      [
+        "Summary of earlier conversation (older turns, condensed):",
+        options.summary.trim(),
+      ].join("\n")
+    );
+  }
+
+  // In a channel, memory comes in two layers: what the
+  // whole project shares with every channel, and what
+  // this channel has learned. Outside a channel it is
+  // all project memory, as before.
+  const shared = options.facts.filter((fact) => fact.shared);
+  const own = options.facts.filter((fact) => !fact.shared);
+
+  if (options.channelName && shared.length > 0) {
+    volatile.push(
+      [
+        "Shared memory for the whole project (every channel's agent knows these - the brief, goals, decisions, deadlines):",
+        ...shared.map((fact) => `- ${fact.content}`),
+      ].join("\n")
+    );
+  }
+
+  if (own.length > 0 || (!options.channelName && shared.length > 0)) {
+    const list = options.channelName ? own : options.facts;
+
+    volatile.push(
+      [
+        options.channelName
+          ? `What you remember from #${options.channelName}:`
+          : "Things you remember about this project and the people in it:",
+        ...list.map((fact) => `- ${fact.content}`),
+      ].join("\n")
+    );
+  }
+
+  if (options.facts.length > 0) {
+    volatile.push("Use what you remember naturally. Do not list it back unless asked.");
+  }
+
+  const stable = parts.join("\n\n");
+
+  return volatile.length
+    ? `${stable}${SYSTEM_VOLATILE_MARKER}${volatile.join("\n\n")}`
+    : stable;
 }
 
 
