@@ -49,7 +49,7 @@ export default function Aurora({
   // what it fades to a screen or so further down -
   // black takes over as you read.
   top = 0.2,
-  rest = 0.08,
+  rest = 0.11,
 }: {
   top?: number;
   rest?: number;
