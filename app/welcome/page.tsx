@@ -8,13 +8,20 @@ import BrandIcon from "@/components/ui/BrandIcon";
 
 import { CATALOG } from "@/lib/mcp/catalog";
 
-import { LEGAL } from "@/lib/legal";
-
 import PlanCards from "@/components/plans/PlanCards";
 
 import ConnectionsOrbit from "@/components/landing/ConnectionsOrbit";
 
-import ContactUs from "@/components/landing/ContactUs";
+import {
+  CONTAINER,
+  H2,
+  PRIMARY,
+  SECONDARY,
+  SITE_THEME,
+  SiteFooter,
+  SiteHeader,
+  at,
+} from "@/components/landing/Site";
 
 import SignalField from "@/components/landing/SignalField";
 
@@ -276,37 +283,6 @@ const CANT = [
 ];
 
 
-// The landing page's own surface: pure black, quieter
-// lines, softer text. Set as the app's colour variables,
-// so the shared pieces on this page (plans, contact
-// form) follow it too.
-
-const LANDING_THEME = {
-  "--bg": "#000000",
-  "--bg-panel": "#050505",
-  "--bg-raised": "#0c0c0c",
-  "--bg-hover": "#141414",
-  "--border": "rgba(255,255,255,0.09)",
-  "--border-strong": "rgba(255,255,255,0.16)",
-  "--text": "#ededed",
-  "--text-muted": "#9b9b9b",
-  "--text-faint": "#646464",
-} as React.CSSProperties;
-
-// Place in a reveal's running order (globals.css).
-const at = (i: number) => ({ "--i": i }) as React.CSSProperties;
-
-const CONTAINER = "mx-auto w-full max-w-[1200px] px-6";
-
-const H2 =
-  "text-[30px] leading-[1.1] font-[450] tracking-[-0.025em] sm:text-[40px]";
-
-const PRIMARY =
-  "t-press inline-flex items-center rounded-[10px] bg-[#ededed] px-5 py-2.5 text-[14px] font-medium text-black shadow-[inset_0_-2px_0_rgba(0,0,0,0.14),0_1px_2px_rgba(0,0,0,0.5)] hover:bg-white";
-
-const SECONDARY =
-  "t-press inline-flex items-center rounded-[10px] border border-white/15 bg-black/40 px-5 py-2.5 text-[14px] text-[#ededed] backdrop-blur-sm hover:border-white/30 hover:bg-white/[0.04]";
-
 // The features that have a picture of their own. The
 // rest sit in a quieter row underneath.
 const VISUALS: Record<string, React.ReactNode> = {
@@ -320,7 +296,7 @@ const VISUALS: Record<string, React.ReactNode> = {
 export default function Welcome() {
   return (
     <main
-      style={LANDING_THEME}
+      style={SITE_THEME}
       className="min-h-screen shrink-0 bg-black text-[#ededed]"
     >
       {/* "<" escaped, as Next.js advises for JSON-LD. */}
@@ -335,47 +311,7 @@ export default function Welcome() {
       {/* TOP BAR                        */}
       {/* ------------------------------ */}
 
-      <header className="absolute inset-x-0 top-0 z-20">
-        <div className={`${CONTAINER} flex items-center gap-3 py-5`}>
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo size={28} />
-
-            <span className="text-[15px] font-medium tracking-[-0.01em]">
-              Teamski
-            </span>
-          </Link>
-
-          <nav className="ml-auto flex items-center gap-1 text-[13px]">
-            {[
-              { href: "#plans", label: "Plans" },
-              { href: "/blog", label: "Blog" },
-              { href: "/hackathons", label: "Hackathons" },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="hidden rounded-md px-3 py-1.5 text-white/60 transition-colors duration-150 hover:text-white sm:block"
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            <Link
-              href="/login"
-              className="rounded-md px-3 py-1.5 text-white/60 transition-colors duration-150 hover:text-white"
-            >
-              Sign in
-            </Link>
-
-            <Link
-              href="/login?mode=signup"
-              className="t-press ml-1 rounded-[9px] bg-[#ededed] px-3.5 py-1.5 font-medium text-black hover:bg-white"
-            >
-              Get started
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader overlay />
 
 
       {/* ------------------------------ */}
@@ -895,8 +831,17 @@ export default function Welcome() {
       {/* limits cannot disagree.        */}
 
       <section id="plans" className="scroll-mt-6 border-t border-white/10">
-        <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+        {/* The heading sits on a faint band of the signal
+            field, fading out before the plan cards. */}
+        <div className="relative isolate overflow-hidden">
+          <SignalField calm="soft" />
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_45%_70%_at_22%_60%,rgba(0,0,0,0.75),transparent_70%),radial-gradient(ellipse_40%_70%_at_75%_55%,rgba(0,0,0,0.7),transparent_70%)]"
+          />
+
+          <Reveal className={`${CONTAINER} relative grid gap-8 pt-24 pb-16 sm:pt-32 sm:pb-20 md:grid-cols-[1.15fr_1fr] md:items-end`}>
             <h2 className={`t-reveal-item ${H2}`}>
               Plans{" "}
               <span className="text-white/45">for the whole team.</span>
@@ -910,7 +855,9 @@ export default function Welcome() {
               </span>
             </p>
           </Reveal>
+        </div>
 
+        <div className={`${CONTAINER} pb-20 sm:pb-28`}>
           <PlanCards />
 
           <p className="mt-4 text-[12px] leading-relaxed text-white/40">
@@ -986,28 +933,7 @@ export default function Welcome() {
       {/* FOOTER                         */}
       {/* ------------------------------ */}
 
-      <footer className="border-t border-white/10">
-        <div className={`${CONTAINER} flex flex-wrap items-center gap-x-5 gap-y-3 py-8 text-[12.5px] text-white/40`}>
-          <span className="flex items-center gap-2">
-            <Logo size={20} />
-            © 2026 {LEGAL.operator}
-          </span>
-
-          <Link href="/privacy" className="transition-colors duration-150 hover:text-white/70">
-            Privacy Policy
-          </Link>
-
-          <Link href="/terms" className="transition-colors duration-150 hover:text-white/70">
-            Terms of Service
-          </Link>
-
-          <Link href="/security" className="transition-colors duration-150 hover:text-white/70">
-            Security &amp; data
-          </Link>
-
-          <ContactUs className="transition-colors duration-150 hover:text-white/70 sm:ml-auto" />
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

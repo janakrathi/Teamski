@@ -1,6 +1,12 @@
 "use client";
 
+import Link from "next/link";
+
 import Logo from "@/components/ui/Logo";
+
+import SignalField from "@/components/landing/SignalField";
+
+import { SITE_THEME } from "@/components/landing/Site";
 
 import GoogleSignIn from "@/components/auth/GoogleSignIn";
 
@@ -199,7 +205,7 @@ export default function LoginForm(ways: WaysIn) {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-[var(--bg)]" />
+        <main className="min-h-screen bg-black" />
       }
     >
       <Form {...ways} />
@@ -530,17 +536,37 @@ function Form({
 
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-12">
-      <div className="w-full max-w-[360px]">
+    <main
+      style={SITE_THEME}
+      className="relative isolate flex min-h-screen shrink-0 items-center justify-center overflow-hidden bg-black px-6 pt-20 pb-12"
+    >
+      {/* The site's signal field, quiet in the middle where
+          the form is. */}
+      <SignalField calm="center" />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_42%_60%_at_50%_50%,rgba(0,0,0,0.92),transparent_80%)]"
+      />
+
+      <Link
+        href="/"
+        className="absolute top-5 left-6 z-10 flex items-center gap-2.5 text-[15px] font-medium tracking-[-0.01em] text-[#ededed]"
+      >
+        <Logo size={28} />
+        Teamski
+      </Link>
+
+      <div className="t-modal relative w-full max-w-[380px] rounded-2xl border border-white/10 bg-black/70 px-6 py-8 shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-md sm:px-7">
 
         {/* ---------------------------- */}
         {/* MASTHEAD                     */}
         {/* ---------------------------- */}
 
         <div className="mb-8 text-center">
-          <Logo size={64} className="mx-auto mb-4" />
+          <Logo size={44} className="mx-auto mb-5" />
 
-          <h1 className="text-[19px] font-medium tracking-[-0.01em] text-[var(--text)]">
+          <h1 className="text-[24px] font-[450] tracking-[-0.025em] text-[var(--text)]">
             Teamski
           </h1>
 

@@ -2,13 +2,26 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 
-import Logo from "@/components/ui/Logo";
-
 import { DAILY_MESSAGES, TRIAL_DAYS } from "@/lib/plans";
 
-import { LEGAL } from "@/lib/legal";
-
 import ContactUs from "@/components/landing/ContactUs";
+
+import SignalField from "@/components/landing/SignalField";
+
+import Reveal from "@/components/landing/Reveal";
+
+import {
+  CONTAINER,
+  EYEBROW,
+  H1,
+  H2,
+  PRIMARY,
+  SECONDARY,
+  SITE_THEME,
+  SiteFooter,
+  SiteHeader,
+  at,
+} from "@/components/landing/Site";
 
 export const metadata: Metadata = {
   title: { absolute: "Teamski for hackathons" },
@@ -91,45 +104,51 @@ const JUDGING = [
 
 export default function HackathonsPage() {
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <header className="mx-auto flex max-w-[1080px] items-center gap-3 px-6 py-5">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-[14px] font-semibold"
-        >
-          <Logo size={24} />
-          {LEGAL.service}
-        </Link>
-
-        <Link
-          href="/login?mode=signup"
-          className="ml-auto rounded-lg bg-[var(--text)] px-4 py-2 text-[13px] font-medium text-[var(--bg)] transition hover:opacity-90"
-        >
-          Create your team&apos;s project
-        </Link>
-      </header>
-
-
+    <main style={SITE_THEME} className="min-h-screen shrink-0 bg-black text-[#ededed]">
       {/* ------------------------------ */}
       {/* INTRO                          */}
       {/* ------------------------------ */}
 
-      <section className="mx-auto max-w-[1080px] px-6 pt-10 pb-16 md:pt-16">
-        <span className="rounded bg-[var(--bg-raised)] px-2 py-1 text-[11px] tracking-[0.08em] text-[var(--text-faint)] uppercase">
-          Hackathon guide
-        </span>
+      <section className="relative isolate flex min-h-[max(600px,92svh)] flex-col overflow-hidden">
+        <SignalField calm="left" />
 
-        <h1 className="mt-5 max-w-[720px] text-[36px] leading-[1.1] font-semibold tracking-[-0.03em] sm:text-[46px]">
-          An AI teammate for your whole hackathon team.
-        </h1>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_18%_55%,rgba(0,0,0,0.9),transparent_70%)]"
+        />
 
-        <p className="mt-5 max-w-[600px] text-[16px] leading-[1.6] text-[var(--text-muted)]">
-          One shared AI agent in every channel. Your whole team talks to the
-          same agent, it remembers your project, and it researches, plans and
-          writes while you build.
-        </p>
+        <SiteHeader />
 
-        <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+        <div className={`${CONTAINER} relative flex flex-1 flex-col justify-center pt-10 pb-20`}>
+          <p style={at(0)} className={`t-text-reveal ${EYEBROW}`}>
+            Hackathon guide
+          </p>
+
+          <h1 style={at(1)} className={`t-text-reveal mt-5 max-w-[800px] ${H1}`}>
+            An AI teammate{" "}
+            <span className="text-white/45">for your whole hackathon team.</span>
+          </h1>
+
+          <p style={at(2)} className="t-text-reveal mt-6 max-w-[520px] text-[16px] leading-[1.6] text-white/60">
+            One shared AI agent in every channel. Your whole team talks to the
+            same agent, it remembers your project, and it researches, plans and
+            writes while you build.
+          </p>
+
+          <div style={at(3)} className="t-text-reveal mt-9 flex flex-wrap gap-3">
+            <Link href="/login?mode=signup" className={PRIMARY}>
+              Create your team&apos;s project
+            </Link>
+
+            <Link href="#setup" className={SECONDARY}>
+              Set up in five minutes
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-white/10">
+        <Reveal className={`${CONTAINER} grid md:grid-cols-3`}>
           {[
             ["Free for every team", "Unlimited teammates, no card."],
             [
@@ -137,19 +156,22 @@ export default function HackathonsPage() {
               `Every new project gets it - ${DAILY_MESSAGES.team} AI messages per person per day, and connected apps.`,
             ],
             ["Nothing to install", "Works in the browser, on any laptop or phone."],
-          ].map(([title, body]) => (
-            <li
+          ].map(([title, body], index) => (
+            <div
               key={title}
-              className="rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] px-4 py-3.5"
+              style={at(index)}
+              className={`t-reveal-item border-b border-white/10 py-8 md:border-b-0 ${
+                index < 2 ? "md:border-r md:pr-8" : ""
+              } ${index > 0 ? "md:pl-8" : ""}`}
             >
-              <p className="text-[14px] font-semibold">{title}</p>
+              <p className="text-[16px] font-[450]">{title}</p>
 
-              <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-muted)]">
+              <p className="mt-1.5 text-[14px] leading-[1.6] text-white/55">
                 {body}
               </p>
-            </li>
+            </div>
           ))}
-        </ul>
+        </Reveal>
       </section>
 
 
@@ -157,27 +179,30 @@ export default function HackathonsPage() {
       {/* SET UP                         */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)] bg-[var(--bg-panel)]">
-        <div className="mx-auto max-w-[1080px] px-6 py-16">
-          <h2 className="text-[26px] font-semibold tracking-[-0.02em]">
-            Set up in five minutes
-          </h2>
+      <section id="setup" className="scroll-mt-6 border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal>
+            <h2 className={`t-reveal-item ${H2}`}>
+              Set up{" "}
+              <span className="text-white/45">in five minutes.</span>
+            </h2>
+          </Reveal>
 
-          <ol className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
             {SETUP.map((step, index) => (
-              <li key={step.title}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-strong)] text-[13px] font-semibold">
-                  {index + 1}
+              <div key={step.title} style={at(index)} className="t-reveal-item bg-black p-6">
+                <span className="text-[34px] leading-none font-light tracking-[-0.03em] text-white/25 tabular-nums">
+                  0{index + 1}
                 </span>
 
-                <h3 className="mt-4 text-[15px] font-semibold">{step.title}</h3>
+                <h3 className="mt-6 text-[16px] font-[450]">{step.title}</h3>
 
-                <p className="mt-2 text-[13.5px] leading-[1.6] text-[var(--text-muted)]">
+                <p className="mt-2 text-[13.5px] leading-[1.6] text-white/55">
                   {step.body}
                 </p>
-              </li>
+              </div>
             ))}
-          </ol>
+          </Reveal>
         </div>
       </section>
 
@@ -186,31 +211,42 @@ export default function HackathonsPage() {
       {/* THE CHANNELS                   */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)]">
-        <div className="mx-auto max-w-[1080px] px-6 py-16">
-          <h2 className="text-[26px] font-semibold tracking-[-0.02em]">
-            The four channels we recommend
-          </h2>
+      <section className="border-t border-white/10">
+        <div className={`${CONTAINER} py-20 sm:py-28`}>
+          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+            <h2 className={`t-reveal-item ${H2}`}>
+              The four channels{" "}
+              <span className="text-white/45">we recommend.</span>
+            </h2>
 
-          <p className="mt-2 max-w-[560px] text-[14px] text-[var(--text-muted)]">
-            Each channel&apos;s agent has its own job and its own memory, so
-            research doesn&apos;t get mixed up with your pitch - and they all
-            share one project memory for the brief and the team&apos;s decisions.
-          </p>
+            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+              Each channel&apos;s agent has its own job and its own memory, so
+              research doesn&apos;t get mixed up with your pitch - and they all
+              share one project memory for the brief and the team&apos;s decisions.
+            </p>
+          </Reveal>
 
-          <div className="mt-8 grid gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2">
-            {CHANNELS.map((channel) => (
-              <div key={channel.name} className="bg-[var(--bg)] p-5">
-                <p className="text-[15px] font-semibold"># {channel.name}</p>
-
-                <p className="mt-0.5 text-[12px] text-[var(--text-faint)]">
-                  Agent: {channel.agent}
+          <div className="mt-14 grid border-t border-white/10 sm:grid-cols-2">
+            {CHANNELS.map((channel, index) => (
+              <Reveal
+                key={channel.name}
+                className={`border-b border-white/10 py-8 ${
+                  index % 2 === 0 ? "sm:border-r sm:pr-8" : "sm:pl-8"
+                }`}
+              >
+                <p className="t-reveal-item text-[20px] font-[450] tracking-[-0.01em]">
+                  # {channel.name}
                 </p>
 
-                <p className="mt-2 text-[13.5px] leading-[1.55] text-[var(--text-muted)]">
+                <p style={at(1)} className="t-reveal-item mt-1 flex items-center gap-2 text-[12.5px] text-white/40">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  {channel.agent}
+                </p>
+
+                <p style={at(2)} className="t-reveal-item mt-3 max-w-[440px] text-[14.5px] leading-[1.6] text-white/55">
                   {channel.use}
                 </p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -221,18 +257,20 @@ export default function HackathonsPage() {
       {/* DURING AND JUDGING             */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)] bg-[var(--bg-panel)]">
-        <div className="mx-auto grid max-w-[1080px] gap-10 px-6 py-16 md:grid-cols-2">
-          <div>
-            <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
-              During the hackathon
+      <section className="border-t border-white/10">
+        <div className={`${CONTAINER} grid md:grid-cols-2`}>
+          <Reveal className="border-b border-white/10 py-20 md:border-r md:border-b-0 md:pr-10 sm:py-28">
+            <h2 className={`t-reveal-item ${H2}`}>
+              During{" "}
+              <span className="text-white/45">the hackathon.</span>
             </h2>
 
-            <ul className="mt-5 space-y-3">
-              {DURING.map((line) => (
+            <ul className="mt-8 space-y-4">
+              {DURING.map((line, index) => (
                 <li
                   key={line}
-                  className="flex gap-3 text-[13.5px] leading-[1.6] text-[var(--text-muted)]"
+                  style={at(index + 1)}
+                  className="t-reveal-item flex gap-3 text-[14.5px] leading-[1.6] text-white/60"
                 >
                   <span aria-hidden="true" className="shrink-0 text-[var(--accent)]">
                     ✓
@@ -242,18 +280,20 @@ export default function HackathonsPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
 
-          <div>
-            <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
-              Before judging
+          <Reveal className="py-20 md:pl-10 sm:py-28">
+            <h2 className={`t-reveal-item ${H2}`}>
+              Before{" "}
+              <span className="text-white/45">judging.</span>
             </h2>
 
-            <ul className="mt-5 space-y-3">
-              {JUDGING.map((line) => (
+            <ul className="mt-8 space-y-4">
+              {JUDGING.map((line, index) => (
                 <li
                   key={line}
-                  className="flex gap-3 text-[13.5px] leading-[1.6] text-[var(--text-muted)]"
+                  style={at(index + 1)}
+                  className="t-reveal-item flex gap-3 text-[14.5px] leading-[1.6] text-white/60"
                 >
                   <span aria-hidden="true" className="shrink-0 text-[var(--accent)]">
                     ✓
@@ -264,16 +304,16 @@ export default function HackathonsPage() {
               ))}
             </ul>
 
-            <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3.5">
-              <p className="text-[13.5px] font-semibold">Play fair</p>
+            <div style={at(JUDGING.length + 1)} className="t-reveal-item mt-10 rounded-2xl border border-white/10 bg-[#050505] px-5 py-4">
+              <p className="text-[14px] font-[450]">Play fair</p>
 
-              <p className="mt-1 text-[13px] leading-[1.6] text-[var(--text-muted)]">
+              <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">
                 Follow your event&apos;s rules on AI, and make sure your team
                 understands everything you submit. Check facts, numbers and
                 links - the AI can be wrong.
               </p>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -282,59 +322,43 @@ export default function HackathonsPage() {
       {/* START, AND ORGANISERS          */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-[var(--border)]">
-        <div className="mx-auto flex max-w-[1080px] flex-col gap-8 px-6 py-16 md:flex-row md:items-center">
-          <div className="flex-1">
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em]">
-              Ready when your team is.
-            </h2>
+      <section className="relative isolate overflow-hidden border-t border-white/10">
+        <SignalField calm="center" />
 
-            <p className="mt-1 text-[14px] text-[var(--text-muted)]">
-              Create the project, invite your team, and give your first
-              channel a job.
-            </p>
+        <Reveal className={`${CONTAINER} relative flex min-h-[460px] flex-col items-center justify-center py-24 text-center`}>
+          <h2 className="t-reveal-item text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[56px]">
+            Ready when your team is.
+          </h2>
 
-            <Link
-              href="/login?mode=signup"
-              className="mt-5 inline-block rounded-lg bg-[var(--text)] px-5 py-2.5 text-[14px] font-medium text-[var(--bg)] transition hover:opacity-90"
-            >
+          <p style={at(1)} className="t-reveal-item mt-4 max-w-[440px] text-[15px] leading-[1.6] text-white/60">
+            Create the project, invite your team, and give your first
+            channel a job.
+          </p>
+
+          <div style={at(2)} className="t-reveal-item mt-8">
+            <Link href="/login?mode=signup" className={PRIMARY}>
               Create your team&apos;s project
             </Link>
           </div>
 
-          <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 md:max-w-[380px]">
-            <p className="text-[14px] font-semibold">Running a hackathon?</p>
+          <div style={at(3)} className="t-reveal-item mt-12 max-w-[440px] rounded-2xl border border-white/10 bg-black/70 p-5 text-left backdrop-blur-sm">
+            <p className="text-[14px] font-[450]">Running a hackathon?</p>
 
-            <p className="mt-1.5 text-[13px] leading-[1.6] text-[var(--text-muted)]">
+            <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">
               We&apos;re happy to give a short demo at your kickoff and help your
               participants get set up.{" "}
               <ContactUs
                 label="Get in touch"
                 topic="Partnership or hackathon"
-                className="text-[var(--text)] underline underline-offset-2"
+                className="text-[#ededed] underline decoration-white/30 underline-offset-4"
               />
               .
             </p>
           </div>
-        </div>
+        </Reveal>
       </section>
 
-
-      <footer className="border-t border-[var(--border)]">
-        <div className="mx-auto flex max-w-[1080px] flex-wrap items-center gap-x-5 gap-y-3 px-6 py-8 text-[12.5px] text-[var(--text-faint)]">
-          <Link href="/" className="hover:text-[var(--text-muted)]">
-            Teamski home
-          </Link>
-
-          <Link href="/security" className="hover:text-[var(--text-muted)]">
-            Security &amp; data
-          </Link>
-
-          <Link href="/privacy" className="hover:text-[var(--text-muted)]">
-            Privacy Policy
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

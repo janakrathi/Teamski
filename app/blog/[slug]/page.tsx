@@ -8,6 +8,19 @@ import Article from "@/components/blog/Article";
 
 import { allPosts, postBySlug } from "@/lib/blog/posts";
 
+import SignalField from "@/components/landing/SignalField";
+
+import Reveal from "@/components/landing/Reveal";
+
+import {
+  PRIMARY,
+  SECONDARY,
+  SITE_THEME,
+  SiteFooter,
+  SiteHeader,
+  at,
+} from "@/components/landing/Site";
+
 
 type Params = { slug: string };
 
@@ -105,7 +118,7 @@ export default async function PostPage({
   };
 
   return (
-    <main className="min-h-dvh bg-[var(--bg)] text-[var(--text)]">
+    <main style={SITE_THEME} className="min-h-dvh shrink-0 bg-black text-[#ededed]">
       <script
         type="application/ld+json"
         // Structured data is JSON, not user input.
@@ -114,45 +127,83 @@ export default async function PostPage({
         }}
       />
 
-      <div className="mx-auto max-w-[720px] px-6 py-16">
-        <Link
-          href="/blog"
-          className="text-[13px] text-[var(--text-faint)] transition hover:text-[var(--text)]"
-        >
-          ← All posts
-        </Link>
+      {/* ------------------------------ */}
+      {/* TITLE                          */}
+      {/* ------------------------------ */}
 
-        <p className="mt-6 text-[12px] tracking-[0.04em] text-[var(--text-faint)] uppercase">
-          {formatDate(post.date)}
-        </p>
+      <section className="relative isolate overflow-hidden border-b border-white/10">
+        <SignalField calm="soft" />
 
-        <h1 className="mt-2 text-[32px] leading-[1.12] font-semibold tracking-[-0.02em]">
-          {post.title}
-        </h1>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_30%_60%,rgba(0,0,0,0.85),transparent_75%)]"
+        />
 
-        <div className="mt-8">
-          <Article content={post.content} />
+        <SiteHeader />
+
+        <div className="relative mx-auto max-w-[760px] px-6 pt-12 pb-16 sm:pt-16 sm:pb-20">
+          <Link
+            href="/blog"
+            style={at(0)}
+            className="t-text-reveal group inline-flex items-center gap-1.5 text-[13px] text-white/50 transition-colors duration-150 hover:text-white"
+          >
+            <span
+              aria-hidden="true"
+              className="transition-transform duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-x-0.5"
+            >
+              ←
+            </span>
+            All posts
+          </Link>
+
+          <p style={at(1)} className="t-text-reveal mt-8 text-[12px] tracking-[0.06em] text-white/40 uppercase">
+            {formatDate(post.date)}
+          </p>
+
+          <h1
+            style={at(2)}
+            className="t-text-reveal mt-3 text-[34px] leading-[1.1] font-[450] tracking-[-0.03em] sm:text-[46px]"
+          >
+            {post.title}
+          </h1>
         </div>
+      </section>
+
+
+      {/* ------------------------------ */}
+      {/* THE POST                       */}
+      {/* ------------------------------ */}
+
+      <div className="mx-auto max-w-[760px] px-6 py-14 sm:py-16">
+        <Article content={post.content} />
 
         {/* Call to action */}
-        <div className="mt-12 rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] p-6">
-          <p className="text-[15px] font-medium text-[var(--text)]">
-            Try Teamski free
-          </p>
+        <Reveal className="mt-16">
+          <div className="t-reveal-item relative isolate overflow-hidden rounded-2xl border border-white/10 bg-[#050505] p-7">
+            <p className="text-[20px] font-[450] tracking-[-0.015em]">
+              Try Teamski free{" "}
+              <span className="text-white/45">with your whole team.</span>
+            </p>
 
-          <p className="mt-1 text-[14px] leading-[1.6] text-[var(--text-muted)]">
-            A shared AI teammate that lives in your team&apos;s
-            channels. Free to start, unlimited people.
-          </p>
+            <p className="mt-2 max-w-[460px] text-[14.5px] leading-[1.6] text-white/55">
+              A shared AI teammate that lives in your team&apos;s
+              channels. Free to start, unlimited people.
+            </p>
 
-          <Link
-            href="/welcome"
-            className="mt-4 inline-block rounded-lg bg-[var(--text)] px-4 py-2 text-[13.5px] font-medium text-[var(--bg)] transition hover:opacity-90"
-          >
-            Get started free
-          </Link>
-        </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/login?mode=signup" className={PRIMARY}>
+                Get started free
+              </Link>
+
+              <Link href="/welcome" className={SECONDARY}>
+                See how it works
+              </Link>
+            </div>
+          </div>
+        </Reveal>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

@@ -53,11 +53,13 @@ function noise(x: number, y: number) {
 export default function SignalField({
   // Where the field is calm, so copy over it stays
   // readable: "left" keeps the left half quiet (a hero
-  // with text on the left), "center" the middle.
+  // with text on the left), "center" the middle, and
+  // "soft" keeps all of it faint - a band behind a
+  // heading.
   calm = "left",
   className = "",
 }: {
-  calm?: "left" | "center";
+  calm?: "left" | "center" | "soft";
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -103,6 +105,12 @@ export default function SignalField({
       }
 
       const edgeY = Math.min(1, y / (height * 0.18), (height - y) / (height * 0.28));
+
+      if (calm === "soft") {
+        const edgeX = Math.min(1, x / (width * 0.12), (width - x) / (width * 0.12));
+
+        return 0.42 * Math.max(0, Math.min(edgeX, edgeY));
+      }
 
       if (calm === "center") {
         const dx = (x - width / 2) / (width / 2);

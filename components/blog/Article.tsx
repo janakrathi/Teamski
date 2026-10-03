@@ -109,7 +109,7 @@ export default function Article({
       blocks.push(
         <h2
           key={key++}
-          className="mt-8 mb-3 text-[20px] font-semibold tracking-[-0.01em] text-[var(--text)] first:mt-0"
+          className="mt-10 mb-3 text-[22px] font-[450] tracking-[-0.015em] text-[var(--text)] first:mt-0"
         >
           {renderInline(line.slice(3), `h${key}`)}
         </h2>
