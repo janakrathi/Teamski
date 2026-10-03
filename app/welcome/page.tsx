@@ -188,30 +188,6 @@ const FILL_ROW = [
   SPAN_4[APPS.length % 4],
 ].join(" ");
 
-const STEPS = [
-  {
-    n: "1",
-    title: "Sign up",
-    body: "With your email or Google. Free, with as many people as you like.",
-  },
-  {
-    n: "2",
-    title: "Name a project",
-    body: "One per team, product or class project. Every new project gets Team free for its first 2 months.",
-  },
-  {
-    n: "3",
-    title: "Give a channel a job",
-    body: "Pick a ready-made agent - Research, Meeting notes, Planner, Bug triage - or write its instructions yourself.",
-  },
-  {
-    n: "4",
-    title: "Invite the team and ask",
-    body: "Everyone talks to the same agent and sees the same answers. Approve anything it wants to change.",
-  },
-];
-
-
 // The example project: one team's week, built only
 // from agents and features the app actually has.
 
@@ -240,46 +216,6 @@ const EXAMPLE_CHANNELS = [
     asked: "\u201cWhat broke since Friday?\u201d",
     did: "New Sentry errors grouped by cause, with the two that need fixing before launch at the top.",
   },
-];
-
-
-const BEFORE = [
-  "Five people, five ChatGPT tabs, five different answers.",
-  "Decisions buried in chat, and asked again next week.",
-  "A status meeting just to find out what everyone did.",
-  "Someone copies AI output into Linear by hand.",
-  "Every new teammate means another AI subscription.",
-];
-
-const AFTER = [
-  "One agent per channel that the whole team talks to.",
-  "It remembers what the team decided, so nobody has to dig.",
-  "A Monday summary posts itself.",
-  "The agent drafts the Linear tasks; a person approves them.",
-  "Unlimited people on the free plan.",
-];
-
-
-// Kept honest on purpose: the "can't" list is as real
-// as the "can" list, and matches /security.
-
-const CAN = [
-  "Answer with the context of your project and channel.",
-  "Search the web and link to what it found.",
-  "Read and write the project's files.",
-  "Read Google Sheets and GitHub - and add rows or open issues once you approve.",
-  "Work in Notion, Linear, Jira, Asana, Sentry and more on Team.",
-  "Run tasks in the background and on a schedule.",
-  "Spot conflicting instructions and ask the team which to follow.",
-];
-
-const CANT = [
-  "Change or delete anything in your tools without a person approving it.",
-  "See into projects you're not a member of.",
-  "Use apps you haven't connected, or go beyond your account's access.",
-  "Finish very long jobs in one go - each task works in up to eight steps.",
-  "Be right every time - check facts, numbers and links before you rely on them.",
-  "Make the decision for you - it lays out options, your team decides.",
 ];
 
 
@@ -396,11 +332,11 @@ export default function Welcome() {
             </p>
 
             <Link
-              href="#start"
+              href="#example"
               className="group mt-4 inline-flex items-center gap-1.5 text-[13.5px] text-[#ededed]"
             >
               <span className="border-b border-white/30 pb-0.5 transition-colors duration-150 group-hover:border-white">
-                How to start
+                See an example project
               </span>
 
               <span
@@ -593,68 +529,6 @@ export default function Welcome() {
 
 
       {/* ------------------------------ */}
-      {/* BEFORE AND AFTER               */}
-      {/* ------------------------------ */}
-
-      <section className="border-t border-white/10">
-        <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal>
-            <h2 className={`t-reveal-item ${H2}`}>
-              Before and after{" "}
-              <span className="text-white/45">Teamski</span>
-            </h2>
-          </Reveal>
-
-          <div className="mt-14 grid border-t border-white/10 md:grid-cols-2">
-            <Reveal className="border-b border-white/10 py-10 md:border-r md:border-b-0 md:pr-10">
-              <p className="t-reveal-item text-[11px] tracking-[0.12em] text-white/40 uppercase">
-                Before
-              </p>
-
-              <ul className="mt-6 space-y-4">
-                {BEFORE.map((line, index) => (
-                  <li
-                    key={line}
-                    style={at(index + 1)}
-                    className="t-reveal-item flex gap-3 text-[15px] leading-[1.55] text-white/45"
-                  >
-                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-white/25">
-                      ✕
-                    </span>
-
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-
-            <Reveal className="py-10 md:pl-10">
-              <p className="t-reveal-item text-[11px] tracking-[0.12em] text-[#ededed] uppercase">
-                With Teamski
-              </p>
-
-              <ul className="mt-6 space-y-4">
-                {AFTER.map((line, index) => (
-                  <li
-                    key={line}
-                    style={at(index + 1)}
-                    className="t-reveal-item flex gap-3 text-[15px] leading-[1.55] text-[#ededed]"
-                  >
-                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-[var(--accent)]">
-                      ✓
-                    </span>
-
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ------------------------------ */}
       {/* CONNECTS TO                    */}
       {/* ------------------------------ */}
 
@@ -712,117 +586,6 @@ export default function Welcome() {
               </span>
             </li>
           </ul>
-        </div>
-      </section>
-
-
-      {/* ------------------------------ */}
-      {/* WHAT IT CAN AND CAN'T DO       */}
-      {/* ------------------------------ */}
-
-      <section className="border-t border-white/10">
-        <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
-            <h2 className={`t-reveal-item ${H2}`}>
-              What the agent can{" "}
-              <span className="text-white/45">and can&apos;t do.</span>
-            </h2>
-
-            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
-              So you know what to hand it, and what to keep for yourselves.
-            </p>
-          </Reveal>
-
-          <div className="mt-14 grid border-t border-white/10 md:grid-cols-2">
-            <Reveal className="border-b border-white/10 py-10 md:border-r md:border-b-0 md:pr-10">
-              <h3 className="t-reveal-item text-[16px] font-[450]">It can</h3>
-
-              <ul className="mt-5 space-y-3">
-                {CAN.map((line, index) => (
-                  <li
-                    key={line}
-                    style={at(index + 1)}
-                    className="t-reveal-item flex gap-3 text-[14.5px] leading-[1.55] text-white/60"
-                  >
-                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-[var(--accent)]">
-                      ✓
-                    </span>
-
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-
-            <Reveal className="py-10 md:pl-10">
-              <h3 className="t-reveal-item text-[16px] font-[450]">It can&apos;t</h3>
-
-              <ul className="mt-5 space-y-3">
-                {CANT.map((line, index) => (
-                  <li
-                    key={line}
-                    style={at(index + 1)}
-                    className="t-reveal-item flex gap-3 text-[14.5px] leading-[1.55] text-white/60"
-                  >
-                    <span aria-hidden="true" className="mt-[1px] shrink-0 text-white/25">
-                      ✕
-                    </span>
-
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ------------------------------ */}
-      {/* CREATE YOUR FIRST PROJECT      */}
-      {/* ------------------------------ */}
-
-      <section id="start" className="scroll-mt-6 border-t border-white/10">
-        <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
-            <h2 className={`t-reveal-item ${H2}`}>
-              Create your first project,{" "}
-              <span className="text-white/45">nothing to set up.</span>
-            </h2>
-
-            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
-              No card and nothing to set up - the built-in AI answers from the
-              first message.
-            </p>
-          </Reveal>
-
-          <Reveal clear className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, index) => (
-              <div key={step.n} style={at(index)} className="t-reveal-item bg-black p-6">
-                <span className="text-[34px] leading-none font-light tracking-[-0.03em] text-white/25 tabular-nums">
-                  0{step.n}
-                </span>
-
-                <h3 className="mt-6 text-[16px] font-[450]">
-                  {step.title}
-                </h3>
-
-                <p className="mt-2 text-[13.5px] leading-[1.6] text-white/55">
-                  {step.body}
-                </p>
-              </div>
-            ))}
-          </Reveal>
-
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link href="/login?mode=signup" className={PRIMARY}>
-              Create your first project
-            </Link>
-
-            <Link href="#example" className={SECONDARY}>
-              See an example project
-            </Link>
-          </div>
         </div>
       </section>
 

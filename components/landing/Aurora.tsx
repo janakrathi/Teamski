@@ -48,7 +48,7 @@ export default function Aurora({
   // How strong the glow is at the top of the page, and
   // what it fades to a screen or so further down -
   // black takes over as you read.
-  top = 0.6,
+  top = 0.42,
   rest = 0.12,
 }: {
   top?: number;
@@ -183,7 +183,7 @@ export default function Aurora({
 
       {/* Black keeps the upper hand: deepest in the middle,
           where most of the copy sits. */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_45%,rgba(0,0,0,0.12),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_45%,rgba(0,0,0,0.3),rgba(0,0,0,0.08)_70%)]" />
     </div>
   );
 }
