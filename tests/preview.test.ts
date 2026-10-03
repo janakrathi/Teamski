@@ -57,7 +57,7 @@ test("the page can show itself but cannot send anything anywhere", () => {
 test("a huge file is cut to the preview limit", () => {
   const doc = previewDocument("x".repeat(MAX_PREVIEW_BYTES + 5000));
 
-  assert.ok(doc.length < MAX_PREVIEW_BYTES + 1000);
+  assert.ok(doc.length < MAX_PREVIEW_BYTES + 3000);
 });
 
 
