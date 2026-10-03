@@ -9,7 +9,8 @@ import { useEffect, useRef } from "react";
 //
 // Children marked `t-reveal-item` (with --i for their
 // place in line) rise out of a blur as the section
-// scrolls into view - transitions.dev's text reveal.
+// scrolls into view - transitions.dev's text reveal -
+// every time, scrolling down or back up.
 //
 // The page is rendered visible. Only a section that is
 // still below the fold when this runs is hidden and
@@ -35,26 +36,40 @@ export default function Reveal({
       return;
     }
 
-    if (node.getBoundingClientRect().top < window.innerHeight * 0.9) {
-      return;
+    // A section already on screen when the page opens
+    // is left as it is; it joins in once it has been
+    // scrolled away and comes back.
+    if (node.getBoundingClientRect().top >= window.innerHeight * 0.9) {
+      node.dataset.reveal = "armed";
     }
 
-    node.dataset.reveal = "armed";
-
-    const observer = new IntersectionObserver(
+    // Rises in once it is a little way into the screen...
+    const enter = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && node.dataset.reveal === "armed") {
           node.dataset.reveal = "in";
-
-          observer.disconnect();
         }
       },
       { rootMargin: "0px 0px -12% 0px" }
     );
 
-    observer.observe(node);
+    // ...and is put back, ready to rise again, only once
+    // it is entirely off screen - so it never vanishes
+    // while somebody can see it, and plays again every
+    // time it is scrolled back to, in either direction.
+    const leave = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) {
+        node.dataset.reveal = "armed";
+      }
+    });
 
-    return () => observer.disconnect();
+    enter.observe(node);
+    leave.observe(node);
+
+    return () => {
+      enter.disconnect();
+      leave.disconnect();
+    };
   }, []);
 
   return (
