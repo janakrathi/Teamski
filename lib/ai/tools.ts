@@ -282,7 +282,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "create_file",
 
     description:
-      "Create a new file in this project's files, or overwrite one that already exists.",
+      "Create a new file in this project's files, or overwrite one that already exists. For a landing page or any web page, write one self-contained .html file (CSS and JavaScript inline, images as full https links): people can preview .html files live in the chat.",
 
     parameters: {
       type: "object",

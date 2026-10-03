@@ -9,6 +9,8 @@ import type {
   ChatMessage,
 } from "./useChat";
 
+import FilePreview, { canPreview } from "./FilePreview";
+
 
 // ==========================================
 // ACTIVITY TRAIL
@@ -565,6 +567,14 @@ function MessageRow({
 
             {message.file}
           </a>
+        )}
+
+        {/* A page the agent made can be seen right here. */}
+        {canPreview(message.file) && (
+          <FilePreview
+            filename={message.file!}
+            projectId={message.projectId ?? projectId ?? ""}
+          />
         )}
 
 
