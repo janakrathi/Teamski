@@ -1,3 +1,5 @@
+import { canReadImages } from "@/lib/ai/router";
+
 import {
   isLocal,
   serviceOf,
@@ -502,12 +504,18 @@ export async function POST(request: Request) {
       ? CEREBRAS_DEFAULT_MODEL
       : DEFAULT_MODEL;
 
+  const chosenModel =
+    channelModel || personalModel || sharedDefault;
+
+  // An image goes to the shared vision model only when
+  // the chosen model can't read images itself; a channel
+  // on Claude or GPT answers it directly.
   const model =
-    needsVision && (cerebrasKey() || groqKey())
+    needsVision &&
+    !canReadImages(chosenModel) &&
+    (cerebrasKey() || groqKey())
       ? visionModel
-      : channelModel ||
-        personalModel ||
-        sharedDefault;
+      : chosenModel;
 
   const answersLocally = isLocal(model);
 

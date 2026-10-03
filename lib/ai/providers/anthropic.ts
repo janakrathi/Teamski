@@ -38,6 +38,27 @@ import {
 const MAX_TOKENS = 16000;
 
 
+// data:image/png;base64,... -> Claude's image block.
+// Anything else (an http link, an unsupported type) is
+// skipped rather than sent broken.
+
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
+
+export function imageBlocks(images: string[] | undefined): Anthropic.ImageBlockParam[] {
+  return (images ?? []).flatMap((url) => {
+    const match = /^data:(image\/[a-z+]+);base64,(.+)$/i.exec(url);
+
+    const type = match?.[1].toLowerCase() as (typeof IMAGE_TYPES)[number] | undefined;
+
+    if (!match || !type || !IMAGE_TYPES.includes(type)) {
+      return [];
+    }
+
+    return [{ type: "image" as const, source: { type: "base64" as const, media_type: type, data: match[2] } }];
+  });
+}
+
+
 function isHaiku(model: string) {
   return /haiku/i.test(model);
 }
@@ -125,6 +146,22 @@ async function* stream(
                 message.tool_name ?? "a tool"
               }:\n${message.content}`,
             },
+          ],
+        };
+      }
+
+      // A user turn with images: the pictures first, then
+      // the question, which is the order Claude reads
+      // best. Images arrive as data URLs.
+      const images =
+        message.role === "user" ? imageBlocks(message.images) : [];
+
+      if (images.length > 0) {
+        return {
+          role: "user",
+          content: [
+            ...images,
+            { type: "text", text: message.content || "What is in this image?" },
           ],
         };
       }

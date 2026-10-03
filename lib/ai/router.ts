@@ -127,3 +127,45 @@ export function resolveAuto(
 
   return `${service}/${chosen}`;
 }
+
+
+// ==========================================
+// WHICH MODELS CAN READ IMAGES
+// ==========================================
+//
+// A message with an image attached used to go to the
+// free shared vision model whatever the channel ran.
+// When the channel's own model can read images - every
+// current Claude, GPT-4o/4.1/5, Gemini - it answers
+// itself, and far better. Unknown models are assumed
+// not to, so an image is never silently ignored.
+
+export function canReadImages(qualifiedModel: string) {
+  const slash = qualifiedModel.indexOf("/");
+
+  if (slash === -1) {
+    return false;
+  }
+
+  const service = qualifiedModel.slice(0, slash);
+  const model = qualifiedModel.slice(slash + 1).toLowerCase();
+
+  if (service === "anthropic") {
+    return true;
+  }
+
+  if (service === "openai") {
+    return model === AUTO_MODEL || /^(gpt-4o|gpt-4\.1|gpt-5|o3|o4)/.test(model);
+  }
+
+  if (service === "google") {
+    return model.startsWith("gemini");
+  }
+
+  // Through OpenRouter, judge by the model behind it.
+  if (service === "openrouter") {
+    return /^(anthropic\/claude|openai\/(gpt-4o|gpt-4\.1|gpt-5)|google\/gemini)/.test(model);
+  }
+
+  return false;
+}

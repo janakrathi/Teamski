@@ -127,3 +127,40 @@ test("Haiku runs without adaptive thinking, which it does not accept", async () 
   assert.equal(body.thinking, undefined);
   assert.deepEqual(body.cache_control, { type: "ephemeral" });
 });
+
+
+test("Claude receives attached images as image blocks, before the question", async () => {
+  const { imageBlocks } = await import("../lib/ai/providers/anthropic.ts");
+
+  const blocks = imageBlocks(["data:image/jpeg;base64,AAAA", "https://example.com/x.png", "data:image/tiff;base64,BBBB"]);
+
+  // Only the supported data URL survives; links and unsupported types are skipped.
+  assert.equal(blocks.length, 1);
+  assert.deepEqual(blocks[0], { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "AAAA" } });
+
+  const realFetch = globalThis.fetch;
+  let body: { messages?: { content: unknown }[] } = {};
+
+  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body ?? "{}"));
+    return new Response(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "stop" } }), { status: 400, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+
+  try {
+    await anthropicProvider
+      .stream({
+        model: "claude-sonnet-5-5",
+        credential: { key: "test-key" },
+        messages: [{ role: "user", content: "what is this?", images: ["data:image/png;base64,CCCC"] }],
+      })
+      .next()
+      .catch(() => null);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+
+  const content = body.messages?.[0].content as { type: string }[];
+
+  assert.equal(content[0].type, "image");
+  assert.equal(content[1].type, "text");
+});

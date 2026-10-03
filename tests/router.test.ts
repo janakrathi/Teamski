@@ -48,3 +48,17 @@ test("Auto becomes a real model; anything else is left alone", () => {
     assert.equal(resolveAuto(model, { messages: [user("hi")] }), model);
   }
 });
+
+
+test("the channel's own model answers images when it can read them", async () => {
+  const { canReadImages } = await import("../lib/ai/router.ts");
+
+  for (const model of ["anthropic/claude-sonnet-5-5", "anthropic/auto", "openai/gpt-4o", "openai/gpt-5-mini", "openai/auto", "google/gemini-3.8-flash", "openrouter/anthropic/claude-sonnet-4.5"]) {
+    assert.equal(canReadImages(model), true, model);
+  }
+
+  // Unknown or text-only models fall back to the shared vision model.
+  for (const model of ["groq/openai/gpt-oss-120b", "qwen3:1.7b", "deepseek/deepseek-chat", "openrouter/meta-llama/llama-3.3-70b-instruct"]) {
+    assert.equal(canReadImages(model), false, model);
+  }
+});
