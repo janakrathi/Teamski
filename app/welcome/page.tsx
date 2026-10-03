@@ -25,6 +25,8 @@ import {
 
 import SignalField from "@/components/landing/SignalField";
 
+import Aurora from "@/components/landing/Aurora";
+
 import Reveal from "@/components/landing/Reveal";
 
 import Faq from "@/components/landing/Faq";
@@ -297,8 +299,11 @@ export default function Welcome() {
   return (
     <main
       style={SITE_THEME}
-      className="min-h-screen shrink-0 bg-black text-[#ededed]"
+      className="relative isolate min-h-screen shrink-0 text-[#ededed]"
     >
+      {/* Pastel light drifting behind the whole page. */}
+      <Aurora />
+
       {/* "<" escaped, as Next.js advises for JSON-LD. */}
       <script
         type="application/ld+json"
@@ -323,7 +328,7 @@ export default function Welcome() {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_18%_55%,rgba(0,0,0,0.9),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_18%_55%,rgba(0,0,0,0.6),transparent_70%)]"
         />
 
         <div className={`${CONTAINER} relative pt-28 pb-20`}>
