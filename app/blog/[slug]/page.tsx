@@ -139,7 +139,7 @@ export default async function PostPage({
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_30%_60%,rgba(0,0,0,0.85),transparent_75%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_30%_60%,rgba(0,0,0,0.4),transparent_75%)]"
         />
 
         <SiteHeader />

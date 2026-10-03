@@ -23,11 +23,12 @@ import { useEffect, useRef } from "react";
 
 type RGB = [number, number, number];
 
-// Light purples only.
+// Light purples only - pale enough to read as light,
+// not as a dark wash.
 const TONES: RGB[] = [
-  [196, 172, 240], // lavender
-  [178, 150, 226], // lilac
-  [160, 134, 214], // soft violet
+  [214, 196, 255], // pale lavender
+  [198, 176, 252], // lilac
+  [184, 160, 246], // soft violet
 ];
 
 const POOLS = 5;
@@ -43,7 +44,16 @@ type Pool = {
   reachY: number;
 };
 
-export default function Aurora() {
+export default function Aurora({
+  // How strong the glow is at the top of the page, and
+  // what it fades to a screen or so further down -
+  // black takes over as you read.
+  top = 0.6,
+  rest = 0.12,
+}: {
+  top?: number;
+  rest?: number;
+}) {
   const layerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -107,6 +117,13 @@ export default function Aurora() {
 
       const progress = Math.min(1, window.scrollY / scrollable);
 
+      // Strong at the top, very light once the opening is
+      // scrolled past. Opacity is a compositor change, so
+      // this costs nothing to update every frame.
+      const fade = Math.min(1, window.scrollY / (height * 1.1));
+
+      layer.style.opacity = (top + (rest - top) * fade).toFixed(3);
+
       pools.forEach((pool, index) => {
         const size = (pool.size / 100) * Math.max(width, height);
 
@@ -158,15 +175,15 @@ export default function Aurora() {
       window.removeEventListener("scroll", onScroll);
       nodes.forEach((node) => node.remove());
     };
-  }, []);
+  }, [top, rest]);
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
-      <div ref={layerRef} className="absolute inset-0 opacity-[0.42]" />
+      <div ref={layerRef} className="absolute inset-0" style={{ opacity: top }} />
 
       {/* Black keeps the upper hand: deepest in the middle,
           where most of the copy sits. */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_45%,rgba(0,0,0,0.3),rgba(0,0,0,0.08)_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_45%,rgba(0,0,0,0.12),transparent_70%)]" />
     </div>
   );
 }

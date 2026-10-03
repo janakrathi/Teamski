@@ -133,9 +133,14 @@ export default function SignalField({
         let value = middle;
 
         if (topWeight > 0) {
-          const hero = phone
-            ? 0.3
-            : Math.max(0, Math.min(1, (x / width - 0.12) * 1.6)) * 0.9 + 0.1;
+          // Barely there behind the top bar, so its links
+          // and buttons read clearly; full below it.
+          const underBar = 0.12 + 0.88 * Math.max(0, Math.min(1, (y - 70) / 90));
+
+          const hero =
+            (phone
+              ? 0.3
+              : Math.max(0, Math.min(1, (x / width - 0.12) * 1.6)) * 0.9 + 0.1) * underBar;
 
           value += (hero - middle) * topWeight;
         }

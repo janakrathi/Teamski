@@ -52,7 +52,7 @@ export default function BlogIndex() {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_18%_60%,rgba(0,0,0,0.9),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_18%_60%,rgba(0,0,0,0.35),transparent_70%)]"
         />
 
         <SiteHeader />

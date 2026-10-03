@@ -6,6 +6,8 @@ import Logo from "@/components/ui/Logo";
 
 import SignalField from "@/components/landing/SignalField";
 
+import Aurora from "@/components/landing/Aurora";
+
 import { SITE_THEME } from "@/components/landing/Site";
 
 import GoogleSignIn from "@/components/auth/GoogleSignIn";
@@ -538,10 +540,12 @@ function Form({
   return (
     <main
       style={SITE_THEME}
-      className="relative isolate flex min-h-screen shrink-0 items-center justify-center overflow-hidden bg-black px-6 pt-20 pb-12"
+      className="relative isolate flex min-h-screen shrink-0 items-center justify-center overflow-hidden px-6 pt-20 pb-12"
     >
-      {/* The site's signal field, quiet in the middle where
-          the form is. */}
+      {/* A very light purple glow on black, and the site's
+          signal field, quiet in the middle where the form is. */}
+      <Aurora top={0.32} rest={0.32} />
+
       <SignalField calm="center" />
 
       <div

@@ -117,7 +117,7 @@ export default function HackathonsPage() {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_18%_55%,rgba(0,0,0,0.9),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_18%_55%,rgba(0,0,0,0.35),transparent_70%)]"
         />
 
         <SiteHeader />
