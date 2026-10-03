@@ -4,7 +4,15 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
+import Link from "next/link";
+
 import Logo from "@/components/ui/Logo";
+
+import Aurora from "@/components/landing/Aurora";
+
+import SignalField from "@/components/landing/SignalField";
+
+import { SITE_THEME } from "@/components/landing/Site";
 
 import { Field } from "@/app/login/LoginForm";
 
@@ -65,8 +73,30 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-12">
-      <div className="w-full max-w-[360px]">
+    <main
+      style={SITE_THEME}
+      className="relative isolate flex min-h-screen shrink-0 items-center justify-center overflow-hidden px-6 pt-20 pb-12"
+    >
+      {/* The same light purple glow and signal lines as
+          sign-in, quiet in the middle where the form is. */}
+      <Aurora top={0.24} rest={0.24} />
+
+      <SignalField calm="center" />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_42%_60%_at_50%_50%,rgba(0,0,0,0.92),transparent_80%)]"
+      />
+
+      <Link
+        href="/"
+        className="absolute top-5 left-6 z-10 flex items-center gap-2.5 text-[15px] font-medium tracking-[-0.01em] text-[#ededed]"
+      >
+        <Logo size={28} />
+        Teamski
+      </Link>
+
+      <div className="t-modal relative w-full max-w-[380px] rounded-2xl border border-white/10 bg-black/85 px-6 py-8 shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:px-7">
         <div className="mb-8 text-center">
           <Logo size={64} className="mx-auto mb-4" />
 

@@ -1,10 +1,13 @@
-import Link from "next/link";
-
-import Logo from "@/components/ui/Logo";
-
 import { LEGAL } from "@/lib/legal";
 
-import ContactUs from "@/components/landing/ContactUs";
+import Backdrop from "@/components/landing/Backdrop";
+
+import {
+  SITE_THEME,
+  SiteFooter,
+  SiteHeader,
+  at,
+} from "@/components/landing/Site";
 
 
 // ==========================================
@@ -24,44 +27,39 @@ export function LegalPage({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-[var(--bg)] px-6 py-12">
-      <div className="mx-auto max-w-[680px]">
-        <Link
-          href="/"
-          className="mb-10 inline-flex items-center gap-2 text-[13px] font-semibold text-[var(--text)]"
-        >
-          <Logo size={24} />
-          {LEGAL.service}
-        </Link>
+    <main style={SITE_THEME} className="relative isolate min-h-screen shrink-0 text-[#ededed]">
+      {/* The public site's backdrop: black, a light purple
+          glow and the signal lines. */}
+      <Backdrop />
 
-        <h1 className="text-[26px] font-semibold tracking-[-0.01em] text-[var(--text)]">
+      <SiteHeader />
+
+      <div className="mx-auto max-w-[720px] px-6 pt-12 pb-20 sm:pt-16">
+        <p style={at(0)} className="t-text-reveal text-[11px] tracking-[0.12em] text-white/40 uppercase">
+          {LEGAL.service}
+        </p>
+
+        <h1
+          style={at(1)}
+          className="t-text-reveal mt-4 text-[36px] leading-[1.08] font-[450] tracking-[-0.03em] sm:text-[48px]"
+        >
           {title}
         </h1>
 
-        <p className="mt-2 text-[13px] text-[var(--text-faint)]">
+        <p style={at(2)} className="t-text-reveal mt-3 text-[13px] text-white/40">
           Last updated {LEGAL.lastUpdated}
         </p>
 
-        <div className="legal mt-8 space-y-4 text-[14px] leading-[1.7] text-[var(--text-muted)]">
+        {/* The text keeps a clear background. */}
+        <div
+          data-signal-clear
+          className="legal mt-10 space-y-4 text-[14.5px] leading-[1.75] text-[var(--text-muted)]"
+        >
           {children}
         </div>
-
-        <footer className="mt-14 flex gap-4 border-t border-[var(--border)] pt-6 text-[12.5px] text-[var(--text-faint)]">
-          <Link href="/privacy" className="hover:text-[var(--text-muted)]">
-            Privacy Policy
-          </Link>
-
-          <Link href="/terms" className="hover:text-[var(--text-muted)]">
-            Terms of Service
-          </Link>
-
-          <Link href="/security" className="hover:text-[var(--text-muted)]">
-            Security &amp; data
-          </Link>
-
-          <ContactUs className="ml-auto hover:text-[var(--text-muted)]" />
-        </footer>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
@@ -69,7 +67,7 @@ export function LegalPage({
 
 export function H2({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="pt-6 text-[17px] font-semibold text-[var(--text)]">
+    <h2 className="pt-8 text-[20px] font-[450] tracking-[-0.015em] text-[var(--text)]">
       {children}
     </h2>
   );

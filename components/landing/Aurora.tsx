@@ -23,13 +23,12 @@ import { useEffect, useRef } from "react";
 
 type RGB = [number, number, number];
 
-// Rich purples, kept dim: saturated enough to read as
-// colour rather than grey, at a low strength so black
-// still leads.
+// Light purples only - pale enough to read as light,
+// not as a dark wash.
 const TONES: RGB[] = [
-  [139, 92, 246], // violet
-  [168, 85, 247], // purple
-  [124, 58, 237], // deep violet
+  [214, 196, 255], // pale lavender
+  [198, 176, 252], // lilac
+  [184, 160, 246], // soft violet
 ];
 
 const POOLS = 5;
@@ -49,8 +48,8 @@ export default function Aurora({
   // How strong the glow is at the top of the page, and
   // what it fades to a screen or so further down -
   // black takes over as you read.
-  top = 0.2,
-  rest = 0.07,
+  top = 0.24,
+  rest = 0.08,
 }: {
   top?: number;
   rest?: number;

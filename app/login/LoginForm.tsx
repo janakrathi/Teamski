@@ -544,7 +544,7 @@ function Form({
     >
       {/* A very light purple glow on black, and the site's
           signal field, quiet in the middle where the form is. */}
-      <Aurora top={0.32} rest={0.32} />
+      <Aurora top={0.24} rest={0.24} />
 
       <SignalField calm="center" />
 
