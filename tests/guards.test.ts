@@ -334,3 +334,44 @@ test("a repo is found however it was written", () => {
     );
   }
 });
+
+
+// ==========================================
+// FILES THE AGENT SAVES
+// ==========================================
+
+import { prepareFileContent } from "../lib/ai/tools.ts";
+
+
+test("an empty file is refused, not saved as 'created'", () => {
+  assert.throws(() => prepareFileContent("landing.html", ""), /Nothing was saved/);
+  assert.throws(() => prepareFileContent("notes.md", "   \n "), /Nothing was saved/);
+  assert.throws(() => prepareFileContent("notes.md", undefined), /Nothing was saved/);
+});
+
+
+test("a page wrapped in a code fence is unwrapped", () => {
+  const { content } = prepareFileContent(
+    "landing.html",
+    "```html\n<!doctype html><html><body>Hi</body></html>\n```"
+  );
+
+  assert.equal(content, "<!doctype html><html><body>Hi</body></html>");
+});
+
+
+test("an .html file must contain HTML", () => {
+  assert.throws(() => prepareFileContent("landing.html", "Here is your landing page!"), /no HTML/);
+
+  // Other files can be plain text.
+  assert.equal(prepareFileContent("notes.md", "just text").content, "just text");
+});
+
+
+test("a page cut off part-way is saved, with a warning for the agent", () => {
+  const { note } = prepareFileContent("landing.html", "<!doctype html><html><body><h1>Crochet");
+
+  assert.match(note, /cut off/);
+
+  assert.equal(prepareFileContent("landing.html", "<html><body>ok</body></html>").note, "");
+});

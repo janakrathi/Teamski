@@ -245,7 +245,17 @@ async function fetchPreview(url: string): Promise<Loaded> {
       return { error: "That page is too large to preview. Download it instead." };
     }
 
-    return { doc: previewDocument(await response.text()) };
+    const text = await response.text();
+
+    if (!text.trim()) {
+      return { error: "This file is empty - the agent may have run out of room. Ask it to create the page again." };
+    }
+
+    if (!/<[a-z!][^>]*>/i.test(text)) {
+      return { error: "This file doesn't contain a web page. Ask the agent to write it as HTML." };
+    }
+
+    return { doc: previewDocument(text) };
   } catch {
     return { error: "The page couldn't be loaded." };
   }

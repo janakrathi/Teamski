@@ -191,6 +191,47 @@ const contentParam = {
 };
 
 
+// What a model hands create_file or edit_file, made fit
+// to save - or refused with a reason it can act on. A
+// model that ran out of room sends an empty or cut-off
+// file and still says "created"; saving that silently
+// left people with blank pages.
+
+export function prepareFileContent(filename: string, raw: unknown) {
+  let content = typeof raw === "string" ? raw : "";
+
+  // A whole file wrapped in a markdown code fence.
+  const fenced = /^\s*```[\w-]*[ \t]*\r?\n([\s\S]*?)\r?\n?```\s*$/.exec(content);
+
+  if (fenced) {
+    content = fenced[1];
+  }
+
+  if (!content.trim()) {
+    throw new Error(
+      `Nothing was saved: the content for ${filename} was empty. Write the complete file and call the tool again.`
+    );
+  }
+
+  let note = "";
+
+  if (/\.html?$/i.test(filename)) {
+    if (!/<[a-z!][^>]*>/i.test(content)) {
+      throw new Error(
+        `Nothing was saved: ${filename} has no HTML in it. Write the complete page as HTML and call the tool again.`
+      );
+    }
+
+    if (/<html[\s>]/i.test(content) && !/<\/html>/i.test(content)) {
+      note =
+        " It looks cut off (there is no closing </html>), so the page may be incomplete. Tell the user, and offer to finish it with edit_file.";
+    }
+  }
+
+  return { content, note };
+}
+
+
 // A spreadsheet id, from whatever the person
 // pasted. The address bar gives a long URL and
 // expecting somebody to dig the id out of it is
@@ -282,7 +323,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "create_file",
 
     description:
-      "Create a new file in this project's files, or overwrite one that already exists. For a landing page or any web page, write one self-contained .html file (CSS and JavaScript inline, images as full https links): people can preview .html files live in the chat.",
+      "Create a new file in this project's files, or overwrite one that already exists. For a landing page or any web page, write one complete, self-contained .html file (CSS and JavaScript inline; visuals made with CSS, emoji or inline SVG rather than image files): people can preview .html files live in the chat.",
 
     parameters: {
       type: "object",
@@ -311,13 +352,14 @@ export const TOOLS: ToolDefinition[] = [
         recursive: true,
       });
 
-      await fs.writeFile(
-        filePath,
-        args.content ?? "",
-        "utf-8"
+      const { content, note } = prepareFileContent(
+        args.filename,
+        args.content
       );
 
-      return `Created ${args.filename}.`;
+      await fs.writeFile(filePath, content, "utf-8");
+
+      return `Created ${args.filename}.${note}`;
     },
   },
 
@@ -406,13 +448,14 @@ export const TOOLS: ToolDefinition[] = [
         return `${args.filename} was not found, so there was nothing to edit.`;
       }
 
-      await fs.writeFile(
-        filePath,
-        args.content ?? "",
-        "utf-8"
+      const { content, note } = prepareFileContent(
+        args.filename,
+        args.content
       );
 
-      return `Edited ${args.filename}.`;
+      await fs.writeFile(filePath, content, "utf-8");
+
+      return `Edited ${args.filename}.${note}`;
     },
   },
 
