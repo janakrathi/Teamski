@@ -177,3 +177,70 @@ export function fallbackOrder(options: {
     ...unknown,
   ];
 }
+
+
+// ==========================================
+// ROTATING ACROSS SOMEONE'S KEYS
+// ==========================================
+//
+// "Rotate my keys" tries a person's own keys in turn -
+// free-tier providers first - and moves on when one is
+// over its limit or failing, the way a free-tier
+// gateway like OmniRoute does, but inside Teamski. A
+// key that let us down is rested for a while so every
+// turn doesn't wait on it again.
+
+// A key that can't answer right now: over its limit,
+// or nothing usable behind it. The rotation moves on.
+export class KeyUnavailable extends Error {
+  constructor(reason: string) {
+    super(reason);
+    this.name = "KeyUnavailable";
+  }
+}
+
+// The order to try services in: free tiers first, paid
+// last, anything else in between.
+const FREE_FIRST = ["groq", "cerebras", "google", "openrouter", "mistral", "nvidia", "github"];
+const PAID_LAST = ["anthropic", "openai"];
+
+export function rotationOrder(services: string[]) {
+  const rank = (service: string) => {
+    const free = FREE_FIRST.indexOf(service);
+
+    if (free !== -1) {
+      return free;
+    }
+
+    const paid = PAID_LAST.indexOf(service);
+
+    return paid === -1 ? FREE_FIRST.length : FREE_FIRST.length + 1 + paid;
+  };
+
+  return [...new Set(services)].sort((a, b) => rank(a) - rank(b));
+}
+
+const resting = new Map<string, { until: number; strikes: number }>();
+
+export function keyResting(id: string, now = Date.now()) {
+  return (resting.get(id)?.until ?? 0) > now;
+}
+
+// Over its limit: a few minutes, growing with repeat
+// misses. Failing for another reason (a bad key, a
+// provider asking for billing): longer.
+export function restKey(id: string, limited: boolean, now = Date.now()) {
+  const strikes = (resting.get(id)?.strikes ?? 0) + 1;
+
+  const minutes = Math.min(60, (limited ? 2 : 15) * 2 ** (strikes - 1));
+
+  resting.set(id, { until: now + minutes * 60_000, strikes });
+}
+
+export function keyRecovered(id: string) {
+  resting.delete(id);
+}
+
+export function __resetRotation() {
+  resting.clear();
+}

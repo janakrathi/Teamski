@@ -524,9 +524,13 @@ export async function POST(request: Request) {
   // minute cap is the tight one, so a request on
   // either is trimmed to fit Groq - every step in the
   // chain then works.
+  // Rotating someone's keys starts on free tiers with
+  // the same tight per-minute caps, so it is trimmed the
+  // same way.
   const onSharedFree =
     serviceOf(model) === "groq" ||
-    serviceOf(model) === "cerebras";
+    serviceOf(model) === "cerebras" ||
+    serviceOf(model) === "rotate";
 
 
   // ----------------------------------------

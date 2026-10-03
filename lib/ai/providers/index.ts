@@ -23,6 +23,7 @@ import {
 
 import {
   GROQ_BASE_URL,
+  GROQ_DEFAULT_MODEL,
   GROQ_MODELS,
   groqKey,
 } from "./groq.ts";
@@ -39,7 +40,16 @@ import { PRESETS, presetById } from "./compatible.ts";
 
 import { projectOverspent } from "../spend.ts";
 
-import { fallbackOrder, unlessLimited } from "./limits.ts";
+import {
+  KeyUnavailable,
+  fallbackOrder,
+  isRateLimited,
+  keyRecovered,
+  keyResting,
+  restKey,
+  rotationOrder,
+  unlessLimited,
+} from "./limits.ts";
 
 import {
   DailyLimitError,
@@ -283,6 +293,21 @@ export async function modelsFor(
     }
   }
 
+  // With two or more keys, they can be used as one:
+  // rotated, free tiers first.
+  const keyGroups = groups.filter(
+    (group) => !group.local && group.service !== "ollama"
+  ).length;
+
+  if (keyGroups >= 2) {
+    groups.push({
+      service: "rotate",
+      label: "All my keys",
+      local: false,
+      models: [ROTATE_INFO],
+    });
+  }
+
   // The environment variables stay meaningful for
   // a workspace one person runs alone, but only
   // when they have not added a key of their own.
@@ -452,6 +477,139 @@ export type Answered = {
 // Anything after the first chunk is a real reply
 // already on screen and is left alone.
 
+// ------------------------------------------
+// ROTATING ACROSS SOMEONE'S OWN KEYS
+// ------------------------------------------
+//
+// "Rotate my keys (free first)": one choice that uses
+// every key a person (or their project) has added -
+// Groq, Cerebras, Gemini, OpenRouter, Mistral, NVIDIA,
+// then paid ones - moving to the next when one is over
+// its limit or failing. Their own accounts, used the
+// way each provider allows; Teamski just switches
+// between them. When every key is spent, the built-in
+// model answers, as it would anyway.
+
+export const ROTATE_MODEL = "rotate/keys";
+
+const ROTATE_INFO = {
+  id: ROTATE_MODEL,
+  label: "Rotate my keys (free first)",
+};
+
+// The keys to rotate through, in order, each as the
+// model to ask on it: the key's own first model, or
+// its provider's suggested one. On Claude and OpenAI
+// keys, Auto - the cheap model for quick asks.
+
+async function rotationModels(
+  db: SupabaseClient | null,
+  userId: string | null,
+  projectId: string | null,
+  admin: SupabaseClient | null
+) {
+  if (!db || !userId) {
+    return [];
+  }
+
+  const plan = await planHere({ db, admin: admin ?? db, userId, projectId });
+
+  const firstModel = new Map<string, string>();
+
+  for (const credential of await credentialsFor(db, userId)) {
+    if (!ownKeyAllowed(plan, credential.service) || firstModel.has(credential.service)) {
+      continue;
+    }
+
+    firstModel.set(credential.service, rotationModelFor(credential.service, credential.models));
+  }
+
+  if (projectId && admin && allows(plan, "shared_keys")) {
+    const { data } = await admin
+      .from("project_model_keys")
+      .select("service, models")
+      .eq("project_id", projectId);
+
+    for (const row of (data ?? []) as { service: string; models: ModelInfo[] | null }[]) {
+      if (!firstModel.has(row.service)) {
+        firstModel.set(row.service, rotationModelFor(row.service, row.models ?? []));
+      }
+    }
+  }
+
+  return rotationOrder([...firstModel.keys()])
+    .map((service) => firstModel.get(service)!)
+    .filter(Boolean);
+}
+
+function rotationModelFor(service: string, models: ModelInfo[]) {
+  if (autoAvailable(service)) {
+    return qualify(service, AUTO_INFO.id);
+  }
+
+  const id =
+    models[0]?.id ??
+    defaultModelsFor(service).find((model) => !/(^|\/)auto$/.test(model.id))?.id;
+
+  return id ? qualify(service, id) : "";
+}
+
+async function rotateKeys(
+  db: SupabaseClient | null,
+  userId: string | null,
+  options: Parameters<typeof streamFor>[2]
+): Promise<Answered> {
+  const models = await rotationModels(
+    db,
+    userId,
+    options.projectId ?? null,
+    options.admin ?? db
+  );
+
+  const restId = (model: string) => `${userId}:${model.slice(0, model.indexOf("/"))}`;
+
+  // Keys that let us down recently go to the back
+  // rather than being skipped, so with every key resting
+  // the best one is still tried.
+  const order = [
+    ...models.filter((model) => !keyResting(restId(model))),
+    ...models.filter((model) => keyResting(restId(model))),
+  ];
+
+  for (const model of order) {
+    try {
+      const answered = await streamFor(db, userId, {
+        ...options,
+        model,
+        noFallback: true,
+      });
+
+      keyRecovered(restId(model));
+
+      console.log(`[rotate] answered by ${answered.model}`);
+
+      return answered;
+    } catch (error) {
+      const limited = error instanceof KeyUnavailable || isRateLimited(error);
+
+      restKey(restId(model), limited);
+
+      console.log(
+        `[rotate] ${model} skipped (${error instanceof Error ? error.message : "failed"})`
+      );
+    }
+  }
+
+  // Every key is spent: the built-in model answers, out
+  // of the plan's allowance like any built-in answer.
+  return streamFor(db, userId, {
+    ...options,
+    model: groqKey() ? qualify("groq", GROQ_DEFAULT_MODEL) : DEFAULT_MODEL,
+    noFallback: false,
+  });
+}
+
+
 export async function streamFor(
   db: SupabaseClient | null,
   userId: string | null,
@@ -462,8 +620,18 @@ export async function streamFor(
     // Reading a key the caller may spend but not
     // see needs the service role.
     admin?: SupabaseClient | null;
+
+    // Used by the key rotation: when this key can't
+    // answer, say so (KeyUnavailable) instead of
+    // falling back to the built-in model, so the
+    // rotation can try the person's next key.
+    noFallback?: boolean;
   }
 ): Promise<Answered> {
+  if (options.model === ROTATE_MODEL) {
+    return rotateKeys(db, userId, options);
+  }
+
   // "Auto" becomes a real model here, once per turn.
   // Steps after the first are passed what answered, so
   // they stay on it. See lib/ai/router.ts.
@@ -626,6 +794,13 @@ export async function streamFor(
     serverAllowed ||
     Boolean(preset?.baseUrl && preset.selfHosted);
 
+  // In a rotation only the person's (or the project's)
+  // own key counts; the server's key is the built-in
+  // model, which the rotation reaches last on its own.
+  if (options.noFallback && stored === null) {
+    throw new KeyUnavailable("no usable key for this provider");
+  }
+
   if (!reachable) {
     // Falling back is a built-in answer too.
     await spendAllowance(plan);
@@ -698,6 +873,10 @@ export async function streamFor(
   // allowance like any other built-in answer.
 
   const limited = async (): Promise<Answered> => {
+    if (options.noFallback) {
+      throw new KeyUnavailable("over its limit");
+    }
+
     if (paidBy !== "server") {
       await spendAllowance(plan);
     }
