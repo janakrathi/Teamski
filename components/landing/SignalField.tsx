@@ -60,9 +60,16 @@ export default function SignalField({
   // only while the top of the page is on screen.
   calm = "left",
   className = "",
+  // How strong the lines are overall, 1 = as designed.
+  intensity = 1,
+  // For "page": how strong the lines at the top of the
+  // page are, 1 = the hero's full strength.
+  topStrength = 1,
 }: {
   calm?: "left" | "center" | "soft" | "page";
   className?: string;
+  intensity?: number;
+  topStrength?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -140,7 +147,9 @@ export default function SignalField({
           const hero =
             (phone
               ? 0.3
-              : Math.max(0, Math.min(1, (x / width - 0.12) * 1.6)) * 0.9 + 0.1) * underBar;
+              : Math.max(0, Math.min(1, (x / width - 0.12) * 1.6)) * 0.9 + 0.1) *
+            underBar *
+            topStrength;
 
           value += (hero - middle) * topWeight;
         }
@@ -217,7 +226,7 @@ export default function SignalField({
           const y = row * CELL_Y + 4;
 
           // Where the field is off, skip the noise too.
-          const strength0 = mask(x, y);
+          const strength0 = mask(x, y) * intensity;
 
           if (strength0 <= 0.02) {
             continue;
@@ -338,7 +347,7 @@ export default function SignalField({
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerleave", onLeave);
     };
-  }, [calm]);
+  }, [calm, intensity, topStrength]);
 
   return (
     <canvas

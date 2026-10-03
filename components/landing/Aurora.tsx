@@ -48,7 +48,7 @@ export default function Aurora({
   // How strong the glow is at the top of the page, and
   // what it fades to a screen or so further down -
   // black takes over as you read.
-  top = 0.24,
+  top = 0.15,
   rest = 0.08,
 }: {
   top?: number;

@@ -79,9 +79,9 @@ export default function ResetPasswordForm() {
     >
       {/* The same light purple glow and signal lines as
           sign-in, quiet in the middle where the form is. */}
-      <Aurora top={0.24} rest={0.24} />
+      <Aurora top={0.15} rest={0.15} />
 
-      <SignalField calm="center" />
+      <SignalField calm="center" intensity={0.5} />
 
       <div
         aria-hidden="true"
