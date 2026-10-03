@@ -129,7 +129,7 @@ export default function HackathonsPage() {
 
           <h1 style={at(1)} className={`t-text-reveal mt-5 max-w-[800px] ${H1}`}>
             An AI teammate{" "}
-            <span className="text-white/45">for your whole hackathon team.</span>
+            <span className="text-white/60">for your whole hackathon team.</span>
           </h1>
 
           <p style={at(2)} className="t-text-reveal mt-6 max-w-[520px] text-[16px] leading-[1.6] text-white/60">
@@ -187,7 +187,7 @@ export default function HackathonsPage() {
           <Reveal>
             <h2 className={`t-reveal-item ${H2}`}>
               Set up{" "}
-              <span className="text-white/45">in five minutes.</span>
+              <span className="text-white/60">in five minutes.</span>
             </h2>
           </Reveal>
 
@@ -216,13 +216,13 @@ export default function HackathonsPage() {
 
       <section className="border-t border-white/10">
         <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+          <Reveal className="grid gap-5">
             <h2 className={`t-reveal-item ${H2}`}>
               The four channels{" "}
-              <span className="text-white/45">we recommend.</span>
+              <span className="text-white/60">we recommend.</span>
             </h2>
 
-            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+            <p style={at(1)} className="t-reveal-item max-w-[640px] text-[15px] leading-[1.65] text-white/60">
               Each channel&apos;s agent has its own job and its own memory, so
               research doesn&apos;t get mixed up with your pitch - and they all
               share one project memory for the brief and the team&apos;s decisions.
@@ -265,7 +265,7 @@ export default function HackathonsPage() {
           <Reveal className="border-b border-white/10 py-20 md:border-r md:border-b-0 md:pr-10 sm:py-28">
             <h2 className={`t-reveal-item ${H2}`}>
               During{" "}
-              <span className="text-white/45">the hackathon.</span>
+              <span className="text-white/60">the hackathon.</span>
             </h2>
 
             <ul className="mt-8 space-y-4">
@@ -288,7 +288,7 @@ export default function HackathonsPage() {
           <Reveal className="py-20 md:pl-10 sm:py-28">
             <h2 className={`t-reveal-item ${H2}`}>
               Before{" "}
-              <span className="text-white/45">judging.</span>
+              <span className="text-white/60">judging.</span>
             </h2>
 
             <ul className="mt-8 space-y-4">

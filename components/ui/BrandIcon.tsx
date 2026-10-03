@@ -61,6 +61,25 @@ const PATHS: Record<string, { title: string; d: string }> = {
 };
 
 
+// Each brand's own colour, for where the logo should be
+// recognised at a glance (the landing page). Marks whose
+// colour is black are drawn white on the dark page.
+export const BRAND_COLORS: Record<string, string> = {
+  google: "#34A853",
+  github: "#FFFFFF",
+  notion: "#FFFFFF",
+  linear: "#5E6AD2",
+  jira: "#2684FF",
+  confluence: "#2684FF",
+  asana: "#F06A6A",
+  sentry: "#7553FF",
+  stripe: "#635BFF",
+  canva: "#00C4CC",
+  huggingface: "#FFD21E",
+  deepwiki: "#FFFFFF",
+};
+
+
 export function hasBrandIcon(id: string) {
   return id in PATHS || id === "deepwiki" || id === "atlassian";
 }
@@ -69,16 +88,22 @@ export function hasBrandIcon(id: string) {
 export default function BrandIcon({
   id,
   className = "h-4 w-4",
+  colored = false,
 }: {
   id: string;
   className?: string;
+
+  // In the brand's own colour rather than the text colour.
+  colored?: boolean;
 }) {
   // Jira and Confluence are one connection.
   const key = id === "atlassian" ? "jira" : id;
 
+  const style = colored && BRAND_COLORS[key] ? { color: BRAND_COLORS[key] } : undefined;
+
   if (key === "deepwiki") {
     return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style} aria-hidden="true">
         <path d="M12 6.5C10.3 5.2 7.9 4.5 4 4.5v13c3.9 0 6.3.7 8 2 1.7-1.3 4.1-2 8-2v-13c-3.9 0-6.3.7-8 2Z" />
         <path d="M12 6.5v13" />
       </svg>
@@ -92,7 +117,7 @@ export default function BrandIcon({
   }
 
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} role="img" aria-label={icon.title}>
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style} role="img" aria-label={icon.title}>
       <path d={icon.d} />
     </svg>
   );

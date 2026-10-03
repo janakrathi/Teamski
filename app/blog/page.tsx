@@ -64,7 +64,7 @@ export default function BlogIndex() {
 
           <h1 style={at(1)} className={`t-text-reveal mt-5 max-w-[760px] ${H1}`}>
             The Teamski blog.{" "}
-            <span className="text-white/45">Notes on working with AI, together.</span>
+            <span className="text-white/60">Notes on working with AI, together.</span>
           </h1>
 
           <p style={at(2)} className="t-text-reveal mt-6 max-w-[480px] text-[16px] leading-[1.6] text-white/60">

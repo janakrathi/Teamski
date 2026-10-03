@@ -252,7 +252,7 @@ export default function Welcome() {
             className="t-text-reveal mt-8 max-w-[780px] text-[42px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[64px]"
           >
             Your team and its AI agents,{" "}
-            <span className="text-white/45">working in one place.</span>
+            <span className="text-white/60">working in one place.</span>
           </h1>
 
           <p
@@ -287,13 +287,13 @@ export default function Welcome() {
       {/* ------------------------------ */}
 
       <section className="overflow-hidden border-t border-white/10">
-        <Reveal className={`${CONTAINER} grid gap-8 py-20 sm:py-28 md:grid-cols-[1.15fr_1fr] md:items-end`}>
+        <Reveal className={`${CONTAINER} grid gap-5 py-20 sm:py-28`}>
           <h2 className={`t-reveal-item ${H2}`}>
             Agents that sit in the room with your team,{" "}
-            <span className="text-white/45">not in a separate tab.</span>
+            <span className="text-white/60">not in a separate tab.</span>
           </h2>
 
-          <div style={at(1)} className="t-reveal-item">
+          <div style={at(1)} className="t-reveal-item max-w-[640px]">
             <p className="text-[15px] leading-[1.65] text-white/60">
               One agent per channel, with its own instructions and memory of
               the work. Everyone talks to the same agent and sees the same
@@ -342,36 +342,65 @@ export default function Welcome() {
           <Reveal>
             <h2 className={`t-reveal-item max-w-[720px] ${H2}`}>
               Built around how teams work,{" "}
-              <span className="text-white/45">not around one person and a chatbot.</span>
+              <span className="text-white/60">not around one person and a chatbot.</span>
             </h2>
           </Reveal>
 
-          <div className="mt-14 grid border-t border-white/10 md:grid-cols-2">
-            {FEATURES.filter((feature) => VISUALS[feature.title]).map(
-              (feature, index) => (
-                <Reveal
-                  key={feature.title}
-                  className={`border-b border-white/10 py-10 ${
-                    index % 2 === 0 ? "md:border-r md:pr-10" : "md:pl-10"
-                  }`}
-                >
-                  <div data-signal-clear className="t-reveal-item flex h-[190px] items-center justify-center">
-                    {VISUALS[feature.title]}
-                  </div>
+          {/* The four ideas in a window of their own that
+              scrolls - one at a time, snapping into place. */}
+          <Reveal clear className="mt-14">
+            <div className="t-reveal-item overflow-hidden rounded-2xl border border-white/10 bg-[#050505] shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+              <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
 
-                  <h3 style={at(1)} className="t-reveal-item mt-8 text-[20px] font-[450] tracking-[-0.01em]">
-                    {feature.title}
-                  </h3>
+                <span className="ml-3 text-[12px] text-white/45">
+                  Teamski · how it works
+                </span>
 
-                  <p style={at(2)} className="t-reveal-item mt-2 max-w-[460px] text-[14.5px] leading-[1.65] text-white/55">
-                    {feature.body}
-                  </p>
-                </Reveal>
-              )
-            )}
-          </div>
+                <span className="ml-auto flex items-center gap-1.5 text-[11px] text-white/35">
+                  Scroll
+                  <span aria-hidden="true">↓</span>
+                </span>
+              </div>
 
-          <div className="grid md:grid-cols-2">
+              <div
+                tabIndex={0}
+                aria-label="How Teamski works, in four parts"
+                className="h-[540px] snap-y snap-mandatory overflow-y-auto md:h-[440px]"
+              >
+                {FEATURES.filter((feature) => VISUALS[feature.title]).map(
+                  (feature, index, shown) => (
+                    <div
+                      key={feature.title}
+                      className="flex min-h-full snap-start flex-col items-center justify-center gap-8 border-b border-white/5 px-6 py-10 last:border-b-0 md:flex-row md:gap-14 md:px-14"
+                    >
+                      <div className="flex h-[190px] w-full max-w-[380px] shrink-0 items-center justify-center">
+                        {VISUALS[feature.title]}
+                      </div>
+
+                      <div className="w-full max-w-[440px]">
+                        <p className="text-[11px] tracking-[0.12em] text-white/35 uppercase tabular-nums">
+                          0{index + 1} / 0{shown.length}
+                        </p>
+
+                        <h3 className="mt-3 text-[22px] font-[450] tracking-[-0.015em]">
+                          {feature.title}
+                        </h3>
+
+                        <p className="mt-2 text-[14.5px] leading-[1.65] text-white/55">
+                          {feature.body}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="mt-6 grid border-t border-white/10 md:grid-cols-2">
             {FEATURES.filter((feature) => !VISUALS[feature.title]).map(
               (feature, index) => (
                 <Reveal
@@ -401,13 +430,13 @@ export default function Welcome() {
 
       <section className="border-t border-white/10">
         <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
+          <Reveal className="grid gap-5">
             <h2 className={`t-reveal-item ${H2}`}>
               Works with the tools{" "}
-              <span className="text-white/45">you already use.</span>
+              <span className="text-white/60">you already use.</span>
             </h2>
 
-            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+            <p style={at(1)} className="t-reveal-item max-w-[640px] text-[15px] leading-[1.65] text-white/60">
               Connect an app once and every agent in your project can read
               from it, and ask before changing anything.
             </p>
@@ -425,6 +454,7 @@ export default function Welcome() {
               >
                 <BrandIcon
                   id={app.id}
+                  colored
                   className="h-5 w-5 shrink-0 text-[#ededed]"
                 />
 
@@ -475,13 +505,13 @@ export default function Welcome() {
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_45%_70%_at_22%_60%,rgba(0,0,0,0.75),transparent_70%),radial-gradient(ellipse_40%_70%_at_75%_55%,rgba(0,0,0,0.7),transparent_70%)]"
           />
 
-          <Reveal className={`${CONTAINER} relative grid gap-8 pt-24 pb-16 sm:pt-32 sm:pb-20 md:grid-cols-[1.15fr_1fr] md:items-end`}>
+          <Reveal className={`${CONTAINER} relative grid gap-5 pt-24 pb-16 sm:pt-32 sm:pb-20`}>
             <h2 className={`t-reveal-item ${H2}`}>
               Plans{" "}
-              <span className="text-white/45">for the whole team.</span>
+              <span className="text-white/60">for the whole team.</span>
             </h2>
 
-            <p style={at(1)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
+            <p style={at(1)} className="t-reveal-item max-w-[640px] text-[15px] leading-[1.65] text-white/60">
               Free to start, with your whole team. Team upgrades the whole
               project — one plan, everyone included.{" "}
               <span className="text-[#ededed]">
@@ -514,7 +544,7 @@ export default function Welcome() {
           <Reveal>
             <h2 className={`t-reveal-item ${H2}`}>
               Questions{" "}
-              <span className="text-white/45">teams ask.</span>
+              <span className="text-white/60">teams ask.</span>
             </h2>
 
             <p style={at(1)} className="t-reveal-item mt-4 max-w-[360px] text-[14.5px] leading-[1.65] text-white/55">

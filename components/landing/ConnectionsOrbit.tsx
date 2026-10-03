@@ -23,8 +23,8 @@ import BrandIcon from "@/components/ui/BrandIcon";
 
 type App = { id: string; name: string };
 
-const POINTS = 150;
-const NEIGHBOURS = 3;
+const POINTS = 240;
+const NEIGHBOURS = 4;
 
 // One full turn of the network, and of an app round
 // its ring, in milliseconds.
@@ -59,19 +59,17 @@ function buildNetwork() {
   const zs = new Float32Array(POINTS);
   const sizes = new Float32Array(POINTS);
 
-  // Points spread evenly over a sphere, then pulled in a
-  // little at random so it reads as a cluster, not a ball.
+  // Points spread evenly over the whole surface of a
+  // sphere, so the network reads as one complete globe.
   const golden = Math.PI * (3 - Math.sqrt(5));
 
   for (let i = 0; i < POINTS; i++) {
     const y = 1 - (i / (POINTS - 1)) * 2;
     const ring = Math.sqrt(1 - y * y);
     const theta = golden * i;
-    const pull = 0.72 + random() * 0.28;
-
-    xs[i] = Math.cos(theta) * ring * pull;
-    ys[i] = y * pull;
-    zs[i] = Math.sin(theta) * ring * pull;
+    xs[i] = Math.cos(theta) * ring;
+    ys[i] = y;
+    zs[i] = Math.sin(theta) * ring;
     sizes[i] = random() < 0.12 ? 2.6 + random() * 1.4 : 1.1 + random() * 1.1;
   }
 
@@ -374,7 +372,7 @@ export default function ConnectionsOrbit({ apps }: { apps: App[] }) {
           className="pointer-events-none absolute top-0 left-0 flex flex-col items-center gap-1.5 opacity-0"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg)]">
-            <BrandIcon id={app.id} className="h-4 w-4 text-[var(--text-muted)]" />
+            <BrandIcon id={app.id} colored className="h-4 w-4 text-[var(--text-muted)]" />
           </span>
 
           <span className="font-mono text-[10px] tracking-[0.18em] whitespace-nowrap text-[var(--text-faint)] uppercase">

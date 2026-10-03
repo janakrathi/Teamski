@@ -185,7 +185,7 @@ export default async function PostPage({
           <div data-signal-clear className="t-reveal-item relative isolate overflow-hidden rounded-2xl border border-white/10 bg-[#050505] p-7">
             <p className="text-[20px] font-[450] tracking-[-0.015em]">
               Try Teamski free{" "}
-              <span className="text-white/45">with your whole team.</span>
+              <span className="text-white/60">with your whole team.</span>
             </p>
 
             <p className="mt-2 max-w-[460px] text-[14.5px] leading-[1.6] text-white/55">
