@@ -860,16 +860,6 @@ export default function Home() {
           ])
         );
 
-        const loaded: ChatMessage[] = raw.map(
-          (message) => ({
-            ...message,
-            localId: newLocalId(),
-            replyToContent: message.reply_to
-              ? byId.get(message.reply_to)
-              : undefined,
-          })
-        );
-
         setMessages((previous) => {
           if (
             hereRef.current &&
@@ -880,7 +870,52 @@ export default function Home() {
             return previous;
           }
 
-          return loaded;
+          // A message already on screen keeps its
+          // localId - the row's key - so a reload
+          // doesn't remount every row (a file preview
+          // reloading, the list flashing). A reply that
+          // just streamed in has no server id yet, so it
+          // is matched by what it says; it also keeps
+          // what only the stream knew (activity, usage).
+          const byServerId = new Map(
+            previous
+              .filter((message) => message.id)
+              .map((message) => [message.id, message])
+          );
+
+          const unsaved = previous.filter(
+            (message) =>
+              !message.id &&
+              message.projectId === currentProject.id &&
+              (message.channelId ?? null) ===
+                (currentChannel?.id ?? null)
+          );
+
+          return raw.map((message) => {
+            let match = byServerId.get(message.id);
+
+            if (!match) {
+              const at = unsaved.findIndex(
+                (local) =>
+                  local.role === message.role &&
+                  local.content === message.content
+              );
+
+              if (at !== -1) {
+                match = unsaved.splice(at, 1)[0];
+              }
+            }
+
+            return {
+              ...(match ?? {}),
+              ...message,
+              localId: match?.localId ?? newLocalId(),
+              streaming: false,
+              replyToContent: message.reply_to
+                ? byId.get(message.reply_to)
+                : match?.replyToContent,
+            };
+          });
         });
       };
 
@@ -888,11 +923,17 @@ export default function Home() {
       // paints instantly, so switching channels or DMs
       // is not a spinner every time. The fetch below
       // still runs, to catch anything new.
+      //
+      // Only when opening a conversation, though. On a
+      // refresh (a new message arrived) the cached copy
+      // is older than what is on screen - painting it
+      // made a reply that had just finished vanish
+      // until the fetch came back.
       const known = peekJson<{ messages?: RawMessage[] }>(
         url
       );
 
-      if (known?.messages) {
+      if (showSpinner && known?.messages) {
         apply(known.messages);
       }
 
