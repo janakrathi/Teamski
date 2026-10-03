@@ -188,37 +188,6 @@ const FILL_ROW = [
   SPAN_4[APPS.length % 4],
 ].join(" ");
 
-// The example project: one team's week, built only
-// from agents and features the app actually has.
-
-const EXAMPLE_CHANNELS = [
-  {
-    name: "planning",
-    agent: "Planner",
-    asked: "\u201cBreak the launch into tasks for next week.\u201d",
-    did: "Six tasks with owners and dates, riskiest first - then asked before creating them in Linear.",
-  },
-  {
-    name: "research",
-    agent: "Research",
-    asked: "\u201cCompare four analytics tools for us.\u201d",
-    did: "A side-by-side on price, privacy and setup, with links to every source it used.",
-  },
-  {
-    name: "meetings",
-    agent: "Meeting notes",
-    asked: "Monday's call notes, pasted in.",
-    did: "The decisions, five action items with owners, and the open questions for next time.",
-  },
-  {
-    name: "bugs",
-    agent: "Bug triage",
-    asked: "\u201cWhat broke since Friday?\u201d",
-    did: "New Sentry errors grouped by cause, with the two that need fixing before launch at the top.",
-  },
-];
-
-
 // The features that have a picture of their own. The
 // rest sit in a quieter row underneath.
 const VISUALS: Record<string, React.ReactNode> = {
@@ -300,8 +269,8 @@ export default function Welcome() {
               Get started free
             </Link>
 
-            <Link href="#example" className={SECONDARY}>
-              See an example
+            <Link href="#features" className={SECONDARY}>
+              See how it works
             </Link>
           </div>
 
@@ -332,11 +301,11 @@ export default function Welcome() {
             </p>
 
             <Link
-              href="#example"
+              href="#plans"
               className="group mt-4 inline-flex items-center gap-1.5 text-[13.5px] text-[#ededed]"
             >
               <span className="border-b border-white/30 pb-0.5 transition-colors duration-150 group-hover:border-white">
-                See an example project
+                See the plans
               </span>
 
               <span
@@ -368,7 +337,7 @@ export default function Welcome() {
       {/* WHAT IT DOES                   */}
       {/* ------------------------------ */}
 
-      <section className="border-t border-white/10">
+      <section id="features" className="scroll-mt-6 border-t border-white/10">
         <div className={`${CONTAINER} py-20 sm:py-28`}>
           <Reveal>
             <h2 className={`t-reveal-item max-w-[720px] ${H2}`}>
@@ -422,108 +391,6 @@ export default function Welcome() {
               )
             )}
           </div>
-        </div>
-      </section>
-
-
-      {/* ------------------------------ */}
-      {/* AN EXAMPLE PROJECT             */}
-      {/* ------------------------------ */}
-      {/*                                */}
-      {/* Illustrative, and labelled so: */}
-      {/* what one team's week looks     */}
-      {/* like, built from the agents    */}
-      {/* and features the app has.      */}
-
-      <section id="example" className="scroll-mt-6 border-t border-white/10">
-        <div className={`${CONTAINER} py-20 sm:py-28`}>
-          <Reveal className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-end">
-            <div>
-              <span className="t-reveal-item inline-block text-[11px] tracking-[0.12em] text-white/40 uppercase">
-                Example project
-              </span>
-
-              <h2 style={at(1)} className={`t-reveal-item mt-4 ${H2}`}>
-                A product team launching a website,{" "}
-                <span className="text-white/45">in one project.</span>
-              </h2>
-            </div>
-
-            <p style={at(2)} className="t-reveal-item text-[15px] leading-[1.65] text-white/60">
-              Four channels, four agents, each with its own job and its own
-              memory of the work. Here&apos;s what one week looks like.
-            </p>
-          </Reveal>
-
-          <Reveal className="mt-14">
-            <div data-signal-clear className="t-reveal-item overflow-hidden rounded-2xl border border-white/10 bg-[#050505] md:grid md:grid-cols-[230px_1fr]">
-              <div className="border-b border-white/10 px-5 py-5 md:border-r md:border-b-0">
-                <p className="text-[13px] font-medium">Website launch</p>
-
-                <p className="mt-0.5 text-[11.5px] text-white/40">
-                  5 people · Team
-                </p>
-
-                <ul className="mt-5 space-y-1">
-                  {EXAMPLE_CHANNELS.map((channel) => (
-                    <li
-                      key={channel.name}
-                      className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-[13px] text-white/60"
-                    >
-                      <span># {channel.name}</span>
-
-                      <span className="truncate text-[11px] text-white/35">
-                        {channel.agent}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="grid gap-px bg-white/10 sm:grid-cols-2">
-                {EXAMPLE_CHANNELS.map((channel) => (
-                  <div key={channel.name} className="bg-[#050505] p-6">
-                    <p className="text-[12px] text-white/40">
-                      # {channel.name} · {channel.agent}
-                    </p>
-
-                    <p className="mt-2.5 text-[14px] leading-[1.55] text-[#ededed]">
-                      {channel.asked}
-                    </p>
-
-                    <p className="mt-2 text-[13.5px] leading-[1.6] text-white/55">
-                      {channel.did}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div data-signal-clear style={at(1)} className="t-reveal-item mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 px-5 py-4">
-                <p className="text-[12px] text-white/40">
-                  Scheduled · every Monday, 9:00
-                </p>
-
-                <p className="mt-1.5 text-[14px] leading-[1.6] text-white/60">
-                  The planning agent posts what the team decided last week and
-                  what is still blocked - before anyone asks.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/15 bg-white/[0.03] px-5 py-4">
-                <p className="flex items-center gap-2 text-[12px] text-[#e08a6a]">
-                  <span className="lp-blink h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                  Waiting for approval
-                </p>
-
-                <p className="mt-1.5 text-[14px] leading-[1.6] text-white/60">
-                  Linear: create 6 issues from the launch plan. Nothing changes
-                  in Linear until someone presses Approve.
-                </p>
-              </div>
-            </div>
-          </Reveal>
         </div>
       </section>
 
