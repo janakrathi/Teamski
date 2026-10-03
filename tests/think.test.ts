@@ -64,6 +64,9 @@ test("file tools are offered only when the message is about files", () => {
     "create a file with the agenda",
     "write the summary into a doc",
     "upload the brief",
+    "build me a landing page for a crochet company",
+    "make our website hero bolder",
+    "write some HTML for a pricing table",
   ]) {
     assert.equal(wantsFiles(message), true, message);
   }
@@ -74,6 +77,7 @@ test("file tools are offered only when the message is about files", () => {
     "list the risks of launching on friday",
     "show me a plan for next week",
     "what should we do first?",
+    "how many pages should our pitch deck have?",
   ]) {
     assert.equal(wantsFiles(message), false, message);
   }

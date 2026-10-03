@@ -89,7 +89,10 @@ const FILE_WORDS = new RegExp(
     // "create/write/make a ... file" style requests
     "|\\b(create|write|make|read|open|edit|update|delete|remove|rename|list|show)\\b[^.?!]{0,40}\\b(file|notes?|doc|document|md|txt|csv|json)\\b" +
     // a filename
-    "|\\b[\\w-]+\\.(md|txt|csv|json|js|ts|py|html|yaml|yml)\\b",
+    "|\\b[\\w-]+\\.(md|txt|csv|json|js|ts|py|html|yaml|yml)\\b" +
+    // a web page to build, which is saved as an .html
+    // file the chat can preview
+    "|\\b(landing[ -]?pages?|web[ -]?pages?|websites?|home[ -]?pages?|microsites?|one[ -]?pager|html|css)\\b",
   "i"
 );
 

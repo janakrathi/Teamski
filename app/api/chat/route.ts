@@ -222,6 +222,15 @@ export async function POST(request: Request) {
       .find((message) => message.role === "user")
       ?.content ?? "";
 
+  // The one before it, for a follow-up like "do it
+  // however you like" after the agent asked a
+  // question about a request.
+  const previousUserMessage =
+    [...history]
+      .reverse()
+      .filter((message) => message.role === "user")[1]
+      ?.content ?? "";
+
   const projectId =
     typeof body.projectId === "string"
       ? body.projectId
@@ -273,7 +282,9 @@ export async function POST(request: Request) {
 
   // File tools only when the message is about
   // files. See lib/ai/think.ts.
-  const fileTools = useTools && wantsFiles(latestUserMessage);
+  const fileTools =
+    useTools &&
+    (wantsFiles(latestUserMessage) || wantsFiles(previousUserMessage));
 
   // The image generator only when the message reads
   // like a request for a picture.
