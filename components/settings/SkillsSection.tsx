@@ -127,6 +127,29 @@ export default function SkillsSection({ projectId }: { projectId: string | null 
     }
   }
 
+  // Re-read every skill from GitHub now, rather than
+  // waiting for the daily sync.
+  async function refresh() {
+    const data = await call({ method: "POST", body: JSON.stringify({ refresh: true }) });
+
+    if (!data) {
+      return;
+    }
+
+    const updated = (data.updated ?? []) as string[];
+    const failed = (data.failed ?? []) as { name: string; error: string }[];
+
+    setNote(
+      updated.length > 0
+        ? `Updated from GitHub: ${updated.join(", ")}.`
+        : "Every skill already matches its repo."
+    );
+
+    if (failed.length > 0) {
+      setError(failed.map((entry) => `${entry.name}: ${entry.error}`).join("\n"));
+    }
+  }
+
   if (!projectId) {
     return (
       <p className="text-[12.5px] text-[var(--text-faint)]">Select a project to see its skills.</p>
@@ -170,8 +193,9 @@ export default function SkillsSection({ projectId }: { projectId: string | null 
           </div>
 
           <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--text-faint)]">
-            Every SKILL.md under the link is added. Adding the same repo again refreshes them. Private
-            repos need your GitHub account connected.
+            Every SKILL.md under the link is added, and kept in step with the repo: skills update
+            from GitHub about once a day. Add the repo again to pick up new skills. Private repos need
+            your GitHub account connected.
           </p>
         </form>
       )}
@@ -183,14 +207,28 @@ export default function SkillsSection({ projectId }: { projectId: string | null 
       )}
 
       {error && (
-        <p className="mt-2.5 rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-[12px] leading-relaxed text-red-200">
+        <p className="mt-2.5 whitespace-pre-line rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-[12px] leading-relaxed text-red-200">
           {error}
         </p>
       )}
 
-      <p className="mt-6 mb-1.5 text-[10px] tracking-[0.12em] text-[var(--text-faint)] uppercase">
-        In this project
-      </p>
+      <div className="mt-6 mb-1.5 flex items-center justify-between gap-2">
+        <p className="text-[10px] tracking-[0.12em] text-[var(--text-faint)] uppercase">
+          In this project
+        </p>
+
+        {canManage && skills.length > 0 && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={refresh}
+            title="Skills also update from GitHub on their own, about once a day"
+            className="rounded px-1.5 py-0.5 text-[11.5px] text-[var(--text-faint)] transition hover:text-[var(--text)] disabled:opacity-40"
+          >
+            {busy ? "Working…" : "Refresh from GitHub"}
+          </button>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-[12.5px] text-[var(--text-faint)]">Loading…</p>

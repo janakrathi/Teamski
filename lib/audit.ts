@@ -36,6 +36,7 @@ export type AuditAction =
   | "skill.add"
   | "skill.remove"
   | "skill.toggle"
+  | "skill.refresh"
   | "project.export";
 
 export async function audit(entry: {

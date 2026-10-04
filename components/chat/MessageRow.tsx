@@ -527,11 +527,15 @@ function MessageRow({
               . This cannot be undone.
             </p>
 
+            {/* Only for someone who can act on it -
+                a viewer sees the request, not the
+                button. */}
+            {onApprove && (
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
                 onClick={() =>
-                  onApprove?.(approval)
+                  onApprove(approval)
                 }
                 className="rounded-md bg-amber-600/90 px-2.5 py-1 text-[11.5px] font-medium text-white transition hover:bg-amber-500"
               >
@@ -542,6 +546,7 @@ function MessageRow({
                 Ignore it and nothing happens.
               </span>
             </div>
+            )}
           </div>
         ))}
 

@@ -81,10 +81,16 @@ export default function AgentDock({
   projectId,
   channelId,
   channelName,
+  readOnly = false,
 }: {
   projectId: string | null;
   channelId: string | null;
   channelName?: string | null;
+
+  // A viewer: watches the agent's activity, but gets no
+  // buttons to start, steer or schedule it (the server
+  // refuses those too).
+  readOnly?: boolean;
 }) {
   // Tasks this channel's agent does on a timer.
   const [schedulesOpen, setSchedulesOpen] = useState(false);
@@ -424,7 +430,7 @@ export default function AgentDock({
                 : "No background task running"}
             </span>
 
-            {channelId && (
+            {channelId && !readOnly && (
               <button
                 type="button"
                 onClick={() => setSchedulesOpen(true)}
@@ -443,7 +449,7 @@ export default function AgentDock({
               </button>
             )}
 
-            {!active && (
+            {!active && !readOnly && (
               <button
                 type="button"
                 onClick={() => setAsking(true)}
@@ -455,7 +461,7 @@ export default function AgentDock({
               </button>
             )}
 
-            {working && (
+            {working && !readOnly && (
               <button
                 type="button"
                 onClick={() => control("pause")}
@@ -466,7 +472,7 @@ export default function AgentDock({
               </button>
             )}
 
-            {paused && (
+            {paused && !readOnly && (
               <button
                 type="button"
                 onClick={() => control("resume")}
@@ -477,7 +483,7 @@ export default function AgentDock({
               </button>
             )}
 
-            {active && (
+            {active && !readOnly && (
               <button
                 type="button"
                 onClick={() => control("stop")}

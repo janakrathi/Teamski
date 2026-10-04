@@ -6,7 +6,7 @@ import { audit } from "@/lib/audit";
 
 import { can, roleInProject } from "@/lib/plans";
 
-import { findSkills } from "@/lib/ai/skills";
+import { findSkills, refreshSkills } from "@/lib/ai/skills";
 
 import { githubToken } from "@/lib/connections/github";
 
@@ -110,7 +110,35 @@ export async function POST(request: Request, context: RouteContext) {
     return Response.json({ error: "Skills are not available on this server." }, { status: 503 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as { url?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    url?: string;
+    refresh?: boolean;
+  };
+
+  // Refresh: re-read every skill here from the file it
+  // came from, with each adder's GitHub connection for
+  // private repos.
+  if (body.refresh) {
+    const synced = await refreshSkills(admin as unknown as SupabaseClient, {
+      projectId,
+      tokenFor: async (userId) => {
+        const found = await githubToken(admin as unknown as SupabaseClient, userId).catch(
+          () => null
+        );
+
+        return found && found.ok ? found.token : null;
+      },
+    });
+
+    await audit({
+      projectId,
+      actorId: user.id,
+      action: "skill.refresh",
+      details: { updated: synced.updated.length, failed: synced.failed.length },
+    });
+
+    return Response.json({ ok: true, ...synced });
+  }
 
   const url = (body.url ?? "").trim();
 

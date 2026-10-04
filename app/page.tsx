@@ -2116,7 +2116,8 @@ export default function Home() {
                       }
                       onRegenerate={
                         message.role ===
-                        "assistant"
+                          "assistant" &&
+                        myRole !== "viewer"
                           ? regenerate
                           : undefined
                       }
@@ -2133,14 +2134,19 @@ export default function Home() {
                       onDelete={
                         message.id &&
                         message.sender !==
-                          "teammate"
+                          "teammate" &&
+                        myRole !== "viewer"
                           ? () =>
                               deleteMessage(
                                 message
                               )
                           : undefined
                       }
-                      onApprove={approve}
+                      onApprove={
+                        myRole === "viewer"
+                          ? undefined
+                          : approve
+                      }
                     />
                   )
                 )
@@ -2155,6 +2161,7 @@ export default function Home() {
             projectId={currentProject?.id ?? null}
             channelId={currentChannel?.id ?? null}
             channelName={currentChannel?.name ?? null}
+            readOnly={myRole === "viewer"}
           />
 
 

@@ -18,7 +18,9 @@ import { streamFor } from "../lib/ai/providers/index.ts";
 
 import { mcpToolsFor } from "../lib/mcp/client.ts";
 
-import { skillIndex, skillsPrompt } from "../lib/ai/skills.ts";
+import { refreshSkills, skillIndex, skillsPrompt } from "../lib/ai/skills.ts";
+
+import { githubToken } from "../lib/connections/github.ts";
 
 import { SELF_HOSTED, allows, planHere } from "../lib/plans.ts";
 
@@ -144,6 +146,12 @@ const REMINDER_POLL_MS = 6 * 60 * 60 * 1000;
 // trickle of new signups. Each person is emailed once.
 
 const WINBACK_POLL_MS = 60 * 60 * 1000;
+
+// Skills are re-read from GitHub about once a day: every
+// hour, any not checked in the last 24 hours, a batch at
+// a time.
+const SKILLS_POLL_MS = 60 * 60 * 1000;
+const SKILLS_STALE_MS = 24 * 60 * 60 * 1000;
 
 // A due schedule whose agent is still busy waits
 // for it - but not forever. Past this, that run is
@@ -1718,6 +1726,8 @@ async function main() {
 
   let lastWinback = 0;
 
+  let lastSkills = 0;
+
   // The runs this worker currently holds. The
   // loop claims while there is room and never
   // awaits a run, so a slow one no longer blocks
@@ -1837,6 +1847,30 @@ async function main() {
               error
             )
         );
+      }
+
+      // Skills follow their repos, on teamski.in and on a
+      // self-hosted copy alike.
+      if (Date.now() - lastSkills > SKILLS_POLL_MS) {
+        lastSkills = Date.now();
+
+        await refreshSkills(db, {
+          olderThanMs: SKILLS_STALE_MS,
+          limit: 40,
+          tokenFor: async (userId) => {
+            const found = await githubToken(db, userId).catch(() => null);
+
+            return found && found.ok ? found.token : null;
+          },
+        })
+          .then((synced) => {
+            if (synced.updated.length > 0 || synced.failed.length > 0) {
+              console.log(
+                `[skills] ${synced.updated.length} updated, ${synced.unchanged.length} unchanged, ${synced.failed.length} failed`
+              );
+            }
+          })
+          .catch((error) => console.error("Skill sync failed:", error));
       }
 
       // Full. Wait for a slot rather than

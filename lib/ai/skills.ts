@@ -425,3 +425,151 @@ async function skillFile(
 
   return { text: (await response.text()).slice(0, MAX_SKILL_CHARS) };
 }
+
+
+// ------------------------------------------
+// KEEPING THEM CURRENT
+// ------------------------------------------
+//
+// A skill is a copy of a SKILL.md, so an edit in the
+// repo does not reach the agent until it is read again.
+// The worker re-reads every skill about once a day, and
+// Settings > Skills has a Refresh button for now.
+// Each skill is re-read from the exact file it came
+// from (raw.githubusercontent.com, not the rate-limited
+// API). Its name is kept, so nothing that refers to it
+// breaks; the description and instructions follow the
+// repo.
+
+// The SKILL.md a skill came from, read again.
+export async function fetchSkillAt(
+  source: string,
+  token?: string | null
+): Promise<Omit<Skill, "source"> | { error: string }> {
+  const match = /^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/blob\/([^/]+)\/(.*)$/.exec(source);
+
+  if (!match) {
+    return { error: "This skill has no GitHub file to read from." };
+  }
+
+  const response = await fetch(
+    rawUrl({ owner: match[1], repo: match[2], ref: decodeURIComponent(match[3]), path: "" }, match[4]),
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal: AbortSignal.timeout(15_000),
+    }
+  ).catch(() => null);
+
+  if (!response) {
+    return { error: "GitHub did not answer." };
+  }
+
+  if (!response.ok) {
+    return {
+      error:
+        response.status === 404
+          ? "The SKILL.md is no longer at that path (moved, renamed, or the repo is private)."
+          : `GitHub answered ${response.status}.`,
+    };
+  }
+
+  const folder = match[4].split("/").slice(-2, -1)[0] || match[2];
+
+  return parseSkill(await response.text(), folder);
+}
+
+
+export type SkillSyncResult = {
+  updated: string[];
+  unchanged: string[];
+  failed: { name: string; error: string }[];
+};
+
+// Re-read skills from GitHub. One project's (the
+// Refresh button), or every project's that has not been
+// checked for a while (the worker). `db` must be able to
+// write project_skills: the service role.
+export async function refreshSkills(
+  db: SupabaseClient,
+  options: {
+    projectId?: string;
+    olderThanMs?: number;
+    limit?: number;
+
+    // A GitHub token for whoever added a skill, so a
+    // private repo still reads; null for none.
+    tokenFor?: (userId: string) => Promise<string | null>;
+  } = {}
+): Promise<SkillSyncResult> {
+  const result: SkillSyncResult = { updated: [], unchanged: [], failed: [] };
+
+  let query = db
+    .from("project_skills")
+    .select("id, name, description, body, source, added_by")
+    .not("source", "is", null)
+    .order("updated_at", { ascending: true })
+    .limit(options.limit ?? 100);
+
+  if (options.projectId) {
+    query = query.eq("project_id", options.projectId);
+  }
+
+  if (options.olderThanMs) {
+    query = query.lt("updated_at", new Date(Date.now() - options.olderThanMs).toISOString());
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return result;
+  }
+
+  const tokens = new Map<string, string | null>();
+
+  for (const skill of (data ?? []) as {
+    id: string;
+    name: string;
+    description: string;
+    body: string;
+    source: string;
+    added_by: string | null;
+  }[]) {
+    let token: string | null = process.env.GITHUB_TOKEN ?? null;
+
+    if (skill.added_by && options.tokenFor) {
+      if (!tokens.has(skill.added_by)) {
+        tokens.set(skill.added_by, await options.tokenFor(skill.added_by).catch(() => null));
+      }
+
+      token = tokens.get(skill.added_by) ?? token;
+    }
+
+    const fresh = await fetchSkillAt(skill.source, token);
+
+    const now = new Date().toISOString();
+
+    if ("error" in fresh) {
+      result.failed.push({ name: skill.name, error: fresh.error });
+
+      // Checked, so the next pass moves on to others.
+      await db.from("project_skills").update({ updated_at: now } as never).eq("id", skill.id);
+
+      continue;
+    }
+
+    const changed = fresh.body !== skill.body || fresh.description !== skill.description;
+
+    await db
+      .from("project_skills")
+      .update(
+        (changed
+          ? { body: fresh.body, description: fresh.description, updated_at: now }
+          : { updated_at: now }) as never
+      )
+      .eq("id", skill.id);
+
+    (changed ? result.updated : result.unchanged).push(skill.name);
+  }
+
+  return result;
+}

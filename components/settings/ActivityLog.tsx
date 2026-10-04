@@ -63,6 +63,8 @@ function describe(entry: Entry) {
       return `removed the skill ${target}`;
     case "skill.toggle":
       return `${details.enabled ? "turned on" : "turned off"} the skill ${target}`;
+    case "skill.refresh":
+      return `refreshed the skills from GitHub (${Number(details.updated ?? 0)} changed)`;
     case "project.export":
       return "exported the project";
     default:

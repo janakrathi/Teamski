@@ -139,3 +139,51 @@ test("a channel you cannot see, or in another project, refuses", async () => {
 
   assert.match(postRefusal(outsider), /not a member/);
 });
+
+
+// ------------------------------------------
+// STAYING IN STEP WITH THE REPO
+// ------------------------------------------
+
+test("a skill is re-read from the exact raw file it came from", async () => {
+  const { fetchSkillAt } = await import("../lib/ai/skills.ts");
+
+  const original = globalThis.fetch;
+  let asked = "";
+
+  globalThis.fetch = (async (url: string) => {
+    asked = url;
+
+    return new Response("---\nname: landing\ndescription: New wording\n---\nUpdated steps");
+  }) as typeof fetch;
+
+  try {
+    const fresh = await fetchSkillAt(
+      "https://github.com/acme/skills/blob/main/web/landing/SKILL.md"
+    );
+
+    assert.equal(asked, "https://raw.githubusercontent.com/acme/skills/main/web/landing/SKILL.md");
+    assert.ok(!("error" in fresh));
+    assert.equal(fresh.description, "New wording");
+    assert.equal(fresh.body, "Updated steps");
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("a moved SKILL.md says so instead of wiping the skill", async () => {
+  const { fetchSkillAt } = await import("../lib/ai/skills.ts");
+
+  const original = globalThis.fetch;
+
+  globalThis.fetch = (async () => new Response("nope", { status: 404 })) as typeof fetch;
+
+  try {
+    const fresh = await fetchSkillAt("https://github.com/acme/skills/blob/main/x/SKILL.md");
+
+    assert.ok("error" in fresh);
+    assert.match(fresh.error, /no longer at that path/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
