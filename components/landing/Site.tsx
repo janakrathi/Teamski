@@ -4,6 +4,8 @@ import Logo from "@/components/ui/Logo";
 
 import ContactUs from "@/components/landing/ContactUs";
 
+import IntroGate from "@/components/landing/IntroGate";
+
 import { LEGAL } from "@/lib/legal";
 
 
@@ -70,6 +72,10 @@ export function SiteHeader({
 }) {
   return (
     <header className={overlay ? "absolute inset-x-0 top-0 z-20" : "relative z-20"}>
+      {/* The page's opening lines rise in once, when it is
+          really on screen. */}
+      <IntroGate />
+
       <div className={`${CONTAINER} flex items-center gap-3 py-5`}>
         <Link href="/" className="flex items-center gap-2.5">
           <Logo size={28} />

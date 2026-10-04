@@ -479,7 +479,16 @@ svg .t-seq {
   }
 }
 
-.t-text-reveal {
+/* Played once, by components/landing/IntroGate.tsx: held
+   back before the page is drawn, played when it is really
+   on screen, then left alone. Without it - no JavaScript,
+   reduced motion - the lines are simply there. */
+
+html[data-intro="pending"] .t-text-reveal {
+  opacity: 0;
+}
+
+html[data-intro="play"] .t-text-reveal {
   animation: t-text-reveal 1000ms var(--ease-cinematic) both;
   animation-delay: calc(150ms + var(--i, 0) * 110ms);
 }
