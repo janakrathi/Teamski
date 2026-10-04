@@ -198,7 +198,7 @@ export default function SecurityPage() {
         </li>
         <li>
           <strong>The limit to know:</strong> a single task works in up to
-          eight steps, and the last step always writes up a result. For bigger
+          20 steps, and the last step always writes up a result. For very big
           jobs, split the work into several tasks, or put it on a schedule.
         </li>
         <li>

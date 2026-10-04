@@ -48,6 +48,12 @@ type Provider = {
 
 const TIMEOUT_MS = 9000;
 
+// DuckDuckGo's pages answer in about a second when they
+// work; when the server is being blocked they can hang.
+// A short wait keeps a blocked search from holding up the
+// reply before the next source gets its turn.
+const SCRAPED_TIMEOUT_MS = 3500;
+
 const MAX_RESULTS = 8;
 
 const USER_AGENT =
@@ -61,10 +67,10 @@ const USER_AGENT =
 class Refused extends Error {}
 
 
-async function get(url: string, init: RequestInit = {}) {
+async function get(url: string, init: RequestInit = {}, timeout = TIMEOUT_MS) {
   const response = await fetch(url, {
     ...init,
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeout),
   });
 
   if (
@@ -198,7 +204,7 @@ const duckduckgo: Provider = {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: body.toString(),
-    });
+    }, SCRAPED_TIMEOUT_MS);
 
     return parseDuckDuckGoHtml(await response.text());
   },
@@ -222,7 +228,7 @@ const duckduckgoLite: Provider = {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: body.toString(),
-    });
+    }, SCRAPED_TIMEOUT_MS);
 
     return parseDuckDuckGoLite(await response.text());
   },
@@ -452,7 +458,13 @@ export async function search(
   // rather than refuse outright.
   const awake = available.filter((provider) => !isResting(provider.id, now));
 
+  const skipped = new Set<string>();
+
   for (const provider of awake.length ? awake : available) {
+    if (skipped.has(provider.id)) {
+      continue;
+    }
+
     const started = Date.now();
 
     try {
@@ -492,6 +504,19 @@ export async function search(
       failures.push(`${provider.id}: ${reason}`);
 
       console.error(`[search] ${provider.id} failed (${reason}); trying the next source`);
+
+      // DuckDuckGo refusing the server - a block page, a
+      // captcha, or no answer in time - means its other
+      // page is blocked too. Skip it and rest it, so the
+      // reply isn't held up waiting on it as well.
+      if (provider.id.startsWith("duckduckgo") && (refused || /timeout|aborted/i.test(reason))) {
+        for (const other of available) {
+          if (other.id !== provider.id && other.id.startsWith("duckduckgo")) {
+            rest(other.id, refused, Date.now());
+            skipped.add(other.id);
+          }
+        }
+      }
     }
   }
 

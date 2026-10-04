@@ -32,7 +32,10 @@ export function isRateLimited(error: unknown) {
 // back whole, first chunk included.
 
 export async function unlessLimited<T>(
-  stream: AsyncGenerator<T>
+  stream: AsyncGenerator<T>,
+  // Told the refusal, for whoever wants to know how long
+  // the provider asked to wait (the key rotation).
+  onLimited?: (error: unknown) => void
 ): Promise<AsyncGenerator<T> | null> {
   let first: IteratorResult<T>;
 
@@ -40,6 +43,8 @@ export async function unlessLimited<T>(
     first = await stream.next();
   } catch (error) {
     if (isRateLimited(error)) {
+      onLimited?.(error);
+
       return null;
     }
 
@@ -193,9 +198,13 @@ export function fallbackOrder(options: {
 // A key that can't answer right now: over its limit,
 // or nothing usable behind it. The rotation moves on.
 export class KeyUnavailable extends Error {
-  constructor(reason: string) {
+  // How long the provider asked us to wait, when it said.
+  retryMs: number | null;
+
+  constructor(reason: string, retryMs: number | null = null) {
     super(reason);
     this.name = "KeyUnavailable";
+    this.retryMs = retryMs;
   }
 }
 
@@ -228,13 +237,19 @@ export function keyResting(id: string, now = Date.now()) {
 
 // Over its limit: a few minutes, growing with repeat
 // misses. Failing for another reason (a bad key, a
-// provider asking for billing): longer.
-export function restKey(id: string, limited: boolean, now = Date.now()) {
+// provider asking for billing): longer. When the
+// provider said how long to wait, that wins: a
+// per-minute limit clears in seconds and is tried again
+// soon, a daily one rests the key for hours instead of
+// being asked again every few minutes.
+export function restKey(id: string, limited: boolean, now = Date.now(), waitMs?: number | null) {
   const strikes = (resting.get(id)?.strikes ?? 0) + 1;
 
   const minutes = Math.min(60, (limited ? 2 : 15) * 2 ** (strikes - 1));
 
-  resting.set(id, { until: now + minutes * 60_000, strikes });
+  const ms = waitMs && waitMs > 0 ? Math.min(Math.max(waitMs, 5_000), 12 * 3_600_000) : minutes * 60_000;
+
+  resting.set(id, { until: now + ms, strikes });
 }
 
 export function keyRecovered(id: string) {

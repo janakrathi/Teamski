@@ -758,7 +758,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Can agents handle long tasks?",
-    a: "Background tasks run on our server, keep going when you close the tab, pick up where they left off after a restart, and can be paused or stopped at any time. Each task works in up to eight steps, so split big jobs into smaller tasks or put them on a schedule.",
+    a: "Background tasks run on our server, keep going when you close the tab, pick up where they left off after a restart, and can be paused or stopped at any time. Each task works in up to 20 steps - enough for long research or a whole landing page - and very big jobs can be split into several tasks or put on a schedule.",
   },
   {
     q: "Can we export our data if we leave?",

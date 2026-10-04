@@ -2,6 +2,8 @@ import { canReadImages } from "@/lib/ai/router";
 
 import {
   isLocal,
+  ROTATE_MODEL,
+  rotationServices,
   serviceOf,
   streamFor,
 } from "@/lib/ai/providers";
@@ -524,13 +526,23 @@ export async function POST(request: Request) {
   // minute cap is the tight one, so a request on
   // either is trimmed to fit Groq - every step in the
   // chain then works.
-  // Rotating someone's keys starts on free tiers with
-  // the same tight per-minute caps, so it is trimmed the
-  // same way.
+  // Rotating someone's keys is trimmed the same way only
+  // when every key in it is one of those small free tiers.
+  // With a Gemini, Mistral or paid key in the mix, a long
+  // request simply skips Groq (lib/ai/providers/rotation)
+  // and keeps its full context on a key with room for it.
+  const rotating = model === ROTATE_MODEL;
+
+  const rotationIsSmall = rotating
+    ? (await rotationServices(db, user.id, projectId, adminClient())).every(
+        (service) => service === "groq" || service === "cerebras"
+      )
+    : false;
+
   const onSharedFree =
     serviceOf(model) === "groq" ||
     serviceOf(model) === "cerebras" ||
-    serviceOf(model) === "rotate";
+    rotationIsSmall;
 
 
   // ----------------------------------------
@@ -970,8 +982,13 @@ export async function POST(request: Request) {
             streamFor(db, user.id, {
               // Whatever answered the step before,
               // so a model over its limit or unpaid
-              // for is not re-tried every step.
-              model: answeredWith,
+              // for is not re-tried every step. A key
+              // rotation stays a rotation, starting on
+              // the key that answered, so running out
+              // mid-answer moves to the next key rather
+              // than to the built-in model.
+              model: rotating ? ROTATE_MODEL : answeredWith,
+              prefer: rotating && answeredWith !== ROTATE_MODEL ? answeredWith : undefined,
 
               // Falls back to the project's shared
               // key when this person has none of

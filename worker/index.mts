@@ -88,7 +88,11 @@ const POLL_INTERVAL_MS = 2000;
 const MAX_CONCURRENT_RUNS =
   Number(process.env.WORKER_CONCURRENCY) || 8;
 
-const MAX_STEPS = 8;
+// How many steps one task may take - enough for long
+// research or a whole landing page in one go. Each step
+// resends the task's history, so the cap keeps a run
+// from wandering forever. WORKER_MAX_STEPS overrides it.
+const MAX_STEPS = Number(process.env.WORKER_MAX_STEPS) || 20;
 
 // A single step's generation budget. Without a
 // cap a reasoning model can spend an unbounded
@@ -507,7 +511,12 @@ async function runStep(
   model: string,
   db: SupabaseClient,
   startedBy: string | null,
-  projectId: string | null
+  projectId: string | null,
+
+  // With the key rotation: the model that answered the
+  // previous step, tried first so the run stays on one
+  // key (and its prompt cache) until that key runs out.
+  prefer?: string
 ) {
   let content = "";
 
@@ -528,6 +537,8 @@ async function runStep(
       // it is its own admin client here.
       projectId,
       admin: db,
+
+      prefer: model === "rotate/keys" ? prefer : undefined,
 
       // Every step of a run shares its prompt's opening,
       // so the run is its own cache group.
@@ -758,6 +769,9 @@ async function execute(
 
   const startedAt = Date.now();
 
+  // Which model answered the last step (see runStep).
+  let lastAnswered: string | undefined;
+
   while (step < MAX_STEPS) {
 
     // ----------------------------------------
@@ -888,8 +902,11 @@ async function execute(
         model,
         db,
         run.started_by ?? null,
-        run.project_id ?? null
+        run.project_id ?? null,
+        lastAnswered
       );
+
+      lastAnswered = outcome.answeredWith;
     } catch (error) {
       // A tool or template error (an invented tool, a
       // bad MCP schema, gpt-oss refusing the tool list):

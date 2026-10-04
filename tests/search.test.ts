@@ -232,3 +232,19 @@ test("by default the free DuckDuckGo routes go first and paid sources only after
   assert.match(tried[1], /lite\.duckduckgo\.com/);
   assert.match(tried[2], /serper\.dev/);
 });
+
+
+test("when DuckDuckGo blocks the server, its other page is skipped too", async () => {
+  const html = source("duckduckgo", async () => {
+    throw new Error("The operation was aborted due to timeout");
+  });
+  const lite = source("duckduckgo-lite", async () => ONE);
+  const serper = source("serper", async () => ONE);
+
+  __setProviders([html, lite, serper]);
+
+  const outcome = await search("weather in goa");
+
+  assert.equal(outcome.ok && outcome.source, "serper");
+  assert.equal(lite.calls, 0);
+});

@@ -1,4 +1,4 @@
-import { AUTO_INFO, autoAvailable, resolveAuto } from "../router.ts";
+import { AUTO_INFO, autoAvailable, needsStrongModel, resolveAuto } from "../router.ts";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -46,6 +46,8 @@ import {
 } from "./chatgpt.ts";
 
 import { projectOverspent } from "../spend.ts";
+
+import { fitsService, pickRotationModel, requestTokens, retryAfterMs } from "./rotation.ts";
 
 import {
   KeyUnavailable,
@@ -511,30 +513,33 @@ const ROTATE_INFO = {
 // its provider's suggested one. On Claude and OpenAI
 // keys, Auto - the cheap model for quick asks.
 
-async function rotationModels(
+// The services someone can rotate through, with every
+// model saved for each - theirs first, then the
+// project's shared keys where the plan allows them.
+async function rotationKeys(
   db: SupabaseClient | null,
   userId: string | null,
   projectId: string | null,
   admin: SupabaseClient | null
 ) {
+  const saved = new Map<string, string[]>();
+
   if (!db || !userId) {
-    return [];
+    return saved;
   }
 
   const plan = await planHere({ db, admin: admin ?? db, userId, projectId });
 
-  const firstModel = new Map<string, string>();
-
   for (const credential of await credentialsFor(db, userId)) {
     if (
       !ownKeyAllowed(plan, credential.service) ||
-      firstModel.has(credential.service) ||
+      saved.has(credential.service) ||
       (credential.service === CHATGPT_SERVICE && !chatgptPlanAvailable())
     ) {
       continue;
     }
 
-    firstModel.set(credential.service, rotationModelFor(credential.service, credential.models));
+    saved.set(credential.service, savedModels(credential.service, credential.models));
   }
 
   if (projectId && admin && allows(plan, "shared_keys")) {
@@ -544,27 +549,49 @@ async function rotationModels(
       .eq("project_id", projectId);
 
     for (const row of (data ?? []) as { service: string; models: ModelInfo[] | null }[]) {
-      if (!firstModel.has(row.service)) {
-        firstModel.set(row.service, rotationModelFor(row.service, row.models ?? []));
+      if (!saved.has(row.service)) {
+        saved.set(row.service, savedModels(row.service, row.models ?? []));
       }
     }
   }
 
-  return rotationOrder([...firstModel.keys()])
-    .map((service) => firstModel.get(service)!)
-    .filter(Boolean);
+  return saved;
 }
 
-function rotationModelFor(service: string, models: ModelInfo[]) {
-  if (autoAvailable(service)) {
-    return qualify(service, AUTO_INFO.id);
-  }
+// A key's models, or its provider's suggested ones when
+// none were saved.
+function savedModels(service: string, models: ModelInfo[]) {
+  const ids = models.map((model) => model.id);
 
-  const id =
-    models[0]?.id ??
-    defaultModelsFor(service).find((model) => !/(^|\/)auto$/.test(model.id))?.id;
+  return ids.length > 0 ? ids : defaultModelsFor(service).map((model) => model.id);
+}
 
-  return id ? qualify(service, id) : "";
+// Just which services, for deciding how much context a
+// rotation can take (app/api/chat).
+export async function rotationServices(
+  db: SupabaseClient | null,
+  userId: string | null,
+  projectId: string | null,
+  admin: SupabaseClient | null
+) {
+  return [...(await rotationKeys(db, userId, projectId, admin)).keys()];
+}
+
+// The model to ask on each key, in the order to try
+// them: free tiers first, paid last. On Claude and
+// OpenAI keys, Auto (the cheap model for quick asks).
+function rotationModels(saved: Map<string, string[]>, strong: boolean) {
+  return rotationOrder([...saved.keys()])
+    .map((service) => {
+      if (autoAvailable(service)) {
+        return qualify(service, AUTO_INFO.id);
+      }
+
+      const id = pickRotationModel(service, saved.get(service) ?? [], strong);
+
+      return id ? qualify(service, id) : "";
+    })
+    .filter(Boolean);
 }
 
 async function rotateKeys(
@@ -572,14 +599,45 @@ async function rotateKeys(
   userId: string | null,
   options: Parameters<typeof streamFor>[2]
 ): Promise<Answered> {
-  const models = await rotationModels(
-    db,
-    userId,
-    options.projectId ?? null,
-    options.admin ?? db
-  );
+  const saved = await rotationKeys(db, userId, options.projectId ?? null, options.admin ?? db);
 
-  const restId = (model: string) => `${userId}:${model.slice(0, model.indexOf("/"))}`;
+  // Real work gets the strong model on each key; a quick
+  // ask the small one, keeping the strong quotas for
+  // when they matter. Decided from the message, as the
+  // Auto router does.
+  const latest =
+    [...options.messages].reverse().find((message) => message.role === "user") ?? null;
+
+  const strong = needsStrongModel({
+    message: latest?.content ?? "",
+    hasImages: options.messages.some((message) => (message.images?.length ?? 0) > 0),
+    tools: options.tools,
+  }).strong;
+
+  const all = rotationModels(saved, strong);
+
+  // A request too big for a key's free tier skips it
+  // rather than spending a request to be refused - unless
+  // nothing else could take it.
+  const size = requestTokens(options.messages, options.tools);
+
+  const fitting = all.filter((model) => fitsService(serviceOf(model) ?? "", size));
+
+  let models = fitting.length > 0 ? fitting : all;
+
+  // Later steps of the same answer stay on the key that
+  // answered the first - its prompt cache, its model -
+  // and only move on if it runs out.
+  const preferred = options.prefer ? serviceOf(options.prefer) : null;
+
+  if (preferred && models.some((model) => serviceOf(model) === preferred)) {
+    models = [
+      options.prefer!,
+      ...models.filter((model) => serviceOf(model) !== preferred),
+    ];
+  }
+
+  const restId = (model: string) => `${userId}:${serviceOf(model)}`;
 
   // Keys that let us down recently go to the back
   // rather than being skipped, so with every key resting
@@ -590,25 +648,40 @@ async function rotateKeys(
   ];
 
   for (const model of order) {
+    // Stopped by the person: no point trying more keys.
+    if (options.signal?.aborted) {
+      throw options.signal.reason ?? new DOMException("Aborted", "AbortError");
+    }
+
     try {
       const answered = await streamFor(db, userId, {
         ...options,
         model,
+        prefer: undefined,
         noFallback: true,
       });
 
       keyRecovered(restId(model));
 
-      console.log(`[rotate] answered by ${answered.model}`);
+      console.log(`[rotate] answered by ${answered.model}${strong ? " (strong)" : ""}`);
 
       return answered;
     } catch (error) {
+      if (options.signal?.aborted) {
+        throw error;
+      }
+
       const limited = error instanceof KeyUnavailable || isRateLimited(error);
 
-      restKey(restId(model), limited);
+      // As long as the provider asked, when it said.
+      const wait = error instanceof KeyUnavailable ? error.retryMs : retryAfterMs(error);
+
+      restKey(restId(model), limited, Date.now(), wait);
 
       console.log(
-        `[rotate] ${model} skipped (${error instanceof Error ? error.message : "failed"})`
+        `[rotate] ${model} skipped (${error instanceof Error ? error.message : "failed"}${
+          wait ? `, resting ${Math.round(wait / 1000)}s` : ""
+        })`
       );
     }
   }
@@ -618,6 +691,7 @@ async function rotateKeys(
   return streamFor(db, userId, {
     ...options,
     model: groqKey() ? qualify("groq", GROQ_DEFAULT_MODEL) : DEFAULT_MODEL,
+    prefer: undefined,
     noFallback: false,
   });
 }
@@ -639,6 +713,10 @@ export async function streamFor(
     // falling back to the built-in model, so the
     // rotation can try the person's next key.
     noFallback?: boolean;
+
+    // With the key rotation: the model that answered the
+    // previous step of this answer, tried first.
+    prefer?: string;
   }
 ): Promise<Answered> {
   if (options.model === ROTATE_MODEL) {
@@ -885,9 +963,18 @@ export async function streamFor(
   // the built-in model answers, out of the plan's
   // allowance like any other built-in answer.
 
+  // The last limit refusal seen, so the key rotation can
+  // rest this key for as long as the provider asked.
+  let limitError: unknown = null;
+
+  const watch = <T,>(stream: AsyncGenerator<T>) =>
+    unlessLimited(stream, (error) => {
+      limitError = error;
+    });
+
   const limited = async (): Promise<Answered> => {
     if (options.noFallback) {
-      throw new KeyUnavailable("over its limit");
+      throw new KeyUnavailable("over its limit", retryAfterMs(limitError));
     }
 
     if (paidBy !== "server") {
@@ -945,7 +1032,7 @@ export async function streamFor(
     }).slice(0, 3);
 
     for (const next of order) {
-      const checked = await unlessLimited(run(next));
+      const checked = await watch(run(next));
 
       if (checked) {
         return {
@@ -982,7 +1069,7 @@ export async function streamFor(
       return limited();
     }
 
-    const checked = await unlessLimited(
+    const checked = await watch(
       chatgptStream({ ...call, credential: { key: token } })
     );
 
@@ -999,7 +1086,7 @@ export async function streamFor(
   }
 
   if (service === "anthropic") {
-    const checked = await unlessLimited(anthropicProvider.stream(call));
+    const checked = await watch(anthropicProvider.stream(call));
 
     if (!checked) {
       return (
@@ -1046,11 +1133,11 @@ export async function streamFor(
     gen: AsyncGenerator<ChatChunk>
   ): Promise<AsyncGenerator<ChatChunk> | null> => {
     if (!viaSharedChain) {
-      return unlessLimited(gen);
+      return watch(gen);
     }
 
     try {
-      return await unlessLimited(gen);
+      return await watch(gen);
     } catch {
       return null;
     }
