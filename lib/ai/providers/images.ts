@@ -2,9 +2,15 @@
 // IMAGE GENERATION - CLOUDFLARE WORKERS AI
 // ==========================================
 //
-// FLUX.1 [schnell] on Cloudflare's Workers AI makes
-// good images fast, on a genuinely free tier with no
-// card. The workspace runs on a shared account (env
+// FLUX.2 [klein] on Cloudflare's Workers AI: a 2026
+// Black Forest Labs model, much sharper than the older
+// FLUX.1 [schnell], on the same genuinely free tier
+// with no card - 10,000 "neurons" a day per account,
+// about 95 images a day at 1024x1024 (26 neurons per
+// 512px tile of output). If it fails, FLUX.1 [schnell]
+// is tried, so an image still comes back.
+//
+// The workspace runs on a shared account (env
 // CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN), but
 // a person can bring their own account + token for
 // their own daily limit - passed in here, falling
@@ -14,8 +20,15 @@
 // image API is this one file.
 //
 
+// Sharper, newer. Takes multipart form input.
 const MODEL =
+  "@cf/black-forest-labs/flux-2-klein-4b";
+
+// The older, cheaper fallback. Takes JSON.
+const FALLBACK_MODEL =
   "@cf/black-forest-labs/flux-1-schnell";
+
+const SIZE = 1024;
 
 const API = "https://api.cloudflare.com/client/v4";
 
@@ -56,27 +69,62 @@ export async function generateImage(
     return { error: "no-key" };
   }
 
-  try {
-    const response = await fetch(
-      `${API}/accounts/${accountId}/ai/run/${MODEL}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt,
+  const url = (model: string) =>
+    `${API}/accounts/${accountId}/ai/run/${model}`;
 
-          // schnell is distilled for 1-4 steps; more
-          // barely helps and just costs neurons, and
-          // the free tier is 10k neurons a day at
-          // ~9.6 per step. 4 is its quality end.
-          steps: 4,
-        }),
-        signal: options?.signal,
-      }
-    );
+  // FLUX.2 [klein]: multipart form, steps fixed at 4.
+  const form = new FormData();
+
+  form.append("prompt", prompt);
+  form.append("width", String(SIZE));
+  form.append("height", String(SIZE));
+
+  const best = await run(
+    url(MODEL),
+    { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form, signal: options?.signal },
+    "flux-2-klein"
+  );
+
+  if (!("error" in best) || options?.signal?.aborted) {
+    return best;
+  }
+
+  // FLUX.1 [schnell]: JSON. Distilled for 1-4 steps;
+  // more barely helps and just costs neurons.
+  const fallback = await run(
+    url(FALLBACK_MODEL),
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, steps: 4 }),
+      signal: options?.signal,
+    },
+    "flux-1-schnell"
+  );
+
+  // Report the newer model's reason if both failed:
+  // it is the one that was meant to answer.
+  return "error" in fallback ? best : fallback;
+}
+
+
+// The image type, from its first bytes - the models
+// return JPEG or PNG without saying which.
+export function imageMime(bytes: Buffer) {
+  if (bytes[0] === 0x89 && bytes[1] === 0x50) return "image/png";
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57) return "image/webp";
+
+  return "image/jpeg";
+}
+
+
+async function run(
+  url: string,
+  init: RequestInit,
+  label: string
+): Promise<GeneratedImage> {
+  try {
+    const response = await fetch(url, init);
 
     if (!response.ok) {
       const text = await response
@@ -84,47 +132,34 @@ export async function generateImage(
         .catch(() => "");
 
       console.log(
-        `[image] cloudflare ${response.status}: ${text.slice(
-          0,
-          200
-        )}`
+        `[image] ${label} ${response.status}: ${text.slice(0, 200)}`
       );
 
       return {
-        error: `${response.status}${
-          text ? `: ${text.slice(0, 200)}` : ""
-        }`,
+        error: `${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`,
       };
     }
 
     const data = (await response.json()) as {
       result?: { image?: string };
+      image?: string;
       errors?: { message?: string }[];
     };
 
-    const base64 = data.result?.image;
+    const base64 = data.result?.image ?? data.image;
 
-    if (
-      typeof base64 === "string" &&
-      base64.length > 0
-    ) {
-      return {
-        bytes: Buffer.from(base64, "base64"),
-        mime: "image/jpeg",
-      };
+    if (typeof base64 === "string" && base64.length > 0) {
+      const bytes = Buffer.from(base64, "base64");
+
+      return { bytes, mime: imageMime(bytes) };
     }
 
     return {
-      error:
-        data.errors?.[0]?.message ??
-        "no image was returned",
+      error: data.errors?.[0]?.message ?? "no image was returned",
     };
   } catch (cause) {
     return {
-      error:
-        cause instanceof Error
-          ? cause.message
-          : "the request failed",
+      error: cause instanceof Error ? cause.message : "the request failed",
     };
   }
 }

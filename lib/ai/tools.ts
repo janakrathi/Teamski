@@ -1326,7 +1326,9 @@ export const TOOLS: ToolDefinition[] = [
 
       const ext = result.mime.includes("jpeg")
         ? "jpg"
-        : "png";
+        : result.mime.includes("webp")
+          ? "webp"
+          : "png";
 
       // First folder is the project id - the storage
       // policy checks exactly that.
