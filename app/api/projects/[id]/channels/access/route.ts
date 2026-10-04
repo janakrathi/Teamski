@@ -18,10 +18,9 @@ const uuidRegex =
 // WHO CAN SEE A CHANNEL
 // ==========================================
 //
-// A channel is open (everyone in the project but
-// viewers) or private (only the people listed). Either
-// way, viewers listed on it can read it, and owners and
-// admins see everything. See migration 0034.
+// A channel is open (everyone in the project, viewers
+// read-only) or private (only the people listed). Owners
+// and admins see everything. See migrations 0034, 0035.
 //
 // Read by anyone who can see the channel; changed by an
 // owner or admin, through the service role after the

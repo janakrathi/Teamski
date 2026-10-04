@@ -11,10 +11,10 @@ import type { Channel } from "@/components/types";
 // WHO CAN SEE A CHANNEL
 // ==========================================
 //
-// Open: everyone in the project except viewers, plus
-// any viewers ticked here. Private: only the people
-// ticked here. Owners and admins always see every
-// channel, so they are shown ticked and fixed.
+// Open: everyone in the project, viewers included (they
+// read, never post). Private: only the people ticked
+// here. Owners and admins always see every channel, so
+// they are shown ticked and fixed.
 //
 
 type Person = {
@@ -131,7 +131,7 @@ export default function ChannelAccessDialog({
 
   // Who sees it without being ticked: owners and admins
   // always; members too while the channel is open.
-  const seesAnyway = (person: Person) => runs(person) || (!restricted && person.role !== "viewer");
+  const seesAnyway = (person: Person) => runs(person) || !restricted;
 
   const toggle = (id: string) =>
     setChosen((previous) => {
@@ -151,7 +151,7 @@ export default function ChannelAccessDialog({
       open={Boolean(channel)}
       onClose={onClose}
       title={channel ? `Who can see #${channel.name}` : "Who can see it"}
-      description="Viewers only read the channels they are given. Owners and admins see every channel."
+      description="Viewers can read every open channel and the private ones they are ticked on, but never post. Owners and admins see every channel."
       footer={
         <>
           <DialogButton onClick={onClose}>Cancel</DialogButton>
@@ -167,7 +167,7 @@ export default function ChannelAccessDialog({
         <div>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { value: false, label: "Open", hint: "Everyone but viewers" },
+              { value: false, label: "Open", hint: "Everyone in the project" },
               { value: true, label: "Private", hint: "Only the people ticked" },
             ].map((option) => (
               <button

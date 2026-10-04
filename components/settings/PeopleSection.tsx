@@ -400,8 +400,9 @@ export default function PeopleSection({
 
         <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--text-faint)]">
           By email, or by @username if they are already on Teamski. Paste
-          several at once, separated by commas or new lines. Viewers only
-          read the channels you give them (channel ⋯ → Who can see it).
+          several at once, separated by commas or new lines. Viewers read
+          every open channel, and private ones you tick them on (channel ⋯ →
+          Who can see it), but never post.
         </p>
       </form>
 
