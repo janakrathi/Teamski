@@ -2,6 +2,10 @@ import { templateById } from "@/lib/agents/templates";
 
 import { createClient } from "@/lib/supabase/server";
 
+import { audit } from "@/lib/audit";
+
+import { can, roleInProject } from "@/lib/plans";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -40,11 +44,25 @@ export async function GET(
     );
   }
 
-  const { data, error } = await supabase
-    .from("channels")
-    .select("id, project_id, name, created_at")
-    .eq("project_id", projectId)
-    .order("created_at", { ascending: true });
+  // Private channels (0034) say so; before that
+  // migration there is no column to read.
+  const list = (columns: string) =>
+    supabase
+      .from("channels")
+      .select(columns)
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: true });
+
+  let result = await list("id, project_id, name, created_at, restricted");
+
+  if (
+    result.error &&
+    (result.error.code === "42703" || result.error.code === "PGRST204")
+  ) {
+    result = await list("id, project_id, name, created_at");
+  }
+
+  const { data, error } = result;
 
   if (error) {
     console.error(
@@ -75,8 +93,13 @@ export async function GET(
     );
   }
 
+  // The caller's role, so a viewer gets a read-only
+  // channel without a second request.
+  const role = await roleInProject(supabase, projectId, user.id);
+
   return Response.json({
     channels: data ?? [],
+    role,
   });
 }
 
@@ -117,6 +140,19 @@ export async function POST(
     name?: string;
     templateId?: string | null;
   };
+
+  const role = await roleInProject(supabase, projectId, user.id);
+
+  if (!can(role, "use")) {
+    return Response.json(
+      {
+        error: role
+          ? "Viewers cannot create channels."
+          : "You are not a member of this project.",
+      },
+      { status: 403 }
+    );
+  }
 
   const template = templateById(body.templateId);
 
@@ -220,6 +256,13 @@ export async function POST(
     );
   }
 
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "channel.create",
+    target: `#${name}`,
+  });
+
   return Response.json({ channel: data });
 }
 
@@ -292,6 +335,22 @@ export async function PATCH(
     );
   }
 
+  const role = await roleInProject(supabase, projectId, user.id);
+
+  if (!can(role, "use")) {
+    return Response.json(
+      { error: "Viewers cannot rename channels." },
+      { status: 403 }
+    );
+  }
+
+  const { data: before } = await supabase
+    .from("channels")
+    .select("name")
+    .eq("id", body.channelId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
   // Row-level security lets only a project member do
   // this, and scopes it to this project's channels.
   const { data, error } = await supabase
@@ -313,6 +372,14 @@ export async function PATCH(
       { status: 500 }
     );
   }
+
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "channel.rename",
+    target: `#${name}`,
+    details: { from: before?.name ?? null },
+  });
 
   return Response.json({ channel: data });
 }
@@ -359,6 +426,22 @@ export async function DELETE(
     );
   }
 
+  const role = await roleInProject(supabase, projectId, user.id);
+
+  if (!can(role, "use")) {
+    return Response.json(
+      { error: "Viewers cannot delete channels." },
+      { status: 403 }
+    );
+  }
+
+  const { data: doomed } = await supabase
+    .from("channels")
+    .select("name")
+    .eq("id", channelId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
   // The channel's messages, agent and memory go with it
   // through the database's cascade. Row-level security
   // lets only a project member remove it.
@@ -373,6 +456,15 @@ export async function DELETE(
       { error: error.message },
       { status: 500 }
     );
+  }
+
+  if (doomed) {
+    await audit({
+      projectId,
+      actorId: user.id,
+      action: "channel.delete",
+      target: `#${doomed.name}`,
+    });
   }
 
   return Response.json({ ok: true });

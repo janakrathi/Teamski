@@ -3,6 +3,7 @@ import { sealSecret } from "@/lib/crypto/secrets";
 import { createClient } from "@/lib/supabase/server";
 
 import { adminClient } from "@/lib/supabase/admin";
+import { audit } from "@/lib/audit";
 
 import { PRESETS, presetById } from "@/lib/ai/providers";
 
@@ -344,6 +345,13 @@ export async function POST(
     );
   }
 
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "key.add",
+    target: labelFor(service),
+  });
+
   return Response.json({ ok: true });
 }
 
@@ -396,6 +404,13 @@ export async function DELETE(
       { status: 500 }
     );
   }
+
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "key.remove",
+    target: labelFor(service),
+  });
 
   return Response.json({ ok: true });
 }

@@ -65,20 +65,21 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  // You added it, or you are in its project.
+  // You added it, or row-level security lets you see
+  // it: in its project, and for a private channel's
+  // file, on that channel.
   const yours = attachment.uploaded_by === user.id;
 
   let allowed = yours;
 
-  if (!allowed && attachment.project_id) {
-    const { data: membership } = await db
-      .from("project_members")
-      .select("user_id")
-      .eq("project_id", attachment.project_id)
-      .eq("user_id", user.id)
+  if (!allowed) {
+    const { data: visible } = await db
+      .from("attachments")
+      .select("id")
+      .eq("id", id)
       .maybeSingle();
 
-    allowed = Boolean(membership);
+    allowed = Boolean(visible);
   }
 
   if (!allowed) {

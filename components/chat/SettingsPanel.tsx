@@ -18,6 +18,8 @@ import ProjectKeys from "@/components/settings/ProjectKeys";
 
 import PeopleSection from "@/components/settings/PeopleSection";
 
+import SkillsSection from "@/components/settings/SkillsSection";
+
 import PlanSection from "@/components/settings/PlanSection";
 
 import McpSection from "@/components/settings/McpSection";
@@ -40,6 +42,7 @@ type Tab =
   | "ai"
   | "connections"
   | "people"
+  | "skills"
   | "plan";
 
 // A self-hosted copy has no plans to show.
@@ -49,6 +52,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "ai", label: "AI" },
   { id: "connections", label: "Connections" },
   { id: "people", label: "People" },
+  { id: "skills", label: "Skills" },
   ...(SELF_HOSTED ? [] : [{ id: "plan" as const, label: "Plan" }]),
 ];
 
@@ -461,6 +465,12 @@ export default function SettingsPanel({
         {tab === "plan" && (
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <PlanSection projectId={projectId} />
+          </div>
+        )}
+
+        {tab === "skills" && (
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <SkillsSection projectId={projectId} />
           </div>
         )}
 

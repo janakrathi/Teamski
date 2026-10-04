@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { cachedJson, peekJson } from "@/lib/net/cache";
 
+import ActivityLog from "./ActivityLog";
+
 
 // ==========================================
 // PEOPLE
@@ -73,6 +75,9 @@ export default function PeopleSection({
 
   const [email, setEmail] = useState("");
 
+  // What new people join as.
+  const [joinAs, setJoinAs] = useState<"member" | "viewer">("member");
+
   const [loading, setLoading] = useState(
     Boolean(projectId) && !known
   );
@@ -128,12 +133,28 @@ export default function PeopleSection({
   }, [load]);
 
 
-  async function invite(event: React.FormEvent) {
-    event.preventDefault();
+  // One person or many: emails and @usernames
+  // separated by commas, spaces or new lines, each
+  // added with the role picked beside the box.
+  async function invite(event?: React.FormEvent) {
+    event?.preventDefault();
 
-    const address = email.trim();
+    const entries = [
+      ...new Set(
+        email
+          .split(/[\s,;]+/)
+          .map((entry) => entry.trim())
+          .filter(Boolean)
+      ),
+    ];
 
-    if (!address || busy || !projectId) {
+    if (entries.length === 0 || busy || !projectId) {
+      return;
+    }
+
+    if (entries.length > 50) {
+      setError("Add up to 50 people at a time.");
+
       return;
     }
 
@@ -141,45 +162,75 @@ export default function PeopleSection({
     setError("");
     setNote("");
 
-    try {
-      const response = await fetch(
-        `/api/projects/${projectId}/members`,
-        {
-          method: "POST",
+    const done: string[] = [];
+    const failed: string[] = [];
+    let lastMessage = "";
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+    for (const entry of entries) {
+      try {
+        const response = await fetch(
+          `/api/projects/${projectId}/members`,
+          {
+            method: "POST",
 
-          body: JSON.stringify({
-            // An email or a @username; the server
-            // works out which.
-            query: address,
-          }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              // An email or a @username; the server
+              // works out which.
+              query: entry,
+              role: joinAs,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          failed.push(`${entry}: ${data.error || "could not be added"}`);
+
+          // The plan is full: the rest would fail too.
+          if (data.enterprise) {
+            break;
+          }
+
+          continue;
         }
-      );
 
-      const data = await response.json();
+        done.push(entry);
+        lastMessage = data.message ?? "";
+      } catch {
+        failed.push(`${entry}: could not be added`);
+      }
+    }
 
-      if (!response.ok) {
-        throw new Error(
-          data.error || "Could not invite them."
+    setEmail(failed.length > 0 ? entries.filter((entry) => !done.includes(entry)).join("\n") : "");
+
+    if (entries.length === 1) {
+      if (done.length === 1) {
+        setNote(lastMessage || "Invited.");
+      } else {
+        setError(failed[0]?.replace(/^[^:]+: /, "") ?? "Could not invite them.");
+      }
+    } else {
+      if (done.length > 0) {
+        setNote(
+          `Added or invited ${done.length} ${done.length === 1 ? "person" : "people"} as ${
+            joinAs === "viewer" ? "viewers" : "members"
+          }.`
         );
       }
 
-      setEmail("");
-      setNote(data.message ?? "Invited.");
-
-      await load(true);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Could not invite them."
-      );
-    } finally {
-      setBusy(false);
+      if (failed.length > 0) {
+        setError(failed.join("\n"));
+      }
     }
+
+    setBusy(false);
+
+    await load(true);
   }
 
 
@@ -290,11 +341,11 @@ export default function PeopleSection({
           Add someone
         </span>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
+        <div className="flex items-start gap-2">
+          <textarea
             value={email}
             disabled={busy}
+            rows={email.includes("\n") ? 4 : 1}
             placeholder="teammate@company.com or @username"
             autoCapitalize="none"
             autoCorrect="off"
@@ -302,20 +353,41 @@ export default function PeopleSection({
             onChange={(event) =>
               setEmail(event.target.value)
             }
-            className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[13px] text-[var(--text)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                void invite();
+              }
+            }}
+            className="min-w-0 flex-1 resize-none rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[13px] text-[var(--text)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
           />
+
+          <select
+            value={joinAs}
+            disabled={busy}
+            onChange={(event) =>
+              setJoinAs(event.target.value === "viewer" ? "viewer" : "member")
+            }
+            aria-label="Join as"
+            className="shrink-0 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-2 py-2 text-[12.5px] text-[var(--text-muted)] outline-none focus:border-[var(--border-strong)]"
+          >
+            <option value="member">Member</option>
+            <option value="viewer">Viewer</option>
+          </select>
 
           <button
             type="submit"
             disabled={busy || !email.trim()}
-            className="shrink-0 rounded-md bg-[var(--accent)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--bg)] transition hover:opacity-90 disabled:opacity-40"
+            className="shrink-0 rounded-md bg-[var(--accent)] px-3 py-2 text-[12.5px] font-medium text-[var(--bg)] transition hover:opacity-90 disabled:opacity-40"
           >
-            Add
+            {busy ? "Adding…" : "Add"}
           </button>
         </div>
 
         <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--text-faint)]">
-          By email, or by @username if they are already on Teamski.
+          By email, or by @username if they are already on Teamski. Paste
+          several at once, separated by commas or new lines. Viewers only
+          read the channels you give them (channel ⋯ → Who can see it).
         </p>
       </form>
 
@@ -326,7 +398,7 @@ export default function PeopleSection({
       )}
 
       {error && (
-        <p className="mt-2.5 rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-[12px] leading-relaxed text-red-200">
+        <p className="mt-2.5 whitespace-pre-line rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-[12px] leading-relaxed text-red-200">
           {error}
         </p>
       )}
@@ -404,6 +476,9 @@ export default function PeopleSection({
                         </option>
                         <option value="admin">
                           Admin
+                        </option>
+                        <option value="viewer">
+                          Viewer
                         </option>
                       </select>
                     ) : (
@@ -515,6 +590,8 @@ export default function PeopleSection({
           </a>
         </div>
       )}
+
+      {canManage && <ActivityLog projectId={projectId} />}
 
     </div>
   );

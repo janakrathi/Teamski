@@ -7,6 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 import { adminClient } from "@/lib/supabase/admin";
+import { audit } from "@/lib/audit";
 
 import { can, roleInProject } from "@/lib/plans";
 
@@ -185,6 +186,8 @@ export async function GET(request: Request, context: RouteContext) {
   if (!project) {
     return Response.json({ error: "Project not found." }, { status: 404 });
   }
+
+  await audit({ projectId, actorId: user.id, action: "project.export" });
 
   const [members, channels, messages, facts, summaries, schedules, attachments] =
     await Promise.all([

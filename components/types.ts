@@ -13,6 +13,10 @@ export type Channel = {
   project_id: string;
   name: string;
   created_at?: string;
+
+  // Private: only the people listed on it (and owners
+  // and admins) see it. Absent before migration 0034.
+  restricted?: boolean;
 };
 
 export type Member = {

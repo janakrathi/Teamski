@@ -75,6 +75,24 @@ export function Hash(props: IconProps) {
   );
 }
 
+export function Lock(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </Svg>
+  );
+}
+
+export function Eye(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.75" />
+    </Svg>
+  );
+}
+
 export function Sparkle(props: IconProps) {
   return (
     <Svg {...props}>

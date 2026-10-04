@@ -117,6 +117,13 @@ export async function POST(
     );
   }
 
+  if (membership.role === "viewer") {
+    return NextResponse.json(
+      { error: "Viewers can watch agents but not steer them." },
+      { status: 403 }
+    );
+  }
+
   // --------------------------------------------------
   // 6. Determine new state
   // --------------------------------------------------

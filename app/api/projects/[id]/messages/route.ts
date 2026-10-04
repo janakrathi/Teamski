@@ -2,6 +2,8 @@ import { forgetMessage } from "@/lib/ai/memory";
 
 import { createClient } from "@/lib/supabase/server";
 
+import { channelAccess, postRefusal } from "@/lib/plans";
+
 import {
   displayName,
   findMentioned,
@@ -463,6 +465,24 @@ export async function POST(
         {
           status: 400,
         }
+      );
+    }
+
+    // A viewer reads; a private channel is for the
+    // people on it. The database refuses either way -
+    // this says why in words.
+
+    const access = await channelAccess(
+      supabase,
+      projectId,
+      channelId,
+      user.id
+    );
+
+    if (!access.post) {
+      return Response.json(
+        { error: postRefusal(access) },
+        { status: 403 }
       );
     }
 

@@ -42,6 +42,11 @@ const NewChannelDialog = dynamic(
   { ssr: false }
 );
 
+const ChannelAccessDialog = dynamic(
+  () => import("@/components/chat/ChannelAccessDialog"),
+  { ssr: false }
+);
+
 import FirstRun from "@/components/onboarding/FirstRun";
 
 import ConnectGroq from "@/components/onboarding/ConnectGroq";
@@ -212,6 +217,17 @@ export default function Home() {
   const [asking, setAsking] = useState<
     "project" | "channel" | null
   >(null);
+
+  // The signed-in person's role in the current project
+  // (from the channel list). A viewer reads; the
+  // composer and channel menu are not offered.
+  const [myRole, setMyRole] = useState<string | null>(
+    null
+  );
+
+  // The channel whose "who can see it" dialog is open.
+  const [accessFor, setAccessFor] =
+    useState<Channel | null>(null);
 
   // Something went wrong that is worth a
   // sentence but not a dialog. An alert() froze
@@ -739,12 +755,14 @@ export default function Home() {
         });
       };
 
-      const known = peekJson<{ channels?: Channel[] }>(
-        url
-      );
+      const known = peekJson<{
+        channels?: Channel[];
+        role?: string | null;
+      }>(url);
 
       if (known?.channels) {
         place(known.channels);
+        setMyRole(known.role ?? null);
       }
 
       try {
@@ -754,11 +772,14 @@ export default function Home() {
           error?: string;
           needsMigration?: boolean;
           channels?: Channel[];
+          role?: string | null;
         };
 
         if (cancelled) {
           return;
         }
+
+        setMyRole(data.role ?? null);
 
         if (data.error) {
           setChannelsNeedMigration(
@@ -1849,7 +1870,11 @@ export default function Home() {
             void deleteChannel(channel);
           }
         }}
+        onChannelAccess={(channel: Channel) =>
+          setAccessFor(channel)
+        }
         channelsNeedMigration={channelsNeedMigration}
+        myRole={myRole}
 
         members={members}
         activeMemberId={activeMember?.id ?? null}
@@ -2135,6 +2160,13 @@ export default function Home() {
 
           {/* COMPOSER */}
 
+          {myRole === "viewer" ? (
+            <div className="border-t border-[var(--border)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <p className="mx-auto max-w-3xl rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-center text-[12.5px] text-[var(--text-muted)]">
+                You are a viewer here: you can read this channel, but not post or ask its agent.
+              </p>
+            </div>
+          ) : (
           <Composer
             value={draft}
             onChange={setDraft}
@@ -2182,6 +2214,7 @@ export default function Home() {
                 : "Create a project first"
             }
           />
+          )}
         </section>
       )}
 
@@ -2290,6 +2323,25 @@ export default function Home() {
             }}
           />
         )}
+
+      {accessFor && currentProject && (
+        <ChannelAccessDialog
+          projectId={currentProject.id}
+          channel={accessFor}
+          onClose={() => setAccessFor(null)}
+          onSaved={(saved) => {
+            setChannels((previous) =>
+              previous.map((channel) =>
+                channel.id === saved.id ? saved : channel
+              )
+            );
+
+            setCurrentChannel((current) =>
+              current?.id === saved.id ? saved : current
+            );
+          }}
+        />
+      )}
 
       {asking === "channel" && (
         <NewChannelDialog

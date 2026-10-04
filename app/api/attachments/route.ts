@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
+import { channelAccess, postRefusal } from "@/lib/plans";
+
 import {
   MAX_UPLOAD_BYTES,
   extractText,
@@ -86,6 +88,25 @@ export async function POST(request: Request) {
       },
       { status: 400 }
     );
+  }
+
+  // Viewers do not upload, and a private channel's
+  // files are for the people on it.
+
+  if (!inDM) {
+    const access = await channelAccess(
+      db,
+      projectId,
+      uuidRegex.test(channelId) ? channelId : null,
+      user.id
+    );
+
+    if (!access.post) {
+      return Response.json(
+        { error: postRefusal(access) },
+        { status: 403 }
+      );
+    }
   }
 
   const file = form.get("file");

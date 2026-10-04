@@ -8,6 +8,7 @@ import ProjectSwitcher from "./ProjectSwitcher";
 
 import {
   Hash,
+  Lock,
   Plus,
   Settings,
 } from "@/components/ui/Icons";
@@ -119,7 +120,9 @@ export default function Sidebar({
   onCreateChannel,
   onRenameChannel,
   onDeleteChannel,
+  onChannelAccess,
   channelsNeedMigration,
+  myRole,
 
   members,
   activeMemberId,
@@ -142,7 +145,12 @@ export default function Sidebar({
   onCreateChannel: () => void;
   onRenameChannel: (channel: Channel) => void;
   onDeleteChannel: (channel: Channel) => void;
+  onChannelAccess: (channel: Channel) => void;
   channelsNeedMigration: boolean;
+
+  // The signed-in person's role here: a viewer gets no
+  // channel menu, an owner or admin gets "Who can see it".
+  myRole: string | null;
 
   members: Member[];
   activeMemberId: string | null;
@@ -193,7 +201,7 @@ export default function Sidebar({
 
         <SectionLabel
           onAdd={
-            currentProject
+            currentProject && myRole !== "viewer"
               ? onCreateChannel
               : undefined
           }
@@ -249,13 +257,23 @@ export default function Sidebar({
                     }
                     className="flex min-w-0 flex-1 items-center gap-2 text-left"
                   >
-                    <Hash
-                      className={`h-3.5 w-3.5 shrink-0 ${
-                        active
-                          ? "text-[var(--accent)]"
-                          : "text-[var(--text-faint)]"
-                      }`}
-                    />
+                    {channel.restricted ? (
+                      <Lock
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          active
+                            ? "text-[var(--accent)]"
+                            : "text-[var(--text-faint)]"
+                        }`}
+                      />
+                    ) : (
+                      <Hash
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          active
+                            ? "text-[var(--accent)]"
+                            : "text-[var(--text-faint)]"
+                        }`}
+                      />
+                    )}
 
                     <span
                       className={`min-w-0 flex-1 truncate text-[13px] ${
@@ -273,7 +291,9 @@ export default function Sidebar({
                       <Unread count={unread} />
                     )}
 
-                  {/* Rename / delete, on hover. */}
+                  {/* Rename / delete, on hover. Viewers
+                      change nothing, so get no menu. */}
+                  {myRole !== "viewer" && (
                   <button
                     type="button"
                     aria-label="Channel options"
@@ -292,6 +312,7 @@ export default function Sidebar({
                   >
                     ⋯
                   </button>
+                  )}
 
                   {channelMenu === channel.id && (
                     <>
@@ -303,7 +324,21 @@ export default function Sidebar({
                         }
                       />
 
-                      <div data-origin="top-right" className="t-dropdown absolute top-full right-1 z-20 mt-1 w-32 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] py-1 shadow-xl">
+                      <div data-origin="top-right" className="t-dropdown absolute top-full right-1 z-20 mt-1 w-40 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] py-1 shadow-xl">
+                        {(myRole === "owner" ||
+                          myRole === "admin") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setChannelMenu(null);
+                              onChannelAccess(channel);
+                            }}
+                            className="block w-full px-3 py-1.5 text-left text-[12.5px] text-[var(--text)] transition hover:bg-[var(--bg-hover)]"
+                          >
+                            Who can see it
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => {

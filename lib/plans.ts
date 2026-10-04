@@ -740,14 +740,24 @@ async function legacyOwnerPlan(
 // included. An admin runs the project day to day -
 // members, settings, connections, schedules - but
 // not its money or its existence. A member uses it.
+// A viewer only reads the channels they were given.
 //
 
 export type ProjectRole =
   | "owner"
   | "admin"
-  | "member";
+  | "member"
+  | "viewer";
+
+export const PROJECT_ROLES: ProjectRole[] = [
+  "owner",
+  "admin",
+  "member",
+  "viewer",
+];
 
 export type ProjectAction =
+  | "view"
   | "use"
   | "manage_members"
   | "manage_settings"
@@ -762,6 +772,7 @@ const ROLE_ACTIONS: Record<
   ProjectAction[]
 > = {
   owner: [
+    "view",
     "use",
     "manage_members",
     "manage_settings",
@@ -773,6 +784,7 @@ const ROLE_ACTIONS: Record<
   ],
 
   admin: [
+    "view",
     "use",
     "manage_members",
     "manage_settings",
@@ -780,7 +792,9 @@ const ROLE_ACTIONS: Record<
     "manage_schedules",
   ],
 
-  member: ["use"],
+  member: ["view", "use"],
+
+  viewer: ["view"],
 };
 
 export const ROLE_LABELS: Record<
@@ -790,6 +804,7 @@ export const ROLE_LABELS: Record<
   owner: "Owner",
   admin: "Admin",
   member: "Member",
+  viewer: "Viewer",
 };
 
 
@@ -830,12 +845,65 @@ export async function roleInProject(
     | ProjectRole
     | undefined;
 
-  return role &&
-    (role === "owner" ||
-      role === "admin" ||
-      role === "member")
+  return role && PROJECT_ROLES.includes(role)
     ? role
     : null;
+}
+
+
+// What someone may do in a project's channel: see it,
+// and post in it (ask its agent, upload, start a run).
+// The channel is read with the caller's own client, so
+// row-level security decides whether they can see it -
+// private channels they are not on, and for a viewer
+// every channel they were not given, come back empty.
+
+export type ChannelAccess = {
+  role: ProjectRole | null;
+  view: boolean;
+  post: boolean;
+};
+
+export async function channelAccess(
+  db: SupabaseClient | null,
+  projectId: string | null,
+  channelId: string | null,
+  userId: string | null
+): Promise<ChannelAccess> {
+  const role = await roleInProject(db, projectId, userId);
+
+  if (!db || !role) {
+    return { role, view: false, post: false };
+  }
+
+  if (!channelId) {
+    return { role, view: true, post: can(role, "use") };
+  }
+
+  const { data } = await db
+    .from("channels")
+    .select("project_id")
+    .eq("id", channelId)
+    .maybeSingle();
+
+  const view = data?.project_id === projectId;
+
+  return { role, view, post: view && can(role, "use") };
+}
+
+
+// Why someone cannot post, in words for a 403.
+
+export function postRefusal(access: ChannelAccess) {
+  if (!access.role) {
+    return "You are not a member of this project.";
+  }
+
+  if (!access.view) {
+    return "You do not have access to this channel.";
+  }
+
+  return "Viewers can read this channel but not post in it or ask its agent.";
 }
 
 

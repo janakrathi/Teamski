@@ -18,6 +18,8 @@ import { streamFor } from "../lib/ai/providers/index.ts";
 
 import { mcpToolsFor } from "../lib/mcp/client.ts";
 
+import { skillIndex, skillsPrompt } from "../lib/ai/skills.ts";
+
 import { SELF_HOSTED, allows, planHere } from "../lib/plans.ts";
 
 import { describeError, raiseAlert } from "../lib/alerts.ts";
@@ -684,10 +686,14 @@ async function execute(
       ? await mcpToolsFor(db, run.started_by)
       : { specs: [], index: new Map() };
 
+  // The project's skills, read when a task matches one.
+  const skills = await skillIndex(db, run.project_id);
+
   const toolSpecs = [
     ...specsFor({
       files: true,
       web: true,
+      skills: skills.length > 0,
 
       connections: (linked ?? []).map(
         (row) => row.provider as string
@@ -736,7 +742,7 @@ async function execute(
               "You can create, read, edit and list this project's files.",
               "Deleting needs a human, so ask instead of trying.",
               "When the task is done, reply with a short summary of what you did.",
-            ].join(" "),
+            ].join(" ") + (skills.length > 0 ? `\n\n${skillsPrompt(skills)}` : ""),
           },
           {
             role: "user",

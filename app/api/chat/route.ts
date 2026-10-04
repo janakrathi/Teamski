@@ -47,6 +47,8 @@ import { createClient } from "@/lib/supabase/server";
 
 import { recordUsage } from "@/lib/ai/usage";
 
+import { skillIndex, skillsPrompt } from "@/lib/ai/skills";
+
 import { mcpToolsFor } from "@/lib/mcp/client";
 
 import {
@@ -70,7 +72,12 @@ import {
   keepKnownLinks,
 } from "@/lib/ai/links";
 
-import { allows, planHere } from "@/lib/plans";
+import {
+  allows,
+  channelAccess,
+  planHere,
+  postRefusal,
+} from "@/lib/plans";
 
 import {
   getTool,
@@ -271,6 +278,25 @@ export async function POST(request: Request) {
     return Response.json(
       { error: "You must be logged in." },
       { status: 401 }
+    );
+  }
+
+  // In the project, able to see the channel, and not a
+  // viewer. The reply is saved with the service role
+  // further down, so this is the check that keeps it to
+  // people who could have posted there themselves.
+
+  const access = await channelAccess(
+    db,
+    projectId,
+    scope.channelId,
+    user.id
+  );
+
+  if (!access.post) {
+    return Response.json(
+      { error: postRefusal(access) },
+      { status: 403 }
     );
   }
 
@@ -584,6 +610,19 @@ export async function POST(request: Request) {
             }
       : undefined;
 
+  // Skills the project added from GitHub: their names
+  // and descriptions go in the prompt (a few tokens
+  // each), and use_skill reads one in full when a task
+  // matches. Offered with the other tools, or on its own
+  // for a real request the tool check calls chat - "make
+  // our landing page" may need no other tool at all.
+  const skills = useTools ? await skillIndex(db, projectId) : [];
+
+  const offerSkills =
+    skills.length > 0 &&
+    (mightUseTools(latestUserMessage) ||
+      latestUserMessage.trim().length > 30);
+
   const context = await buildContext({
     db,
     scope,
@@ -607,6 +646,7 @@ export async function POST(request: Request) {
     customInstructions: [
       channelInstructions,
       body.instructions?.trim() ?? "",
+      offerSkills ? skillsPrompt(skills) : "",
     ]
       .filter(Boolean)
       .join("\n\n"),
@@ -636,11 +676,12 @@ export async function POST(request: Request) {
   // tools (GitHub, Google, MCP) are many and large,
   // so they are what the Groq budget trims, never the
   // image generator the user just asked for.
-  const builtinTools = offerTools
+  const builtinTools = offerTools || offerSkills
     ? specsFor({
-        files: fileTools,
-        web: useWeb,
-        images: imageTools,
+        files: offerTools && fileTools,
+        web: offerTools && useWeb,
+        images: offerTools && imageTools,
+        skills: offerSkills,
         connections: [],
       })
     : [];

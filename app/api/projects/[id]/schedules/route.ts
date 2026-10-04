@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 import { adminClient } from "@/lib/supabase/admin";
+import { audit } from "@/lib/audit";
 
 import {
   PLAN_LABELS,
@@ -269,8 +270,14 @@ export async function POST(request: Request, context: RouteContext) {
     return Response.json({ error: "You must be logged in." }, { status: 401 });
   }
 
-  if (!uuid.test(projectId) || !(await membership(db, projectId, user.id))) {
+  const joined = uuid.test(projectId) ? await membership(db, projectId, user.id) : null;
+
+  if (!joined) {
     return Response.json({ error: "You are not in this project." }, { status: 403 });
+  }
+
+  if (joined === "viewer") {
+    return Response.json({ error: "Viewers cannot schedule agents." }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -384,6 +391,14 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const row = data as Row;
+
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "schedule.add",
+    target: title,
+    details: { when: describeTiming(timingOf(row)) },
+  });
 
   return Response.json({
     ok: true,
@@ -555,7 +570,7 @@ export async function DELETE(request: Request, context: RouteContext) {
 
   const { data: existing } = await db
     .from("agent_schedules")
-    .select("created_by")
+    .select("created_by, title")
     .eq("id", scheduleId)
     .eq("project_id", projectId)
     .maybeSingle();
@@ -592,6 +607,13 @@ export async function DELETE(request: Request, context: RouteContext) {
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
+
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "schedule.remove",
+    target: (existing as { title?: string | null }).title ?? null,
+  });
 
   return Response.json({ ok: true });
 }

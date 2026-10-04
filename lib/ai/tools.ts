@@ -26,6 +26,8 @@ import { fetchPage } from "./web.ts";
 
 import { search } from "./search.ts";
 
+import { readSkill } from "./skills.ts";
+
 
 // ==========================================
 // AGENT TOOLS
@@ -93,6 +95,10 @@ export type ToolDefinition = {
   // reads like a request for one, so its schema is
   // not in every request.
   image?: boolean;
+
+  // Reads the project's skills. Offered only when the
+  // project has some.
+  skill?: boolean;
 
   // Needs a connected account. Offered only when
   // there is one, so the model is not told about
@@ -1236,6 +1242,43 @@ export const TOOLS: ToolDefinition[] = [
   },
 
   {
+    name: "use_skill",
+
+    description:
+      "Read one of this project's skills: expert instructions for a kind of work (listed in your instructions). Call it before doing work a skill covers, then follow it. Set file to read a file the skill mentions, and page for long ones.",
+
+    parameters: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "The skill's name, as listed.",
+        },
+        file: {
+          type: "string",
+          description:
+            "Optional: a file in the skill's folder that it refers to, e.g. references/layout.md.",
+        },
+        page: {
+          type: "string",
+          description: "Optional: which part of a long skill or file, from 1.",
+        },
+      },
+      required: ["name"],
+    },
+
+    skill: true,
+
+    runningLabel: (args) => `Reading the ${args.name ?? ""} skill`,
+
+    doneLabel: (args) =>
+      args.file ? `Read ${args.file} from ${args.name ?? "a skill"}` : `Read the ${args.name ?? ""} skill`,
+
+    run: async (args, context) =>
+      readSkill(context.db, context.projectId, args.name ?? "", args.file, Number(args.page) || 1),
+  },
+
+  {
     name: "generate_image",
     description:
       "Generate an image from a text description and show it to the user. Use it when the user asks for a picture, logo, illustration, icon, poster or similar. Give a clear, detailed prompt of what to draw.",
@@ -1437,6 +1480,9 @@ export function specsFor(options: {
   web: boolean;
   images?: boolean;
 
+  // The project has skills to offer.
+  skills?: boolean;
+
   // The providers this person has actually
   // connected.
   connections?: string[];
@@ -1452,6 +1498,10 @@ export function specsFor(options: {
 
     if (tool.image) {
       return options.images ?? false;
+    }
+
+    if (tool.skill) {
+      return options.skills ?? false;
     }
 
     return tool.web ? options.web : options.files;

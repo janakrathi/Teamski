@@ -5,6 +5,7 @@ import { projectInviteEmail } from "@/lib/email/templates";
 import { createClient } from "@/lib/supabase/server";
 
 import { adminClient } from "@/lib/supabase/admin";
+import { audit } from "@/lib/audit";
 
 import {
   TEAM_MAX_MEMBERS,
@@ -352,7 +353,16 @@ export async function POST(
 
   const body = (await request
     .json()
-    .catch(() => ({}))) as { email?: string; query?: string };
+    .catch(() => ({}))) as {
+    email?: string;
+    query?: string;
+    role?: string;
+  };
+
+  // A member, or a viewer who only reads the channels
+  // they are given. Never an owner or admin from here.
+  const joinAs: "member" | "viewer" =
+    body.role === "viewer" ? "viewer" : "member";
 
   // One box takes either an email or a @username.
   const raw = (body.query ?? body.email ?? "").trim();
@@ -392,7 +402,7 @@ export async function POST(
       .insert({
         project_id: projectId,
         user_id: person.id,
-        role: "member",
+        role: joinAs,
       });
 
     // 23505: they were already in the project.
@@ -418,6 +428,16 @@ export async function POST(
 
     const who = person.display_name || person.email || "They";
 
+    if (!error) {
+      await audit({
+        projectId,
+        actorId: actor.id,
+        action: "member.add",
+        target: person.email ?? who,
+        details: { role: joinAs },
+      });
+    }
+
     return Response.json({
       emailed: mailed?.sent ?? false,
       added: true,
@@ -425,7 +445,7 @@ export async function POST(
         id: person.id,
         email: person.email,
         display_name: person.display_name,
-        role: "member",
+        role: joinAs,
       },
       message: error
         ? `${who} is already in this project.`
@@ -530,6 +550,7 @@ export async function POST(
     .insert({
       project_id: projectId,
       email,
+      role: joinAs,
       invited_by: user.id,
     })
     .select("id, email, role, created_at")
@@ -564,6 +585,14 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "member.invite",
+    target: email,
+    details: { role: joinAs },
+  });
 
   // The invite is real either way, and is claimed
   // the moment they sign up with this address. The
@@ -644,11 +673,15 @@ export async function PATCH(
     );
   }
 
-  if (nextRole !== "admin" && nextRole !== "member") {
+  if (
+    nextRole !== "admin" &&
+    nextRole !== "member" &&
+    nextRole !== "viewer"
+  ) {
     return Response.json(
       {
         error:
-          "A member can be an admin or a member.",
+          "Someone can be an admin, a member or a viewer.",
       },
       { status: 400 }
     );
@@ -731,6 +764,14 @@ export async function PATCH(
     );
   }
 
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: "member.role",
+    target: await nameOf(targetId),
+    details: { from: target.role, to: nextRole },
+  });
+
   return Response.json({ ok: true, role: nextRole });
 }
 
@@ -809,17 +850,29 @@ export async function DELETE(
   // Withdrawing an invite.
 
   if (inviteId) {
-    const { error } = await admin
+    const { data: withdrawn, error } = await admin
       .from("project_invites")
       .delete()
       .eq("id", inviteId)
-      .eq("project_id", projectId);
+      .eq("project_id", projectId)
+      .select("email");
 
     if (error) {
       return Response.json(
         { error: error.message },
         { status: 500 }
       );
+    }
+
+    const gone = (withdrawn ?? []) as { email: string }[];
+
+    if (gone.length > 0) {
+      await audit({
+        projectId,
+        actorId: user.id,
+        action: "invite.withdraw",
+        target: gone[0].email,
+      });
     }
 
     return Response.json({ ok: true });
@@ -889,5 +942,32 @@ export async function DELETE(
     );
   }
 
+  await audit({
+    projectId,
+    actorId: user.id,
+    action: removingSelf ? "member.leave" : "member.remove",
+    target: await nameOf(userId),
+  });
+
   return Response.json({ ok: true });
+}
+
+
+// Someone's email or name, for the audit log.
+async function nameOf(userId: string) {
+  const reader = adminClient();
+
+  if (!reader) {
+    return userId;
+  }
+
+  const { data } = await reader
+    .from("profiles")
+    .select("email, display_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const row = data as { email?: string | null; display_name?: string | null } | null;
+
+  return row?.email || row?.display_name || userId;
 }

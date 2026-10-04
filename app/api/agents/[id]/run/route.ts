@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { channelAccess, postRefusal } from "@/lib/plans";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -81,19 +82,25 @@ export async function POST(
   // CHECK MEMBERSHIP
   // ----------------------------------------
 
-  const { data: membership } = await supabase
-    .from("project_members")
-    .select("project_id")
-    .eq("project_id", agent.project_id)
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // In the project, not a viewer, and able to see the
+  // channel the run will post in.
 
-  if (!membership) {
+  const channelId =
+    typeof body.channelId === "string" &&
+    /^[0-9a-f-]{36}$/i.test(body.channelId)
+      ? body.channelId
+      : null;
+
+  const access = await channelAccess(
+    supabase,
+    agent.project_id,
+    channelId,
+    user.id
+  );
+
+  if (!access.post) {
     return NextResponse.json(
-      {
-        error:
-          "You are not a member of this project",
-      },
+      { error: postRefusal(access) },
       { status: 403 }
     );
   }
@@ -138,10 +145,7 @@ export async function POST(
       .insert({
         agent_id: agent.id,
         project_id: agent.project_id,
-        channel_id:
-          typeof body.channelId === "string"
-            ? body.channelId
-            : null,
+        channel_id: channelId,
         started_by: user.id,
         task,
         status: "queued",
