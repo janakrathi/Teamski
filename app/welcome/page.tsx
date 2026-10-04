@@ -29,6 +29,8 @@ import Backdrop from "@/components/landing/Backdrop";
 
 import Faq from "@/components/landing/Faq";
 
+import MorphBridge from "@/components/landing/MorphBridge";
+
 import {
   ApprovalLog,
   ChannelTree,
@@ -222,6 +224,8 @@ export default function Welcome() {
 
       <SiteHeader overlay />
 
+      <MorphBridge />
+
 
       {/* ------------------------------ */}
       {/* HERO                           */}
@@ -321,7 +325,10 @@ export default function Welcome() {
         </Reveal>
 
         <Reveal className={`${CONTAINER} pb-20 sm:pb-28`}>
-          <div data-signal-clear className="t-reveal-card relative mx-auto max-w-[760px]">
+          {/* Hands over to the "how it works" window below as
+              the page scrolls (components/landing/MorphBridge.tsx). */}
+          <div data-morph="from" className="relative mx-auto max-w-[760px]">
+          <div data-signal-clear className="t-reveal-card relative">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -inset-x-16 -inset-y-10 bg-[radial-gradient(ellipse_at_center,rgba(201,100,66,0.12),transparent_65%)]"
@@ -330,6 +337,7 @@ export default function Welcome() {
             <div className="relative">
               <ChannelPreview />
             </div>
+          </div>
           </div>
         </Reveal>
       </section>
@@ -353,6 +361,7 @@ export default function Welcome() {
           {/* The four ideas in a window of their own that
               scrolls - one at a time, snapping into place. */}
           <Reveal clear className="mt-14">
+            <div data-morph="to">
             <div className="t-reveal-card lp-glow overflow-hidden rounded-2xl border border-white/10 bg-[#050505] shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
               <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
@@ -401,6 +410,7 @@ export default function Welcome() {
                   )
                 )}
               </div>
+            </div>
             </div>
           </Reveal>
 
@@ -691,7 +701,7 @@ function ChannelPreview() {
             <li>DNS and HTTPS · Riya · Tue</li>
           </ol>
 
-          <p className="mt-0.5 pl-5 text-[11.5px] text-[var(--text-faint)]">
+          <p className="t-seq mt-0.5 pl-5 text-[11.5px] text-[var(--text-faint)]" style={at(5)}>
             + 3 more
           </p>
         </div>

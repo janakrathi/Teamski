@@ -435,6 +435,15 @@ svg .t-seq {
   transform-box: fill-box;
 }
 
+/* A box taking over in the scroll hand-over
+   (components/landing/MorphBridge.tsx) replays its content:
+   switched off for a moment, the animations start again. */
+
+[data-morph][data-replay] .t-seq,
+[data-morph="to"][data-replay] .t-reveal :is(.t-reveal-item, .t-reveal-card) {
+  animation: none !important;
+}
+
 
 /* Buttons press in, slightly. */
 
