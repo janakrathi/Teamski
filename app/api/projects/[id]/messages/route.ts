@@ -37,6 +37,9 @@ type MessageRow = {
   // The message this one answers (0032). Absent on a
   // database that has not run the migration yet.
   reply_to?: string | null;
+
+  // The model that wrote an agent reply (0036).
+  model?: string | null;
 };
 
 type QueryError = {
@@ -158,8 +161,14 @@ export async function GET(
     // channel_id - fall back a tier at a time so an
     // un-migrated database still loads the conversation.
     let result = await load(
-      "id, project_id, channel_id, user_id, role, content, file, created_at, edited_at, reply_to"
+      "id, project_id, channel_id, user_id, role, content, file, created_at, edited_at, reply_to, model"
     );
+
+    if (isMissingColumn(result.error)) {
+      result = await load(
+        "id, project_id, channel_id, user_id, role, content, file, created_at, edited_at, reply_to"
+      );
+    }
 
     if (isMissingColumn(result.error)) {
       result = await load(

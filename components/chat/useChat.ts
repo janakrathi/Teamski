@@ -90,6 +90,11 @@ export type ChatMessage = {
   // The model that was asked for, when another
   // model on the same key answered instead.
   fellBackFrom?: string;
+
+  // The model that wrote this reply, shown in place of
+  // "Agent". From the stream while it is live, and
+  // saved with the reply (0036).
+  model?: string | null;
 };
 
 // Bumped when a default changes in a way that
@@ -636,6 +641,15 @@ export function useChat(options: {
             // COMPLETE
             // ============================
             else if (
+              event.type === "model"
+            ) {
+              const answering = String(event.model ?? "");
+
+              patchLast((message) => ({
+                ...message,
+                model: answering || message.model,
+              }));
+            } else if (
               event.type === "complete"
             ) {
               answer =

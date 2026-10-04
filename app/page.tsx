@@ -867,6 +867,7 @@ export default function Home() {
         created_at: string;
         edited_at?: string | null;
         reply_to?: string | null;
+        model?: string | null;
       };
 
       // Give the server's messages a local id and put

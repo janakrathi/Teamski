@@ -1129,7 +1129,7 @@ async function execute(
         answer || run.task
       );
 
-      await postScheduledAnswer(db, run, answer);
+      await postScheduledAnswer(db, run, answer, lastAnswered);
 
       return;
     }
@@ -1507,7 +1507,10 @@ async function startSchedule(
 async function postScheduledAnswer(
   db: SupabaseClient,
   run: AgentRun,
-  answer: string
+  answer: string,
+
+  // The model that wrote it, shown on the reply (0036).
+  model?: string
 ) {
   if (!run.schedule_id || !run.channel_id || !answer.trim()) {
     return;
@@ -1529,13 +1532,20 @@ async function postScheduledAnswer(
       })}_`
     : "**Scheduled task**";
 
-  const { error } = await db.from("messages").insert({
+  const row: Record<string, unknown> = {
     project_id: run.project_id,
     channel_id: run.channel_id,
     user_id: null,
     role: "assistant",
     content: `${heading}\n\n${answer}`,
-  });
+  };
+
+  let { error } = await db.from("messages").insert(model ? { ...row, model } : row);
+
+  // Before migration 0036 there is no model column.
+  if (error && model && (error.code === "42703" || error.code === "PGRST204")) {
+    ({ error } = await db.from("messages").insert(row));
+  }
 
   if (error) {
     console.error("  ! could not post the scheduled answer:", error.message);

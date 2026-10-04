@@ -885,41 +885,43 @@ export async function POST(request: Request) {
           return;
         }
 
-        const { error } = await writer
-          .from("messages")
-          .insert({
-            project_id: projectId,
-            channel_id: scope.channelId,
-            user_id: null,
-            role: "assistant",
-            content: text,
-            file: file ?? null,
-            reply_to: repliesTo,
-          });
+        // The model that answered (0036), and what this
+        // reply answers (0032). A database without one of
+        // those columns still gets the reply, without it.
+        const row = {
+          project_id: projectId,
+          channel_id: scope.channelId,
+          user_id: null,
+          role: "assistant",
+          content: text,
+          file: file ?? null,
+        };
 
-        if (error) {
-          // Before migration 0032 there is no reply_to
-          // column; save the reply without the link
-          // rather than losing it.
+        const attempts = [
+          { ...row, reply_to: repliesTo, model: answeredWith },
+          { ...row, reply_to: repliesTo },
+          row,
+        ];
+
+        for (const attempt of attempts) {
+          const { error } = await writer
+            .from("messages")
+            .insert(attempt);
+
+          if (!error) {
+            return;
+          }
+
           if (
-            error.code === "42703" ||
-            error.code === "PGRST204"
+            error.code !== "42703" &&
+            error.code !== "PGRST204"
           ) {
-            await writer
-              .from("messages")
-              .insert({
-                project_id: projectId,
-                channel_id: scope.channelId,
-                user_id: null,
-                role: "assistant",
-                content: text,
-                file: file ?? null,
-              });
-          } else {
             console.error(
               "Could not save the agent reply:",
               error.message
             );
+
+            return;
           }
         }
       }
@@ -1101,6 +1103,9 @@ export async function POST(request: Request) {
           paidBy = answered.paidBy ?? "local";
           answeredWith = answered.model;
 
+          // Shown in place of "Agent" on the reply.
+          send({ type: "model", model: answeredWith });
+
           if (answered.fellBack) {
             send({
               type: "meta",
@@ -1223,6 +1228,8 @@ export async function POST(request: Request) {
 
               paidBy = retry.paidBy ?? "local";
               answeredWith = retry.model;
+
+              send({ type: "model", model: answeredWith });
 
               await drain(retry);
             } else {

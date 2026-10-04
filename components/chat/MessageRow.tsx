@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 
 import Markdown from "./Markdown";
+import { modelDisplayName } from "@/lib/ai/modelName";
 import { AttachmentList } from "./Attachments";
 import type {
   ApprovalRequest,
@@ -433,8 +434,14 @@ function MessageRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="mb-1.5 text-[10px] tracking-wide text-[var(--text-faint)]">
-          Agent
+        {/* The model that wrote it, by the name people
+            use; "Agent" for replies saved before models
+            were recorded (0036). */}
+        <p
+          title={message.model ?? undefined}
+          className="mb-1.5 text-[10px] tracking-wide text-[var(--text-faint)]"
+        >
+          {modelDisplayName(message.model) ?? "Agent"}
         </p>
 
         {/* What this reply answers - so a reply that
