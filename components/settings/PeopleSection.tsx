@@ -83,6 +83,10 @@ export default function PeopleSection({
   );
   const [busy, setBusy] = useState(false);
 
+  // Only while people are being added, so a role change
+  // or removal does not relabel the Add button.
+  const [adding, setAdding] = useState(false);
+
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
 
@@ -167,6 +171,7 @@ export default function PeopleSection({
     }
 
     setBusy(true);
+    setAdding(true);
     setError("");
     setNote("");
 
@@ -237,6 +242,7 @@ export default function PeopleSection({
     }
 
     setBusy(false);
+    setAdding(false);
 
     await load(true);
   }
@@ -388,7 +394,7 @@ export default function PeopleSection({
             disabled={busy || !email.trim()}
             className="shrink-0 rounded-md bg-[var(--accent)] px-3 py-2 text-[12.5px] font-medium text-[var(--bg)] transition hover:opacity-90 disabled:opacity-40"
           >
-            {busy ? "Adding…" : "Add"}
+            {adding ? "Adding…" : "Add"}
           </button>
         </div>
 
