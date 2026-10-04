@@ -83,8 +83,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // The intro script marks <html data-intro> before React
+    // loads (components/landing/IntroGate), so that one
+    // attribute is expected to differ from the server's.
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

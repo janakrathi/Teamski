@@ -81,7 +81,15 @@ function when(iso: string) {
   });
 }
 
-export default function ActivityLog({ projectId }: { projectId: string }) {
+export default function ActivityLog({
+  projectId,
+  refreshKey = 0,
+}: {
+  projectId: string;
+
+  // Changes when something in People changed.
+  refreshKey?: number;
+}) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [more, setMore] = useState(false);
@@ -113,7 +121,7 @@ export default function ActivityLog({ projectId }: { projectId: string }) {
   useEffect(() => {
     void Promise.resolve().then(() => load());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, refreshKey]);
 
   return (
     <div className="mt-8 border-t border-[var(--border)] pt-5">

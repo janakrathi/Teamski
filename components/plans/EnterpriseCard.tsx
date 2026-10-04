@@ -53,7 +53,7 @@ export default function EnterpriseCard() {
       style={{ "--i": 2 } as React.CSSProperties}
       className="t-reveal-card lp-card flex flex-col rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] p-6"
     >
-      <h3 className="text-[16px] font-semibold">Enterprise</h3>
+      <h3 className="text-[16px] font-[450]">Enterprise</h3>
 
       <p className="mt-1 text-[13px] text-[var(--text-muted)]">
         For larger teams with custom needs and advanced control.

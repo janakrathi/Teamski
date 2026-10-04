@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { cachedJson, peekJson } from "@/lib/net/cache";
+
 
 // ==========================================
 // SKILLS
@@ -23,18 +25,25 @@ type Skill = {
 };
 
 export default function SkillsSection({ projectId }: { projectId: string | null }) {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [canManage, setCanManage] = useState(false);
+  const base = projectId ? `/api/projects/${projectId}/skills` : "";
+
+  // Cached from a previous open, so the tab shows the
+  // skills at once; a fresh read follows behind.
+  const known = base
+    ? peekJson<{ skills?: Skill[]; canManage?: boolean }>(base)
+    : undefined;
+
+  const [skills, setSkills] = useState<Skill[]>(known?.skills ?? []);
+  const [canManage, setCanManage] = useState(Boolean(known?.canManage));
 
   const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(Boolean(projectId));
+  const [loading, setLoading] = useState(Boolean(projectId) && !known);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
 
-  const base = projectId ? `/api/projects/${projectId}/skills` : "";
-
-  const load = useCallback(async () => {
+  // `force` re-reads past the cache, after a change.
+  const load = useCallback(async (force = false) => {
     if (!base) {
       setLoading(false);
 
@@ -42,11 +51,14 @@ export default function SkillsSection({ projectId }: { projectId: string | null 
     }
 
     try {
-      const response = await fetch(base);
-      const data = await response.json();
+      const data = (await cachedJson(base, { force })) as {
+        error?: string;
+        skills?: Skill[];
+        canManage?: boolean;
+      };
 
-      if (!response.ok || data.error) {
-        throw new Error(data.error ?? "Could not load skills.");
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       setSkills(data.skills ?? []);
@@ -58,8 +70,15 @@ export default function SkillsSection({ projectId }: { projectId: string | null 
     }
   }, [base]);
 
+  // With nothing cached, join the read Settings already
+  // started on open; with something cached, show it and
+  // refresh behind it, so a skill a teammate added shows
+  // up without a reload.
+  const cached = Boolean(known);
+
   useEffect(() => {
-    void Promise.resolve().then(() => load());
+    void Promise.resolve().then(() => load(cached));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
   async function call(init: RequestInit, query = "") {
@@ -79,7 +98,7 @@ export default function SkillsSection({ projectId }: { projectId: string | null 
         throw new Error(data.error ?? "That did not work.");
       }
 
-      await load();
+      await load(true);
 
       return data;
     } catch (cause) {

@@ -192,7 +192,7 @@ export default function MorphBridge() {
       ref={shellRef}
       aria-hidden="true"
       style={{ visibility: "hidden" }}
-      className="pointer-events-none fixed top-0 left-0 -z-[1] overflow-hidden rounded-2xl border border-white/12 bg-[#050505] shadow-[0_30px_90px_-30px_rgba(139,92,246,0.45)] will-change-transform"
+      className="pointer-events-none fixed top-0 left-0 -z-[1] overflow-hidden rounded-2xl border border-white/12 bg-[#050505] shadow-[0_30px_90px_-30px_rgba(167,139,250,0.42),0_14px_40px_-24px_rgba(214,196,255,0.18)] will-change-transform"
     >
       <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
         <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-white/15" />

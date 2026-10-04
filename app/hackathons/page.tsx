@@ -169,7 +169,7 @@ export default function HackathonsPage() {
             >
               <p className="text-[16px] font-[450]">{title}</p>
 
-              <p className="mt-1.5 text-[14px] leading-[1.6] text-white/55">
+              <p className="mt-1.5 text-[14.5px] leading-[1.6] text-white/55">
                 {body}
               </p>
             </div>
@@ -202,7 +202,7 @@ export default function HackathonsPage() {
 
                 <h3 className="mt-6 text-[16px] font-[450]">{step.title}</h3>
 
-                <p className="mt-2 text-[13.5px] leading-[1.6] text-white/55">
+                <p className="mt-2 text-[14.5px] leading-[1.6] text-white/55">
                   {step.body}
                 </p>
               </div>
@@ -239,7 +239,7 @@ export default function HackathonsPage() {
                   index % 2 === 0 ? "sm:border-r sm:pr-8" : "sm:pl-8"
                 }`}
               >
-                <p className="t-reveal-item text-[20px] font-[450] tracking-[-0.01em]">
+                <p className="t-reveal-item text-[22px] font-[450] tracking-[-0.015em]">
                   # {channel.name}
                 </p>
 
@@ -310,9 +310,9 @@ export default function HackathonsPage() {
             </ul>
 
             <div data-signal-clear style={at(JUDGING.length + 1)} className="t-reveal-card lp-card mt-10 rounded-2xl border border-white/10 bg-[#050505] px-5 py-4">
-              <p className="text-[14px] font-[450]">Play fair</p>
+              <p className="text-[16px] font-[450]">Play fair</p>
 
-              <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">
+              <p className="mt-1.5 text-[14.5px] leading-[1.6] text-white/55">
                 Follow your event&apos;s rules on AI, and make sure your team
                 understands everything you submit. Check facts, numbers and
                 links - the AI can be wrong.
@@ -346,9 +346,9 @@ export default function HackathonsPage() {
           </div>
 
           <div style={at(3)} data-signal-clear className="t-reveal-card lp-card mt-12 max-w-[440px] rounded-2xl border border-white/10 bg-black/85 p-5 text-left">
-            <p className="text-[14px] font-[450]">Running a hackathon?</p>
+            <p className="text-[16px] font-[450]">Running a hackathon?</p>
 
-            <p className="mt-1.5 text-[13.5px] leading-[1.6] text-white/55">
+            <p className="mt-1.5 text-[14.5px] leading-[1.6] text-white/55">
               We&apos;re happy to give a short demo at your kickoff and help your
               participants get set up.{" "}
               <ContactUs

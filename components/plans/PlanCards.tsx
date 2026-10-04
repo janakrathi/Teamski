@@ -133,7 +133,7 @@ export default function PlanCards() {
                 : "border-[var(--border)] bg-[var(--bg-panel)]"
             }`}
           >
-            <h3 className="text-[16px] font-semibold">
+            <h3 className="text-[16px] font-[450]">
               {PLAN_LABELS[offer.plan]}
             </h3>
 

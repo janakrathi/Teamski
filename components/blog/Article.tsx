@@ -133,7 +133,7 @@ export default function Article({
       blocks.push(
         <ul
           key={key++}
-          className="my-4 list-disc space-y-1.5 pl-5 text-[var(--text-muted)] marker:text-[var(--text-faint)]"
+          className="my-4 list-disc space-y-1.5 pl-5 text-[15px] leading-[1.7] text-[var(--text-muted)] marker:text-[var(--text-faint)]"
         >
           {items.map((item, j) => (
             <li key={j}>

@@ -253,7 +253,7 @@ export default function Welcome() {
 
           <h1
             style={at(1)}
-            className="t-text-reveal mt-8 max-w-[780px] text-[42px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[64px]"
+            className="t-text-reveal mt-8 max-w-[780px] text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[60px]"
           >
             Your team and its AI agents,{" "}
             <span className="text-white/60">working in one place.</span>
@@ -427,7 +427,7 @@ export default function Welcome() {
                     {feature.title}
                   </h3>
 
-                  <p style={at(1)} className="t-reveal-item mt-2 max-w-[460px] text-[14px] leading-[1.65] text-white/55">
+                  <p style={at(1)} className="t-reveal-item mt-2 max-w-[460px] text-[14.5px] leading-[1.65] text-white/55">
                     {feature.body}
                   </p>
                 </Reveal>
@@ -573,7 +573,7 @@ export default function Welcome() {
               <span className="text-white/60">teams ask.</span>
             </h2>
 
-            <p style={at(1)} className="t-reveal-item mt-4 max-w-[360px] text-[14.5px] leading-[1.65] text-white/55">
+            <p style={at(1)} className="t-reveal-item mt-4 max-w-[360px] text-[15px] leading-[1.65] text-white/60">
               The short answers. The full detail - including what isn&apos;t
               in place yet - is on{" "}
               <Link

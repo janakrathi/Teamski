@@ -41,7 +41,7 @@ export function LegalPage({
 
         <h1
           style={at(1)}
-          className="t-text-reveal mt-4 text-[36px] leading-[1.08] font-[450] tracking-[-0.03em] sm:text-[48px]"
+          className="t-text-reveal mt-4 text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[60px]"
         >
           {title}
         </h1>
@@ -53,7 +53,7 @@ export function LegalPage({
         {/* The text keeps a clear background. */}
         <div
           data-signal-clear
-          className="legal mt-10 space-y-4 text-[14.5px] leading-[1.75] text-[var(--text-muted)]"
+          className="legal mt-10 space-y-4 text-[15px] leading-[1.75] text-[var(--text-muted)]"
         >
           {children}
         </div>
@@ -67,7 +67,7 @@ export function LegalPage({
 
 export function H2({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="pt-8 text-[20px] font-[450] tracking-[-0.015em] text-[var(--text)]">
+    <h2 className="pt-8 text-[22px] font-[450] tracking-[-0.015em] text-[var(--text)]">
       {children}
     </h2>
   );

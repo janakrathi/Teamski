@@ -86,6 +86,10 @@ export default function PeopleSection({
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
 
+  // Bumped after every change, so the activity log
+  // below re-reads and shows it straight away.
+  const [changes, setChanges] = useState(0);
+
 
   // `force` re-reads past the cache, after a change.
   const load = useCallback(
@@ -111,6 +115,10 @@ export default function PeopleSection({
 
         setPeople(data.members ?? []);
         setInvites(data.invites ?? []);
+
+        if (force) {
+          setChanges((count) => count + 1);
+        }
       } catch (cause) {
         setError(
           cause instanceof Error
@@ -591,7 +599,7 @@ export default function PeopleSection({
         </div>
       )}
 
-      {canManage && <ActivityLog projectId={projectId} />}
+      {canManage && <ActivityLog projectId={projectId} refreshKey={changes} />}
 
     </div>
   );

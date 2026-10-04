@@ -232,6 +232,8 @@ export default function SettingsPanel({
       primeJson(
         `/api/projects/${projectId}/members?includeSelf=true`
       );
+
+      primeJson(`/api/projects/${projectId}/skills`);
     }
   }, [open, projectId]);
 

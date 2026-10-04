@@ -165,7 +165,7 @@ export default async function PostPage({
 
           <h1
             style={at(2)}
-            className="t-text-reveal mt-3 text-[34px] leading-[1.1] font-[450] tracking-[-0.03em] sm:text-[46px]"
+            className="t-text-reveal mt-3 text-[40px] leading-[1.05] font-[450] tracking-[-0.035em] sm:text-[60px]"
           >
             {post.title}
           </h1>
@@ -183,7 +183,7 @@ export default async function PostPage({
         {/* Call to action */}
         <Reveal className="mt-16">
           <div data-signal-clear className="t-reveal-card lp-card relative isolate overflow-hidden rounded-2xl border border-white/10 bg-[#050505] p-7">
-            <p className="text-[20px] font-[450] tracking-[-0.015em]">
+            <p className="text-[22px] font-[450] tracking-[-0.015em]">
               Try Teamski free{" "}
               <span className="text-white/60">with your whole team.</span>
             </p>
