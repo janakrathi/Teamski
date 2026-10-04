@@ -222,7 +222,7 @@ export default function Welcome() {
       {/* TOP BAR                        */}
       {/* ------------------------------ */}
 
-      <SiteHeader overlay />
+      <SiteHeader overlay home />
 
       <MorphBridge />
 

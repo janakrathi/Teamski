@@ -65,9 +65,13 @@ export function SiteHeader({
   // Over a full-bleed hero, the header floats on top
   // of it instead of taking its own room.
   overlay = false,
+  // On the landing page itself, so its own sections are
+  // linked in place.
+  home = false,
   cta = { href: "/login?mode=signup", label: "Get started" },
 }: {
   overlay?: boolean;
+  home?: boolean;
   cta?: { href: string; label: string };
 }) {
   return (
@@ -86,15 +90,28 @@ export function SiteHeader({
         </Link>
 
         <nav className="ml-auto flex items-center gap-1 text-[13px]">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="hidden rounded-md px-3 py-1.5 text-white/60 transition-colors duration-150 hover:text-white sm:block"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV.map((item) => {
+            const className =
+              "hidden rounded-md px-3 py-1.5 text-white/60 transition-colors duration-150 hover:text-white sm:block";
+
+            // On the landing page, a plain in-page jump. Its
+            // address is "/" (the landing page is shown there),
+            // so a link to "/welcome#plans" was treated as a
+            // new page and lost the jump to Plans.
+            if (home && item.href.startsWith("/welcome#")) {
+              return (
+                <a key={item.href} href={item.href.slice("/welcome".length)} className={className}>
+                  {item.label}
+                </a>
+              );
+            }
+
+            return (
+              <Link key={item.href} href={item.href} className={className}>
+                {item.label}
+              </Link>
+            );
+          })}
 
           <Link
             href="/login"
