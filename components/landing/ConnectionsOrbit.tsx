@@ -52,19 +52,19 @@ function seeded(seed: number) {
 }
 
 
-function buildNetwork() {
+function buildNetwork(points: number) {
   const random = seeded(7);
-  const xs = new Float32Array(POINTS);
-  const ys = new Float32Array(POINTS);
-  const zs = new Float32Array(POINTS);
-  const sizes = new Float32Array(POINTS);
+  const xs = new Float32Array(points);
+  const ys = new Float32Array(points);
+  const zs = new Float32Array(points);
+  const sizes = new Float32Array(points);
 
   // Points spread evenly over the whole surface of a
   // sphere, so the network reads as one complete globe.
   const golden = Math.PI * (3 - Math.sqrt(5));
 
-  for (let i = 0; i < POINTS; i++) {
-    const y = 1 - (i / (POINTS - 1)) * 2;
+  for (let i = 0; i < points; i++) {
+    const y = 1 - (i / (points - 1)) * 2;
     const ring = Math.sqrt(1 - y * y);
     const theta = golden * i;
     xs[i] = Math.cos(theta) * ring;
@@ -77,10 +77,10 @@ function buildNetwork() {
   const seen = new Set<string>();
   const edges: [number, number][] = [];
 
-  for (let i = 0; i < POINTS; i++) {
+  for (let i = 0; i < points; i++) {
     const nearest: { j: number; d: number }[] = [];
 
-    for (let j = 0; j < POINTS; j++) {
+    for (let j = 0; j < points; j++) {
       if (i === j) continue;
 
       const d =
@@ -134,7 +134,7 @@ export default function ConnectionsOrbit({ apps }: { apps: App[] }) {
       return;
     }
 
-    const network = buildNetwork();
+    const network = buildNetwork(window.innerWidth < 640 ? 170 : POINTS);
     const count = network.xs.length;
     const px = new Float32Array(count);
     const py = new Float32Array(count);
@@ -155,7 +155,7 @@ export default function ConnectionsOrbit({ apps }: { apps: App[] }) {
     const halves: number[] = [];
 
     function resize() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
 
       width = wrap!.clientWidth;
       height = wrap!.clientHeight;
@@ -208,23 +208,44 @@ export default function ConnectionsOrbit({ apps }: { apps: App[] }) {
         depth[i] = (z2 + 1) / 2;
       }
 
-      for (const [i, j] of network.edges) {
-        const alpha = 0.05 + 0.24 * ((depth[i] + depth[j]) / 2);
+      // Lines grouped by depth - a few strokes a frame
+      // instead of one per line.
+      const BANDS = 5;
+
+      for (let band = 0; band < BANDS; band++) {
+        const alpha = 0.05 + 0.24 * ((band + 0.5) / BANDS);
 
         context!.strokeStyle = `rgba(${tr},${tg},${tb},${alpha.toFixed(3)})`;
         context!.beginPath();
-        context!.moveTo(px[i], py[i]);
-        context!.lineTo(px[j], py[j]);
+
+        for (const [i, j] of network.edges) {
+          const d = (depth[i] + depth[j]) / 2;
+
+          if (Math.min(BANDS - 1, Math.floor(d * BANDS)) !== band) continue;
+
+          context!.moveTo(px[i], py[i]);
+          context!.lineTo(px[j], py[j]);
+        }
+
         context!.stroke();
       }
 
-      for (let i = 0; i < count; i++) {
-        const alpha = 0.3 + 0.62 * depth[i];
-        const size = network.sizes[i] * (0.6 + 0.7 * depth[i]);
+      // Dots, grouped the same way.
+      for (let band = 0; band < BANDS; band++) {
+        const alpha = 0.3 + 0.62 * ((band + 0.5) / BANDS);
 
         context!.fillStyle = `rgba(${tr},${tg},${tb},${alpha.toFixed(3)})`;
         context!.beginPath();
-        context!.arc(px[i], py[i], size, 0, Math.PI * 2);
+
+        for (let i = 0; i < count; i++) {
+          if (Math.min(BANDS - 1, Math.floor(depth[i] * BANDS)) !== band) continue;
+
+          const size = network.sizes[i] * (0.6 + 0.7 * depth[i]);
+
+          context!.moveTo(px[i] + size, py[i]);
+          context!.arc(px[i], py[i], size, 0, Math.PI * 2);
+        }
+
         context!.fill();
       }
 

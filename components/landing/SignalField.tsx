@@ -285,7 +285,11 @@ export default function SignalField({
     const loop = (time: number) => {
       frame = requestAnimationFrame(loop);
 
-      if (!visible || document.hidden || time - last < interval) {
+      // In the faint middle of a page the lines barely
+      // show, so they are redrawn half as often there.
+      const quiet = calm === "page" && topWeight === 0 && bottomWeight === 0;
+
+      if (!visible || document.hidden || time - last < (quiet ? interval * 2 : interval)) {
         return;
       }
 

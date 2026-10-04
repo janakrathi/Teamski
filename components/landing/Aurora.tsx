@@ -65,14 +65,21 @@ export default function Aurora({
 
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Phones and small machines: fewer, slower pools.
+    const slow = window.innerWidth < 640 || (navigator.hardwareConcurrency ?? 8) <= 4;
+
+    const poolCount = slow ? 3 : POOLS;
+
     // Every tone at least once, then the rest at random,
     // so no visit is all one colour.
     const tones = [
       ...TONES,
-      ...Array.from({ length: POOLS - TONES.length }, () =>
+      ...Array.from({ length: Math.max(0, poolCount - TONES.length) }, () =>
         TONES[Math.floor(Math.random() * TONES.length)]
       ),
-    ].sort(() => Math.random() - 0.5);
+    ]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, poolCount);
 
     const pools: Pool[] = tones.map((colour) => ({
       colour,
@@ -154,7 +161,7 @@ export default function Aurora({
       frame = requestAnimationFrame(loop);
 
       // The pools move slowly; 20 frames a second is plenty.
-      if (document.hidden || time - last < 50) {
+      if (document.hidden || time - last < (slow ? 66 : 50)) {
         return;
       }
 

@@ -110,8 +110,9 @@ export default function Ribbon({
 
     const interval = slow ? 50 : 33;
 
-    // Half resolution: softer, and a quarter of the pixels.
-    const SCALE = 0.5;
+    // Half resolution (less on phones): softer, and a
+    // fraction of the pixels.
+    const SCALE = slow ? 0.4 : 0.5;
 
     let width = 0;
     let height = 0;

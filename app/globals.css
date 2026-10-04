@@ -435,6 +435,32 @@ svg .t-seq {
   transform-box: fill-box;
 }
 
+/* Phones: the same reveals without blur - the costliest
+   part to draw - and the ambient light holds still. */
+
+@keyframes t-item-in-lite {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+@keyframes t-card-in-lite {
+  from { opacity: 0; transform: translateY(22px) scale(0.95); }
+}
+
+@keyframes t-text-reveal-lite {
+  from { opacity: 0; transform: translateY(18px); }
+}
+
+@media (max-width: 640px) {
+  .t-reveal[data-reveal="in"] .t-reveal-item { animation-name: t-item-in-lite; }
+  .t-reveal[data-reveal="in"] .t-reveal-card { animation-name: t-card-in-lite; }
+  html[data-intro="play"] .t-text-reveal { animation-name: t-text-reveal-lite; }
+
+  .lp-ambient {
+    animation: none;
+    will-change: auto;
+  }
+}
+
 /* A box taking over in the scroll hand-over
    (components/landing/MorphBridge.tsx) replays its content:
    switched off for a moment, the animations start again. */

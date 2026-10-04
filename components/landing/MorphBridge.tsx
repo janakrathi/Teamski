@@ -76,6 +76,17 @@ export default function MorphBridge() {
     // being handed back.
     let previous: number | null = null;
 
+    // Styles are only written when they change - a scroll
+    // frame that changes nothing costs nothing.
+    const written = new Map<string, string>();
+
+    const set = (key: string, element: HTMLElement, property: string, value: string) => {
+      if (written.get(key) === value) return;
+
+      written.set(key, value);
+      element.style.setProperty(property, value);
+    };
+
     // A box that has just taken over again plays its own
     // content in afresh (app/globals.css, data-replay),
     // rather than appearing with it already in place.
@@ -115,10 +126,10 @@ export default function MorphBridge() {
       // stand-in.
       const moving = p > 0 && p < 1;
 
-      from.style.opacity = p <= 0 ? "" : String(clamp(1 - p / 0.06));
-      to.style.opacity = p >= 1 ? "" : String(clamp((p - 0.94) / 0.06));
+      set("from", from, "opacity", p <= 0 ? "1" : clamp(1 - p / 0.06).toFixed(3));
+      set("to", to, "opacity", p >= 1 ? "1" : clamp((p - 0.94) / 0.06).toFixed(3));
 
-      shell.style.visibility = moving ? "visible" : "hidden";
+      set("shell", shell, "visibility", moving ? "visible" : "hidden");
 
       if (!moving) {
         return;
@@ -126,9 +137,10 @@ export default function MorphBridge() {
 
       const t = ease(p);
 
-      // Small in the middle of the journey, with a little
-      // hop upward as it goes.
-      const shrink = 1 - 0.48 * Math.sin(Math.PI * p);
+      // Small in the middle of the journey (smaller still on
+      // a phone, where the boxes fill the width), with a
+      // little hop upward as it goes.
+      const shrink = 1 - (window.innerWidth < 640 ? 0.6 : 0.48) * Math.sin(Math.PI * p);
 
       const width = (a.width + (b.width - a.width) * t) * shrink;
       const boxHeight = (a.height + (b.height - a.height) * t) * shrink;
@@ -139,14 +151,14 @@ export default function MorphBridge() {
         window.scrollY -
         height * 0.06 * Math.sin(Math.PI * p);
 
-      shell.style.width = `${width.toFixed(1)}px`;
-      shell.style.height = `${boxHeight.toFixed(1)}px`;
-      shell.style.transform = `translate3d(${(centreX - width / 2).toFixed(1)}px, ${(centreY - boxHeight / 2).toFixed(1)}px, 0)`;
+      set("w", shell, "width", `${Math.round(width)}px`);
+      set("h", shell, "height", `${Math.round(boxHeight)}px`);
+      set("t", shell, "transform", `translate3d(${(centreX - width / 2).toFixed(1)}px, ${(centreY - boxHeight / 2).toFixed(1)}px, 0)`);
 
       // What the box is: the channel on the way out, the
       // window on the way in.
-      fromLabel.style.opacity = String(clamp(1 - p / 0.45));
-      toLabel.style.opacity = String(clamp((p - 0.55) / 0.35));
+      set("fl", fromLabel, "opacity", clamp(1 - p / 0.45).toFixed(2));
+      set("tl", toLabel, "opacity", clamp((p - 0.55) / 0.35).toFixed(2));
     };
 
     const onScroll = () => {
@@ -170,8 +182,8 @@ export default function MorphBridge() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", remeasure);
 
-      from.style.opacity = "";
-      to.style.opacity = "";
+      from.style.removeProperty("opacity");
+      to.style.removeProperty("opacity");
     };
   }, []);
 

@@ -381,7 +381,7 @@ export default function Welcome() {
               <div
                 tabIndex={0}
                 aria-label="How Teamski works, in four parts"
-                className="h-[540px] snap-y snap-mandatory overflow-y-auto md:h-[440px]"
+                className="h-[460px] snap-y snap-mandatory overflow-y-auto md:h-[440px]"
               >
                 {FEATURES.filter((feature) => VISUALS[feature.title]).map(
                   (feature, index, shown) => (
