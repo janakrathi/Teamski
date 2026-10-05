@@ -1020,7 +1020,11 @@ export async function POST(request: Request) {
 
           const callModel = (
             tools: typeof turnTools | undefined,
-            msgs: typeof stepMessages = stepMessages
+            msgs: typeof stepMessages = stepMessages,
+
+            // Another model for this one call - see
+            // answerWithoutTools.
+            instead?: string
           ) =>
             streamFor(db, user.id, {
               // Whatever answered the step before,
@@ -1030,8 +1034,11 @@ export async function POST(request: Request) {
               // the key that answered, so running out
               // mid-answer moves to the next key rather
               // than to the built-in model.
-              model: rotating ? ROTATE_MODEL : answeredWith,
-              prefer: rotating && answeredWith !== ROTATE_MODEL ? answeredWith : undefined,
+              model: instead ?? (rotating ? ROTATE_MODEL : answeredWith),
+              prefer:
+                !instead && rotating && answeredWith !== ROTATE_MODEL
+                  ? answeredWith
+                  : undefined,
 
               // Falls back to the project's shared
               // key when this person has none of
@@ -1062,6 +1069,42 @@ export async function POST(request: Request) {
               signal: request.signal,
             });
 
+          // The model called a tool it was not offered -
+          // or, with no tools offered at all, one of
+          // GPT-OSS's own built-in ones (browser, python),
+          // which Groq rejects as "Tool choice is none, but
+          // model called a tool". Asking GPT-OSS the same
+          // tool-less question again tends to fail the same
+          // way, so on Groq the step goes to Qwen on the
+          // same key; elsewhere the same model, told
+          // plainly that there are no tools this time.
+          // Tool calls and results are flattened to text
+          // either way, or the template fails on them.
+          const answerWithoutTools = () => {
+            const current =
+              rotating && answeredWith === ROTATE_MODEL
+                ? ""
+                : answeredWith;
+
+            const instead =
+              current.startsWith("groq/") && /gpt-oss/i.test(current)
+                ? GROQ_VISION_MODEL
+                : undefined;
+
+            return callModel(
+              undefined,
+              [
+                ...flattenToolMessages(stepMessages),
+                {
+                  role: "system" as const,
+                  content:
+                    "No tools are available for this reply. Do not call any tool, function, browser or code runner - answer directly in plain text with what you already have.",
+                },
+              ],
+              instead
+            );
+          };
+
           let answered;
 
           try {
@@ -1070,22 +1113,15 @@ export async function POST(request: Request) {
             // The model called a tool that was not
             // offered; answer the turn with no tools
             // rather than failing outright.
-            if (
-              stepTools &&
-              isToolError(error)
-            ) {
+            // With tools offered or not: a plain chat
+            // question gets none, and GPT-OSS can still
+            // reach for a built-in one.
+            if (isToolError(error)) {
               console.log(
-                "[chat] tool call rejected; retrying without tools"
+                `[chat] ${answeredWith} called a tool it was not given; answering without tools`
               );
 
-              // Flatten the tool call/result messages to
-              // plain text, or gpt-oss's template fails
-              // the same way when it renders them with no
-              // tools defined.
-              answered = await callModel(
-                undefined,
-                flattenToolMessages(stepMessages)
-              );
+              answered = await answerWithoutTools();
             } else {
               throw error;
             }
@@ -1221,10 +1257,7 @@ export async function POST(request: Request) {
                 "[chat] stream rejected the tools; retrying without them"
               );
 
-              const retry = await callModel(
-                undefined,
-                flattenToolMessages(stepMessages)
-              );
+              const retry = await answerWithoutTools();
 
               paidBy = retry.paidBy ?? "local";
               answeredWith = retry.model;

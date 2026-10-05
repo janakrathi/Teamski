@@ -16,6 +16,8 @@ import {
 
 import { streamFor } from "../lib/ai/providers/index.ts";
 
+import { GROQ_VISION_MODEL } from "../lib/ai/providers/groq.ts";
+
 import { mcpToolsFor } from "../lib/mcp/client.ts";
 
 import { refreshSkills, skillIndex, skillsPrompt } from "../lib/ai/skills.ts";
@@ -929,23 +931,39 @@ async function execute(
       // so one bad tool cannot kill a whole run. The same
       // backstop the chat route has.
 
-      if (
-        !interrupted &&
-        !lastStep &&
-        toolSpecs.length > 0 &&
-        isToolError(error)
-      ) {
+      // Also on the last step, which offers no tools:
+      // GPT-OSS can still reach for a built-in one there
+      // ("Tool choice is none, but model called a tool").
+      if (!interrupted && isToolError(error)) {
         try {
           log("tools rejected; retrying step without them");
+
+          // Asking GPT-OSS on Groq the same tool-less
+          // question tends to fail the same way, so Qwen
+          // on the same key answers this step; any other
+          // model is just told there are no tools.
+          const current = lastAnswered ?? model;
+
+          const instead =
+            current.startsWith("groq/") && /gpt-oss/i.test(current)
+              ? GROQ_VISION_MODEL
+              : model;
 
           // Flatten tool call/result messages to plain
           // text, or gpt-oss's template fails again on
           // rendering them with no tools defined.
           outcome = await runStep(
-            flattenToolMessages(messages),
+            [
+              ...flattenToolMessages(messages),
+              {
+                role: "system",
+                content:
+                  "No tools are available for this step. Do not call any tool, function, browser or code runner - answer directly in plain text with what you already have.",
+              },
+            ],
             controller.signal,
             [],
-            model,
+            instead,
             db,
             run.started_by ?? null,
             run.project_id ?? null
