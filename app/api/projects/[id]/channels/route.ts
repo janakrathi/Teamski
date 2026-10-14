@@ -176,15 +176,25 @@ export async function POST(
     );
   }
 
-  const { data, error } = await supabase
-    .from("channels")
-    .insert({
-      project_id: projectId,
-      name,
-      created_by: user.id,
-    })
-    .select("id, project_id, name, created_at")
-    .single();
+  // Inserted without asking for the row back, then read
+  // in a second statement. Row-level security decides who
+  // can see a channel by looking it up (migration 0034),
+  // and inside the insert itself the new row is not there
+  // to find - so asking for it back in the same statement
+  // was refused as "new row violates row-level security
+  // policy". The same reason projects are made this way
+  // (app/api/projects).
+  const channel = {
+    id: crypto.randomUUID(),
+    project_id: projectId,
+    name,
+    created_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase.from("channels").insert({
+    ...channel,
+    created_by: user.id,
+  });
 
   if (error) {
     return Response.json(
@@ -197,6 +207,14 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  const { data: saved } = await supabase
+    .from("channels")
+    .select("id, project_id, name, created_at")
+    .eq("id", channel.id)
+    .maybeSingle();
+
+  const data = saved ?? channel;
 
   // A channel without an agent is a room with
   // nobody in it, so give it one straight away,
