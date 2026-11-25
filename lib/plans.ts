@@ -377,8 +377,9 @@ export function schedulesLimit(plan: Plan): number {
 // models alone; these lines stay so adding a key
 // later needs no code change - only the page.
 
+// Both of the machine's own models (qwen3:1.7b and
+// qwen3:4b) are basic: every plan gets them.
 const STANDARD = new Set([
-  "qwen3:4b",
   "anthropic/claude-haiku-4-5",
   "openai/gpt-4.1-mini",
 ]);

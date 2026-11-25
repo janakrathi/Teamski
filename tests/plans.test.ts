@@ -84,12 +84,11 @@ test("keys, shared keys, apps and the spend report all come with Team", () => {
 });
 
 
-test("Team gets a better built-in model than Free", () => {
-  // The machine's default model is basic, and
-  // everyone has it.
+test("every plan gets both of the machine's own models", () => {
+  // Both local Qwens are basic, so everyone has them.
   assert.equal(builtinAllowed("free", "qwen3:1.7b"), true);
 
-  assert.equal(builtinAllowed("free", "qwen3:4b"), false);
+  assert.equal(builtinAllowed("free", "qwen3:4b"), true);
   assert.equal(builtinAllowed("team", "qwen3:4b"), true);
 
   // Paid hosted models are never handed out
@@ -121,7 +120,7 @@ test("Team gets a better built-in model than Free", () => {
     null
   );
 
-  assert.equal(planForModel("qwen3:4b"), "team");
+  assert.equal(planForModel("qwen3:4b"), "free");
 
   // No plan hands out a "best" hosted model built
   // in, so there is no plan for it.
