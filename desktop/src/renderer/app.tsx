@@ -14,6 +14,7 @@ import {
   IconStop,
   IconTrash,
   IconWorkspace,
+  IconDownload,
   Markdown,
   ModePicker,
   ModelPicker,
@@ -50,6 +51,41 @@ function Home({
 }) {
   const noModel = !state.settings.model;
 
+  // Teamski Code is part of a Teamski account: sign in
+  // (in the Workspace tab) before opening a folder.
+  if (!state.account) {
+    return (
+      <div className="home">
+        <div className="home-inner">
+          <h1>Teamski Code</h1>
+          <p className="lead">
+            A coding agent that works in your own folders: it reads your code, makes changes, runs your tests and
+            commands, and asks before anything risky.
+          </p>
+
+          <div className="signin">
+            <strong>Sign in to Teamski to start</strong>
+            <p>
+              Use the same account as teamski.in - Google, GitHub or email. It's free, and your code still stays on
+              this computer.
+            </p>
+            <div className="signin-actions">
+              <button className="btn primary big" onClick={() => void api().login("signin")}>
+                Sign in
+              </button>
+              <button className="btn big" onClick={() => void api().login("signup")}>
+                Create a free account
+              </button>
+            </div>
+            <button className="link" onClick={() => void api().checkAccount()}>
+              Already signed in? Check again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home">
       <div className="home-inner">
@@ -58,6 +94,34 @@ function Home({
           A coding agent that works in your own folders: it reads your code, makes changes, runs your tests and
           commands, and asks before anything risky.
         </p>
+        <p className="signed-in">Signed in as {state.account.name || state.account.email}</p>
+
+        {state.update && (
+          <div className="update-banner">
+            <div style={{ flex: 1 }}>
+              <strong>Teamski {state.update.version} is available</strong>
+              <p>
+                {state.update.error
+                  ? state.update.error
+                  : state.update.progress !== null
+                    ? `Downloading… ${Math.round(state.update.progress * 100)}%`
+                    : state.update.canInstall
+                      ? "Installs in under a minute and reopens Teamski. Your keys and sessions stay."
+                      : "Download the new version and drag it to Applications."}{" "}
+                <button className="link" onClick={() => void api().openExternal(state.update!.notesUrl)}>
+                  What's new
+                </button>
+              </p>
+            </div>
+            <button
+              className="btn primary"
+              disabled={state.update.progress !== null}
+              onClick={() => void api().installUpdate()}
+            >
+              {state.update.progress !== null ? "Updating…" : state.update.canInstall ? "Update now" : "Download"}
+            </button>
+          </div>
+        )}
 
         {noModel && (
           <div className="callout">
@@ -143,6 +207,8 @@ function SessionScreen({
   onState: (state: AppState) => void;
 }) {
   const [draft, setDraft] = useState("");
+  // The user message whose Undo is waiting for a yes.
+  const [arming, setArming] = useState<number | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const pinned = useRef(true);
@@ -220,12 +286,41 @@ function SessionScreen({
 
           {session.items.map((item, index) => {
             switch (item.kind) {
-              case "user":
+              case "user": {
+                const undoable = !session.running && session.undoable.includes(index);
                 return (
-                  <div key={index} className="msg-user">
-                    {item.text}
+                  <div key={index} className="user-wrap">
+                    {undoable &&
+                      (arming === index ? (
+                        <span className="undo-confirm">
+                          Undo this and everything after?
+                          <button
+                            className="btn danger"
+                            onClick={async () => {
+                              setArming(null);
+                              const result = await api().rewind(session.id, index);
+                              if (result) setDraft(result.text);
+                            }}
+                          >
+                            Undo
+                          </button>
+                          <button className="btn ghost" onClick={() => setArming(null)}>
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          className="undo"
+                          title="Undo this message: put back files the agent changed since, and edit the message"
+                          onClick={() => setArming(index)}
+                        >
+                          ↶ Undo
+                        </button>
+                      ))}
+                    <div className="msg-user">{item.text}</div>
                   </div>
                 );
+              }
               case "assistant":
                 return <Markdown key={index} text={item.text} />;
               case "thinking":
@@ -360,12 +455,16 @@ function App() {
   };
 
   // Menu shortcuts from the main process.
-  const latest = useRef({ openFolder, startIn, session });
-  latest.current = { openFolder, startIn, session };
+  const latest = useRef({ openFolder, startIn, session, signedIn: false });
+  latest.current = { openFolder, startIn, session, signedIn: Boolean(state?.account) };
 
   useEffect(
     () =>
       api().onCommand((command) => {
+        if (!latest.current.signedIn) {
+          void api().login("signin");
+          return;
+        }
         if (command === "open-folder") void latest.current.openFolder();
         if (command === "new-session") {
           const folder = latest.current.session?.folder;
@@ -401,6 +500,17 @@ function App() {
           Code
         </button>
         <span className="spacer" />
+        {state.update && (
+          <button
+            className="rail-button update"
+            onClick={() => void api().installUpdate()}
+            title={`Teamski ${state.update.version} is available${state.update.canInstall ? " - click to install" : " - click to download"}`}
+          >
+            <span className="update-dot" />
+            <IconDownload />
+            {state.update.progress !== null ? `${Math.round(state.update.progress * 100)}%` : "Update"}
+          </button>
+        )}
         <button className="rail-button" onClick={() => setSettingsOpen(true)} title="Settings">
           <IconSettings />
           Settings

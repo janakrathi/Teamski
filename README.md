@@ -155,8 +155,16 @@ agent that works in folders on your own computer, like Claude Code or Codex.
 - **Knows your codebase**: file and code search (ripgrep, respects `.gitignore`), and it follows your `AGENTS.md` / `CLAUDE.md`
 - **Edits with a diff you approve**: it must read a file before editing it, and an edit fails if the file changed since it was read
 - **Runs your tools**: tests, builds, linters, git, package managers, and dev servers in the background
-- **Plans out loud**: a visible task list for multi-step work, and it can read docs from the web
+- **Plans out loud**: a visible task list for multi-step work, plus web search and page fetching for docs
+- **Command sandbox**: commands run without network access unless you approve one that needs it. On macOS it's
+  OS-enforced ([sandbox-runtime](https://github.com/anthropic-experimental/sandbox-runtime)): writes stay in the
+  project and secrets like `~/.ssh` can't be read. On Windows it's best effort (network blocked through proxies)
+- **Undo any message**: every file the agent changed since that message goes back, and the message returns to the box
+- **Long tasks**: older conversation is summarised when it nears the model's limit, and read-only helper agents
+  research in parallel without filling the main agent's context
+- **MCP servers and hooks**: Claude Code's `mcpServers` and hooks formats, so existing configs paste straight in
 - **Three modes**: ask before every change, auto-edit, or full auto. `git push`, `rm -rf`, `sudo` and `curl | sh` always ask
+- **Sign in with your Teamski account** (Google, GitHub or email), and it tells you when an update is ready
 - **Your models**: your own Groq, Gemini, Cerebras, Mistral, Claude, OpenAI, DeepSeek, xAI or OpenRouter key, or Ollama on your machine. Keys are encrypted in the OS keychain, and your code never passes through Teamski's servers
 
 The beta isn't code-signed yet. On Windows, click *More info* → *Run anyway*. On a Mac,

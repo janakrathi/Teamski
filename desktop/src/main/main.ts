@@ -5,6 +5,7 @@ import {
   app,
   dialog,
   ipcMain,
+  session as electronSession,
   shell,
   type IpcMainInvokeEvent,
   type MenuItemConstructorOptions,
@@ -12,9 +13,13 @@ import {
 import { statSync } from "node:fs";
 import path from "node:path";
 
-import type { AppState, ApprovalDecision, ProviderId, SessionView, Settings } from "../shared/types.ts";
-import { Session, newSessionData, type ResolvedModel } from "./agent.ts";
+import type { Account, AppState, ApprovalDecision, ProviderId, SandboxInfo, SessionView, Settings, UpdateState } from "../shared/types.ts";
+import { Session, newSessionData, type ResolvedModel, type SessionData } from "./agent.ts";
+import { HOOKS_TEMPLATE } from "./hooks.ts";
+import { MCP_TEMPLATE, McpHub } from "./mcp.ts";
 import { listModels } from "./models.ts";
+import { sandboxStatus } from "./sandbox.ts";
+import { checkForUpdate, downloadInstaller, runInstaller } from "./update.ts";
 import { presetFor, splitModel } from "./providers.ts";
 import { adoptLoginPath } from "./shell.ts";
 import * as store from "./store.ts";
@@ -40,6 +45,15 @@ let win: BrowserWindow | null = null;
 let workspace: WebContentsView | null = null;
 
 const sessions = new Map<string, Session>();
+
+let hub: McpHub | null = null;
+
+function mcp() {
+  if (!hub) hub = new McpHub(store.configPath("mcp"));
+  return hub;
+}
+
+let sandboxInfo: SandboxInfo = { strong: false, detail: "Checking the sandbox…" };
 
 // ------------------------------------------
 // MODELS
@@ -93,14 +107,32 @@ function emit(view: SessionView) {
   wasRunning.set(view.id, view.running);
 }
 
-function makeSession(data: ReturnType<typeof newSessionData>) {
-  const session = new Session(data, {
-    resolveModel,
-    mode: () => store.getSettings().mode,
-    showThinking: () => store.getSettings().showThinking,
-    save: (snapshot) => store.saveSession(snapshot),
-    emit,
-  });
+function makeSession(data: SessionData) {
+  const session = new Session(
+    data,
+    {
+      resolveModel,
+      mode: () => store.getSettings().mode,
+      showThinking: () => store.getSettings().showThinking,
+      sandbox: async () =>
+        store.getSettings().sandbox
+          ? { enabled: true, strong: (await sandboxStatus(data.folder)).strong }
+          : { enabled: false, strong: false },
+      save: (snapshot) => store.saveSession(snapshot),
+      saveCheckpoints: (id, checkpoints) => store.saveCheckpoints(id, checkpoints),
+      emit,
+      hooksFile: store.configPath("hooks"),
+      mcp: {
+        ensure: async () => {
+          await mcp().ensure();
+          pushState();
+        },
+        schemas: () => mcp().schemas(),
+        call: (name, args, signal) => mcp().call(name, args, signal),
+      },
+    },
+    store.loadCheckpoints(data.id)
+  );
 
   sessions.set(data.id, session);
   return session;
@@ -122,11 +154,134 @@ function state(): AppState {
     providers: store.providerInfo(),
     sessions: store.listSessions(),
     workspaceUrl: WORKSPACE_URL,
+    mcp: hub ? hub.states() : [],
+    sandbox: sandboxInfo,
+    account,
+    update,
   };
+}
+
+// ------------------------------------------
+// UPDATES
+// ------------------------------------------
+
+let update: UpdateState | null = null;
+
+// For trying the button in development:
+// TEAMSKI_PRETEND_VERSION=0.0.1 npm start
+function currentVersion() {
+  return (!app.isPackaged && process.env.TEAMSKI_PRETEND_VERSION) || app.getVersion();
+}
+
+async function lookForUpdate() {
+  try {
+    const found = await checkForUpdate(currentVersion());
+
+    if (found && found.version !== update?.version) {
+      update = { ...found, progress: null };
+      pushState();
+    }
+  } catch {
+    // Offline or rate-limited: try again later.
+  }
+}
+
+async function installUpdate() {
+  if (!update || update.progress !== null) return;
+
+  if (!update.canInstall) {
+    void shell.openExternal(update.downloadUrl);
+    return;
+  }
+
+  update = { ...update, progress: 0, error: undefined };
+  pushState();
+
+  try {
+    let last = 0;
+    const file = await downloadInstaller(update, (fraction) => {
+      if (fraction - last >= 0.02 || fraction === 1) {
+        last = fraction;
+        update = update && { ...update, progress: fraction };
+        pushState();
+      }
+    });
+
+    // A development run only downloads; it never installs
+    // over the copy in Program Files.
+    if (!app.isPackaged) {
+      shell.showItemInFolder(file);
+      update = update && { ...update, progress: null, error: "Downloaded (development run, not installed)." };
+      pushState();
+      return;
+    }
+
+    runInstaller(file);
+    app.quit();
+  } catch (error) {
+    update = update && { ...update, progress: null, error: (error as Error).message };
+    pushState();
+  }
 }
 
 function pushState() {
   win?.webContents.send("state", state());
+}
+
+// ------------------------------------------
+// THE TEAMSKI ACCOUNT
+// ------------------------------------------
+//
+// Teamski Code needs a Teamski account. The Workspace
+// tab is teamski.in itself, so being signed in there is
+// being signed in: the app asks the site who that is,
+// with the workspace's own cookies. The last answer is
+// remembered, so a moment offline doesn't sign anyone
+// out.
+
+let account: Account | null = store.getAccount();
+
+function workspaceSession() {
+  return electronSession.fromPartition("persist:workspace");
+}
+
+async function checkAccount() {
+  try {
+    const response = await workspaceSession().fetch(`${WORKSPACE_URL}/api/profile`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    let next: Account | null = account;
+
+    if (response.status === 401 || response.status === 403) {
+      next = null;
+    } else if (response.ok) {
+      const data = (await response.json()) as { profile?: { email?: string | null; display_name?: string | null; username?: string | null } };
+      const profile = data.profile ?? {};
+      next = { email: profile.email ?? "", name: profile.display_name || profile.username || "" };
+    }
+
+    if (JSON.stringify(next) !== JSON.stringify(account)) {
+      account = next;
+      store.setAccount(account);
+      pushState();
+    }
+  } catch {
+    // Offline: keep what we knew.
+  }
+}
+
+let accountTimer: ReturnType<typeof setTimeout> | null = null;
+
+function checkAccountSoon() {
+  if (accountTimer) clearTimeout(accountTimer);
+  accountTimer = setTimeout(() => void checkAccount(), 800);
+}
+
+function openLogin(mode: "signin" | "signup") {
+  showView("workspace");
+  void workspace?.webContents.loadURL(`${WORKSPACE_URL}/login${mode === "signup" ? "?mode=signup" : ""}`);
 }
 
 // ------------------------------------------
@@ -138,6 +293,29 @@ function pushState() {
 // Chrome it is.
 function chromeUserAgent(agent: string) {
   return agent.replace(/\sElectron\/\S+/, "").replace(/\sTeamski\/\S+/, "");
+}
+
+// Sign-in pages that open as popups and have to report
+// back to the page that opened them - Google's button
+// does this - so they open in the app, not the browser.
+const SIGN_IN_HOSTS = [
+  /(^|\.)accounts\.google\.com$/,
+  /(^|\.)google\.com$/,
+  /(^|\.)github\.com$/,
+  /(^|\.)microsoftonline\.com$/,
+  /(^|\.)live\.com$/,
+  /(^|\.)supabase\.co$/,
+];
+
+function isSignInPopup(url: string) {
+  if (url === "" || url === "about:blank") return true;
+
+  try {
+    const host = new URL(url).hostname;
+    return host === new URL(WORKSPACE_URL).hostname || SIGN_IN_HOSTS.some((pattern) => pattern.test(host));
+  } catch {
+    return false;
+  }
 }
 
 function isHttp(url: string) {
@@ -163,12 +341,42 @@ function ensureWorkspace() {
 
   const contents = workspace.webContents;
 
+  // For the page and any sign-in popup it opens.
+  contents.session.setUserAgent(chromeUserAgent(contents.getUserAgent()));
   contents.setUserAgent(chromeUserAgent(contents.getUserAgent()));
 
-  // Links that open a new tab go to the real browser.
+  // Sign-in popups stay in the app, in the workspace's
+  // own session, so they can hand the result back.
+  // Other links that open a new tab go to the browser.
   contents.setWindowOpenHandler(({ url }) => {
+    if (isSignInPopup(url)) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          width: 520,
+          height: 680,
+          parent: win ?? undefined,
+          autoHideMenuBar: true,
+          backgroundColor: "#ffffff",
+          webPreferences: {
+            partition: "persist:workspace",
+            sandbox: true,
+            contextIsolation: true,
+            nodeIntegration: false,
+          },
+        },
+      };
+    }
+
     if (isHttp(url)) void shell.openExternal(url);
     return { action: "deny" };
+  });
+
+  // Signing in or out shows up as navigation.
+  contents.on("did-navigate", checkAccountSoon);
+  contents.on("did-navigate-in-page", checkAccountSoon);
+  contents.on("did-create-window", (child) => {
+    child.on("closed", checkAccountSoon);
   });
 
   contents.session.setPermissionRequestHandler((_contents, permission, callback) => {
@@ -346,6 +554,7 @@ function registerBridge() {
     if (typeof patch?.model === "string") allowed.model = patch.model;
     if (patch?.mode === "ask" || patch?.mode === "auto-edit" || patch?.mode === "full-auto") allowed.mode = patch.mode;
     if (typeof patch?.showThinking === "boolean") allowed.showThinking = patch.showThinking;
+    if (typeof patch?.sandbox === "boolean") allowed.sandbox = patch.sandbox;
     store.updateSettings(allowed);
     return state();
   });
@@ -392,7 +601,19 @@ function registerBridge() {
     return result.canceled ? null : result.filePaths[0] ?? null;
   });
 
+  handle("login", (mode: unknown) => {
+    openLogin(mode === "signup" ? "signup" : "signin");
+  });
+
+  handle("install-update", () => installUpdate());
+
+  handle("check-account", async () => {
+    await checkAccount();
+    return state();
+  });
+
   handle("new-session", (folder: unknown) => {
+    if (!account) throw new Error("Sign in to Teamski first.");
     if (typeof folder !== "string" || !folder) throw new Error("Pick a folder.");
 
     try {
@@ -443,6 +664,25 @@ function registerBridge() {
     sessions.get(id)?.respond(requestId, decision);
   });
 
+  handle("rewind", async (id: unknown, itemIndex: unknown) => {
+    if (typeof id !== "string" || typeof itemIndex !== "number") return null;
+    const session = getSession(id);
+    if (!session) return null;
+    const result = await session.rewind(itemIndex);
+    return result ? { ...result, view: session.view() } : null;
+  });
+
+  handle("open-config", (which: unknown) => {
+    if (which !== "mcp" && which !== "hooks") return;
+    const file = store.configFile(which, which === "mcp" ? MCP_TEMPLATE : HOOKS_TEMPLATE);
+    void shell.openPath(file);
+  });
+
+  handle("reload-mcp", async () => {
+    await mcp().reload();
+    return state();
+  });
+
   handle("show-view", (view: unknown) => {
     if (view === "workspace" || view === "code") showView(view);
   });
@@ -459,6 +699,17 @@ function registerBridge() {
 // ------------------------------------------
 // START
 // ------------------------------------------
+
+// A development run keeps its own settings, keys and
+// sessions, apart from the installed app's.
+if (!app.isPackaged) {
+  app.setPath("userData", `${app.getPath("userData")}-dev`);
+}
+
+// Electron doesn't implement Chrome's FedCM sign-in API,
+// and Google's button tries it first. Without it, Google
+// uses its popup, which the app handles.
+app.commandLine.appendSwitch("disable-features", "FedCm");
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -481,6 +732,26 @@ if (!app.requestSingleInstanceLock()) {
     buildMenu();
     createWindow();
 
+    // Start MCP servers and check the sandbox in the
+    // background; the window shows their state when ready.
+    void sandboxStatus().then((status) => {
+      sandboxInfo = { strong: status.strong, detail: status.detail };
+      pushState();
+    });
+
+    void mcp()
+      .ensure()
+      .then(pushState);
+
+    // Load the workspace in the background, so its
+    // sign-in is known before anyone opens that tab.
+    ensureWorkspace();
+    void checkAccount();
+
+    // Look for a newer version now and every six hours.
+    setTimeout(() => void lookForUpdate(), 5000);
+    setInterval(() => void lookForUpdate(), 6 * 60 * 60 * 1000);
+
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
@@ -488,6 +759,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("before-quit", () => {
     for (const session of sessions.values()) session.dispose();
+    void hub?.close();
   });
 
   app.on("window-all-closed", () => {

@@ -4,6 +4,8 @@ import path from "node:path";
 import type { TodoItem } from "../shared/types.ts";
 import { countChanges, lineDiff } from "./diff.ts";
 import { glob, grep, looksBinary, relativePosix, resolveInside } from "./files.ts";
+import { NETWORK_HINT, planSandbox } from "./sandbox.ts";
+import { webSearch } from "./search.ts";
 import type { ToolSchema } from "./models.ts";
 import {
   capOutput,
@@ -25,7 +27,7 @@ import {
 // what happens.
 //
 
-export type ToolKind = "read" | "edit" | "command" | "network" | "meta";
+export type ToolKind = "read" | "edit" | "command" | "network" | "meta" | "task" | "mcp";
 
 export type ToolContext = {
   root: string;
@@ -37,6 +39,14 @@ export type ToolContext = {
   backgroundIds: string[];
   onOutput: (text: string) => void;
   setTodos: (todos: TodoItem[]) => void;
+  // Whether commands run sandboxed, and whether that
+  // sandbox is enforced by the OS.
+  sandbox: { enabled: boolean; strong: boolean };
+  // Called with a file's path just before it is written,
+  // so its old content can be kept for undo.
+  beforeWrite: (file: string) => Promise<void>;
+  // Starts a read-only helper agent (see subagent.ts).
+  runSubagent?: (description: string, prompt: string, onStep: (steps: number, label: string) => void) => Promise<string>;
 };
 
 export type ToolResult = {
@@ -59,6 +69,11 @@ export type ToolPlan =
       dangerous?: boolean;
       // A command safe enough to never ask about.
       readOnly?: boolean;
+      // A command that will run inside the sandbox.
+      sandboxed?: boolean;
+      // A command that asked for the network, so runs
+      // outside the sandbox.
+      network?: boolean;
       apply: () => Promise<ToolResult>;
     };
 
@@ -446,6 +461,7 @@ export const TOOLS: Tool[] = [
         detail: diff,
         detailKind: "diff",
         apply: async () => {
+          await context.beforeWrite(file);
           await fs.writeFile(file, updated, "utf8");
           context.readFiles.set(file, (await mtime(file)) ?? 0);
 
@@ -523,6 +539,7 @@ export const TOOLS: Tool[] = [
         detail: diff,
         detailKind: "diff",
         apply: async () => {
+          await context.beforeWrite(file);
           await fs.mkdir(path.dirname(file), { recursive: true });
           await fs.writeFile(file, content, "utf8");
           context.readFiles.set(file, (await mtime(file)) ?? 0);
@@ -542,13 +559,14 @@ export const TOOLS: Tool[] = [
     schema: {
       name: "run_command",
       description:
-        "Run a shell command in the project folder: tests, builds, linters, git, package managers. Returns combined output and the exit code. For servers or watchers that keep running, set run_in_background, then use command_output and stop_command. Never run interactive commands (they would hang).",
+        "Run a shell command in the project folder: tests, builds, linters, git, package managers. Returns combined output and the exit code. Commands run in a sandbox with no network access; set needs_network only when the command must reach the internet (installing packages, git fetch/pull/push, downloads) - the user is asked first. For servers or watchers that keep running, set run_in_background, then use command_output and stop_command. Never run interactive commands (they would hang).",
       parameters: {
         type: "object",
         properties: {
           command: { type: "string", description: "The command line." },
           timeout_seconds: { type: "number", description: "Give up after this long. Optional, default 120, max 600." },
           run_in_background: { type: "boolean", description: "Start it and return at once with an id. Optional." },
+          needs_network: { type: "boolean", description: "Run outside the sandbox, with internet access. Only when needed. Optional." },
         },
         required: ["command"],
       },
@@ -562,6 +580,8 @@ export const TOOLS: Tool[] = [
       }
 
       const inBackground = args.run_in_background === true;
+      const network = args.needs_network === true;
+      const sandboxed = context.sandbox.enabled && !network;
 
       return {
         title: `${inBackground ? "Start in background" : "Run"}: ${command}`,
@@ -569,10 +589,14 @@ export const TOOLS: Tool[] = [
         detailKind: "command",
         commandPrefix: commandPrefix(command),
         dangerous: isDangerousCommand(command),
-        readOnly: !inBackground && isReadOnlyCommand(command),
+        readOnly: !inBackground && !network && isReadOnlyCommand(command),
+        sandboxed,
+        network: network && context.sandbox.enabled,
         apply: async () => {
+          const runAs = sandboxed ? await planSandbox(command, context.root) : undefined;
+
           if (inBackground) {
-            const id = startBackground(command, context.root);
+            const id = startBackground(command, context.root, runAs);
             context.backgroundIds.push(id);
 
             // A moment for it to print its first lines
@@ -590,6 +614,7 @@ export const TOOLS: Tool[] = [
 
           const result = await runCommand({
             command,
+            runAs,
             cwd: context.root,
             timeoutMs: timeout,
             signal: context.signal,
@@ -602,8 +627,16 @@ export const TOOLS: Tool[] = [
               ? `Timed out after ${timeout / 1000}s and was stopped. For something long-running, use run_in_background.`
               : `Exit code ${result.exitCode}.`;
 
+          // A sandboxed command that failed the way an
+          // offline one does is told how to ask for the
+          // network.
+          const offline =
+            sandboxed &&
+            result.exitCode !== 0 &&
+            /ENOTFOUND|EAI_AGAIN|ECONNREFUSED|getaddrinfo|127\.0\.0\.1:9|Could not resolve host|network|offline|Operation not permitted|proxy/i.test(result.output);
+
           return {
-            output: `${result.output.trim() || "(no output)"}\n\n${status}`,
+            output: `${result.output.trim() || "(no output)"}\n\n${status}${offline ? `\n\n${NETWORK_HINT}` : ""}`,
             error: result.exitCode !== 0,
             display: result.timedOut ? "timed out" : `exit ${result.exitCode}`,
           };
@@ -704,6 +737,82 @@ export const TOOLS: Tool[] = [
           } catch (error) {
             return { output: `Couldn't fetch ${url.href}: ${(error as Error).message}`, error: true };
           }
+        },
+      };
+    },
+  },
+
+  {
+    kind: "read",
+    schema: {
+      name: "web_search",
+      description:
+        "Search the web (DuckDuckGo). Returns titles, URLs and snippets. Use it for documentation, error messages and library versions; then fetch_url a result to read it.",
+      parameters: {
+        type: "object",
+        properties: { query: { type: "string", description: "What to search for." } },
+        required: ["query"],
+      },
+    },
+    summary: (args) => `Search the web for ${str(args.query)}`,
+    plan: async (args, context) => {
+      const query = str(args.query).trim();
+      if (!query) return { error: "query is empty." };
+
+      return {
+        title: `Search the web for ${query}`,
+        apply: async () => {
+          try {
+            const results = (await webSearch(query, context.signal)).slice(0, 8);
+
+            if (!results.length) return { output: "No results.", display: "no results" };
+
+            return {
+              output: results.map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`).join("\n"),
+              display: `${results.length} results`,
+            };
+          } catch (error) {
+            return { output: `Search failed: ${(error as Error).message}`, error: true };
+          }
+        },
+      };
+    },
+  },
+
+  {
+    kind: "task",
+    schema: {
+      name: "task",
+      description:
+        "Hand a self-contained research job to a helper agent that can only read (list, read, glob, grep, web search) and get back a short report with file paths and line numbers. Use it for broad searches that would otherwise fill your context, e.g. finding every place the session cookie is read. Start several in the same step to run them in parallel. The helper sees nothing of this conversation, so put everything it needs in the prompt.",
+      parameters: {
+        type: "object",
+        properties: {
+          description: { type: "string", description: "A 3-6 word label, e.g. Find session cookie reads." },
+          prompt: { type: "string", description: "The full job, with the context the helper needs." },
+        },
+        required: ["description", "prompt"],
+      },
+    },
+    summary: (args) => `Helper: ${str(args.description) || "research"}`,
+    plan: async (args, context) => {
+      const prompt = str(args.prompt).trim();
+      if (!prompt) return { error: "prompt is empty." };
+      if (!context.runSubagent) return { error: "Helpers can't start helpers." };
+
+      const description = str(args.description).trim() || "research";
+
+      return {
+        title: `Helper: ${description}`,
+        apply: async () => {
+          let steps = 0;
+
+          const report = await context.runSubagent!(description, prompt, (n, label) => {
+            steps = n;
+            context.onOutput(`${label}\n`);
+          });
+
+          return { output: report, display: `${steps} steps` };
         },
       };
     },

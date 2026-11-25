@@ -114,7 +114,7 @@ export default function DownloadPage() {
         <li>Find its way around a codebase with file search and code search</li>
         <li>Edit files, with a diff you approve before anything changes</li>
         <li>Run tests, builds, linters, git and dev servers in the background</li>
-        <li>Read documentation from the web</li>
+        <li>Search the web and read documentation</li>
         <li>Keep a visible task list for longer jobs</li>
         <li>Follow your repo&apos;s AGENTS.md or CLAUDE.md</li>
         <li>
@@ -122,6 +122,40 @@ export default function DownloadPage() {
           risky commands like <code>git push</code> always ask
         </li>
       </List>
+
+
+      <H2>New in 0.2</H2>
+
+      <List>
+        <li>
+          <strong>Command sandbox:</strong> commands run without internet
+          access unless you approve one that needs it. On a Mac the system
+          enforces it - writes stay inside your project and files like
+          <code>~/.ssh</code> can&apos;t be read. On Windows it&apos;s best
+          effort.
+        </li>
+        <li>
+          <strong>Undo any message:</strong> the files the agent changed since
+          then go back the way they were.
+        </li>
+        <li>
+          <strong>Longer tasks:</strong> older conversation is summarised when
+          it gets long, and helper agents research in parallel.
+        </li>
+        <li>
+          <strong>MCP servers and hooks</strong> in the same format as Claude
+          Code, so your existing setup works.
+        </li>
+        <li>
+          <strong>Updates:</strong> the app tells you when a new version is
+          ready and, on Windows, installs it for you.
+        </li>
+      </List>
+
+      <p>
+        Already installed 0.1? Download it once more and run the installer -
+        your keys and sessions stay. From 0.2 on, the app updates itself.
+      </p>
     </LegalPage>
   );
 }

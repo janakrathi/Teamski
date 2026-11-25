@@ -1,4 +1,6 @@
-import { execFile } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
@@ -231,11 +233,30 @@ export async function glob(root: string, pattern: string, under = ".") {
 
 export type GrepMatch = { file: string; line: number; text: string };
 
-let ripgrep: boolean | null = null;
+// The app ships ripgrep (@vscode/ripgrep's per-platform
+// package); a system rg is the fallback, then a plain
+// scan.
+let ripgrep: string | null | undefined;
 
-async function hasRipgrep(root: string) {
-  if (ripgrep === null) {
-    ripgrep = (await run("rg", ["--version"], root, 5000)).ok;
+function bundledRipgrep() {
+  try {
+    const require = createRequire(typeof __filename === "string" ? __filename : import.meta.url);
+    const binary = process.platform === "win32" ? "rg.exe" : "rg";
+    const found = require
+      .resolve(`@vscode/ripgrep-${process.platform}-${process.arch}/bin/${binary}`)
+      .replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
+    if (!existsSync(found)) return null;
+    // An Intel Mac build can carry the Apple Silicon
+    // binary; only use it if it actually runs.
+    return execFileSync(found, ["--version"], { timeout: 5000, windowsHide: true, stdio: "ignore" }) !== undefined ? found : null;
+  } catch {
+    return null;
+  }
+}
+
+async function ripgrepPath(root: string) {
+  if (ripgrep === undefined) {
+    ripgrep = bundledRipgrep() ?? ((await run("rg", ["--version"], root, 5000)).ok ? "rg" : null);
   }
 
   return ripgrep;
@@ -248,13 +269,15 @@ export async function grep(
   const limit = options.limit ?? 200;
   const start = resolveInside(root, options.under ?? ".");
 
-  if (await hasRipgrep(root)) {
+  const rg = await ripgrepPath(root);
+
+  if (rg) {
     const args = ["--line-number", "--no-heading", "--color", "never", "--max-columns", "300", "--max-columns-preview"];
     if (options.ignoreCase) args.push("-i");
     if (options.glob) args.push("--glob", options.glob);
     args.push("-e", options.pattern, "--", start);
 
-    const result = await run("rg", args, root, 30000);
+    const result = await run(rg, args, root, 30000);
 
     // rg exits 1 for "no matches", 2 for a bad pattern.
     if (result.code === 2) {

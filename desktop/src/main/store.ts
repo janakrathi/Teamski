@@ -1,9 +1,9 @@
 import { app, safeStorage } from "electron";
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import type { ProviderId, ProviderInfo, SessionSummary, Settings } from "../shared/types.ts";
-import type { SessionData } from "./agent.ts";
+import type { Account, ProviderId, ProviderInfo, SessionSummary, Settings } from "../shared/types.ts";
+import type { Checkpoint, SessionData } from "./agent.ts";
 import { PROVIDERS, joinModel, presetFor } from "./providers.ts";
 
 // ==========================================
@@ -19,6 +19,8 @@ import { PROVIDERS, joinModel, presetFor } from "./providers.ts";
 
 type Stored = {
   settings: Settings;
+  // Who is signed in to Teamski, as last seen.
+  account?: Account | null;
   // provider -> encrypted key, base64
   keys: Partial<Record<ProviderId, string>>;
   // provider -> address, for the editable ones
@@ -30,6 +32,7 @@ const DEFAULTS: Settings = {
   mode: "ask",
   recentFolders: [],
   showThinking: false,
+  sandbox: true,
 };
 
 function dataDir() {
@@ -65,6 +68,7 @@ function load(): Stored {
       settings: { ...DEFAULTS, ...(parsed.settings ?? {}) },
       keys: parsed.keys ?? {},
       baseUrls: parsed.baseUrls ?? {},
+      account: parsed.account ?? null,
     };
   } catch {
     stored = { settings: { ...DEFAULTS }, keys: {}, baseUrls: {} };
@@ -76,6 +80,15 @@ function load(): Stored {
 function persist() {
   mkdirSync(dataDir(), { recursive: true });
   writeAtomic(settingsFile(), JSON.stringify(load(), null, 2));
+}
+
+export function getAccount(): Account | null {
+  return load().account ?? null;
+}
+
+export function setAccount(account: Account | null) {
+  load().account = account;
+  persist();
 }
 
 export function getSettings(): Settings {
@@ -187,6 +200,37 @@ export function loadSession(id: string): SessionData | null {
 export function deleteSession(id: string) {
   if (!SAFE_ID.test(id)) return;
   rmSync(path.join(sessionsDir(), `${id}.json`), { force: true });
+  rmSync(path.join(sessionsDir(), `${id}.undo`), { force: true });
+}
+
+// Undo history is kept beside a session, so listing
+// sessions never has to read it.
+export function saveCheckpoints(id: string, checkpoints: Checkpoint[]) {
+  if (!SAFE_ID.test(id)) return;
+  writeAtomic(path.join(sessionsDir(), `${id}.undo`), JSON.stringify(checkpoints));
+}
+
+export function loadCheckpoints(id: string): Checkpoint[] {
+  if (!SAFE_ID.test(id)) return [];
+
+  try {
+    return JSON.parse(readFileSync(path.join(sessionsDir(), `${id}.undo`), "utf8")) as Checkpoint[];
+  } catch {
+    return [];
+  }
+}
+
+// The person's own MCP servers and hooks, as files they
+// can edit (and paste Claude Code's config into).
+export function configFile(which: "mcp" | "hooks", template: string) {
+  mkdirSync(dataDir(), { recursive: true });
+  const file = path.join(dataDir(), which === "mcp" ? "mcp.json" : "hooks.json");
+  if (!existsSync(file)) writeFileSync(file, template, "utf8");
+  return file;
+}
+
+export function configPath(which: "mcp" | "hooks") {
+  return path.join(dataDir(), which === "mcp" ? "mcp.json" : "hooks.json");
 }
 
 export function listSessions(): SessionSummary[] {

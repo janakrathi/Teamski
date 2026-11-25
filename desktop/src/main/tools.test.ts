@@ -27,6 +27,8 @@ function context(root: string): ToolContext {
     backgroundIds: [],
     onOutput: () => {},
     setTodos: () => {},
+    sandbox: { enabled: false, strong: false },
+    beforeWrite: async () => {},
   };
 }
 
@@ -181,6 +183,7 @@ function deps(root: string, stream: AgentDeps["stream"], mode: "ask" | "full-aut
     resolveModel: () => ({ provider: "groq", kind: "openai", baseUrl: "http://x", key: "k", model: "m" }),
     mode: () => mode,
     showThinking: () => false,
+    sandbox: async () => ({ enabled: false, strong: false }),
     save: () => {},
     emit: () => {
       if (session?.approval && decide) decide(session);

@@ -165,6 +165,69 @@ export function Settings({
           </div>
         </div>
 
+        <h3>Safety</h3>
+        <div className="toggle-row">
+          <div>
+            Run commands in a sandbox
+            <div className="sub">{state.sandbox.detail}</div>
+          </div>
+          <div className="seg">
+            <button
+              className={state.settings.sandbox ? "on" : ""}
+              onClick={async () => onState(await api().setSettings({ sandbox: true }))}
+            >
+              On
+            </button>
+            <button
+              className={!state.settings.sandbox ? "on" : ""}
+              onClick={async () => onState(await api().setSettings({ sandbox: false }))}
+            >
+              Off
+            </button>
+          </div>
+        </div>
+        <p className="lead" style={{ fontSize: 12, margin: "4px 0 0" }}>
+          A command that needs the internet (installing packages, git pull) asks first and then runs outside the sandbox.
+          Every message can be undone: hover it and click Undo to put back the files the agent changed since.
+        </p>
+
+        <h3>MCP servers</h3>
+        <p className="lead" style={{ fontSize: 12, margin: "0 0 8px" }}>
+          Give the agent tools from MCP servers - GitHub, Linear, databases, browsers. Same format as Claude Code and
+          Cursor (<code>mcpServers</code>), so you can paste your existing config. The agent asks before using a
+          server's tools unless you allow it.
+        </p>
+        {state.mcp.length === 0 && <p className="lead" style={{ fontSize: 12, margin: "0 0 8px" }}>No servers yet.</p>}
+        {state.mcp.map((server) => (
+          <div key={server.name} className="provider">
+            <div className="line">
+              <span className="name">{server.name}</span>
+              <span className={`badge ${server.status === "connected" ? "free" : server.status === "error" ? "" : "on"}`}>
+                {server.status === "connected" ? `${server.tools} tools` : server.status}
+              </span>
+            </div>
+            {server.error && <div className="msg bad">{server.error}</div>}
+          </div>
+        ))}
+        <div className="edit" style={{ display: "flex", gap: 6 }}>
+          <button className="btn" onClick={() => void api().openConfig("mcp")}>
+            Edit mcp.json
+          </button>
+          <button className="btn" onClick={async () => onState(await api().reloadMcp())}>
+            Reload servers
+          </button>
+        </div>
+
+        <h3>Hooks</h3>
+        <p className="lead" style={{ fontSize: 12, margin: "0 0 8px" }}>
+          Your own commands, run before or after the agent uses a tool, when you send a message, or when it finishes -
+          to format code after edits, block certain files, or make it keep going until tests pass. Claude Code's
+          format; exit code 2 blocks. On Windows they run in PowerShell.
+        </p>
+        <button className="btn" onClick={() => void api().openConfig("hooks")}>
+          Edit hooks.json
+        </button>
+
         <h3>Models</h3>
         {state.providers.map((provider) => (
           <ProviderCard key={provider.id} provider={provider} onState={onState} />

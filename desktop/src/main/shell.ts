@@ -20,6 +20,14 @@ export type ShellInfo = { name: string; file: string; args: (command: string) =>
 
 let cached: ShellInfo | null = null;
 
+// PowerShell's own exit code is 1 or 0, whatever the
+// program it ran returned. Hand the real one back, so
+// "exit 2" from a hook or a test runner's code survive.
+function withExitCode(command: string) {
+  return `${command}
+$__ok = $?; $__code = $global:LASTEXITCODE; if ($__code) { exit $__code } elseif (-not $__ok) { exit 1 } else { exit 0 }`;
+}
+
 export function detectShell(): ShellInfo {
   if (cached) return cached;
 
@@ -34,13 +42,13 @@ export function detectShell(): ShellInfo {
       cached = {
         name: "PowerShell 7 (pwsh)",
         file: "pwsh.exe",
-        args: (command) => ["-NoProfile", "-NonInteractive", "-Command", command],
+        args: (command) => ["-NoProfile", "-NonInteractive", "-Command", withExitCode(command)],
       };
     } else {
       cached = {
         name: "Windows PowerShell 5.1 (no && or ||; use ; and if ($?) { ... })",
         file: "powershell.exe",
-        args: (command) => ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", command],
+        args: (command) => ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", withExitCode(command)],
       };
     }
 
@@ -109,12 +117,22 @@ export function capOutput(text: string) {
   return `${text.slice(0, HEAD)}\n\n... [${dropped} characters cut from the middle] ...\n\n${text.slice(-TAIL)}`;
 }
 
-function start(command: string, cwd: string) {
-  const shell = detectShell();
+// How to run one command: plain, or wrapped by the
+// sandbox (see sandbox.ts).
+export type RunAs = {
+  command: string;
+  useSh?: boolean;
+  env?: Record<string, string>;
+};
 
-  return spawn(shell.file, shell.args(command), {
+function start(run: RunAs, cwd: string) {
+  const shell = detectShell();
+  const file = run.useSh ? "/bin/sh" : shell.file;
+  const args = run.useSh ? ["-c", run.command] : shell.args(run.command);
+
+  return spawn(file, args, {
     cwd,
-    env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1", CI: process.env.CI ?? "", TERM: "dumb", GIT_PAGER: "cat", PAGER: "cat" },
+    env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1", CI: process.env.CI ?? "", TERM: "dumb", GIT_PAGER: "cat", PAGER: "cat", ...(run.env ?? {}) },
     windowsHide: true,
     detached: process.platform !== "win32",
     stdio: ["ignore", "pipe", "pipe"],
@@ -129,13 +147,14 @@ function plain(text: string) {
 
 export async function runCommand(options: {
   command: string;
+  runAs?: RunAs;
   cwd: string;
   timeoutMs: number;
   signal?: AbortSignal;
   onOutput?: (chunk: string) => void;
 }): Promise<{ output: string; exitCode: number | null; timedOut: boolean; stopped: boolean }> {
   return new Promise((resolve) => {
-    const child = start(options.command, options.cwd);
+    const child = start(options.runAs ?? { command: options.command }, options.cwd);
     let output = "";
     let timedOut = false;
     let stopped = false;
@@ -204,8 +223,8 @@ type Background = {
 const background = new Map<string, Background>();
 let counter = 0;
 
-export function startBackground(command: string, cwd: string) {
-  const child = start(command, cwd);
+export function startBackground(command: string, cwd: string, runAs?: RunAs) {
+  const child = start(runAs ?? { command }, cwd);
   const id = `bg${++counter}`;
 
   const entry: Background = {

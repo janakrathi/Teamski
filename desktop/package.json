@@ -1,7 +1,7 @@
 {
   "name": "teamski-desktop",
   "productName": "Teamski",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Teamski for Windows and Mac: your team's AI workspace, plus a coding agent that works in your own folders.",
   "author": "Teamski",
   "license": "MIT",
@@ -16,7 +16,10 @@
     "dist:win": "node scripts/build.mjs && electron-builder --win --publish never",
     "dist:mac": "node scripts/build.mjs && electron-builder --mac --publish never"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "0.0.81",
+    "@vscode/ripgrep": "1.18.0"
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
@@ -28,6 +31,7 @@
     "react-dom": "19.2.8",
     "react-markdown": "10.1.0",
     "remark-gfm": "4.0.1",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "@modelcontextprotocol/sdk": "1.32.2"
   }
 }

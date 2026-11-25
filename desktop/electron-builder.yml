@@ -13,6 +13,11 @@ files:
 
 asar: true
 
+# ripgrep is a program the app runs, so it can't stay
+# inside the archive.
+asarUnpack:
+  - node_modules/@vscode/ripgrep-*/**
+
 # Fixed names, so the website can link to
 # releases/latest/download/<name> without knowing
 # the version.

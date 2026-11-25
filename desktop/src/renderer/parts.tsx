@@ -33,6 +33,8 @@ export const IconSettings = ({ size = 20 }: IconProps) =>
   svg(size, <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></>);
 export const IconFolder = ({ size = 16 }: IconProps) =>
   svg(size, <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />);
+export const IconDownload = ({ size = 20 }: IconProps) =>
+  svg(size, <><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></>);
 export const IconPlus = ({ size = 16 }: IconProps) => svg(size, <><path d="M12 5v14" /><path d="M5 12h14" /></>);
 export const IconBack = ({ size = 16 }: IconProps) => svg(size, <path d="m15 18-6-6 6-6" />);
 export const IconSend = ({ size = 16 }: IconProps) => svg(size, <><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></>);
@@ -175,11 +177,24 @@ export function ApprovalCard({
   const sessionLabel =
     approval.tool === "run_command"
       ? approval.commandPrefix
-        ? `Always allow "${approval.commandPrefix}"`
+        ? `Always allow "${approval.commandPrefix}"${approval.network ? " online" : ""}`
         : null
       : approval.tool === "fetch_url"
         ? "Allow web fetches this session"
-        : "Allow all edits this session";
+        : approval.tool === "mcp"
+          ? `Always allow ${approval.commandPrefix ?? "this server"}`
+          : "Allow all edits this session";
+
+  const question =
+    approval.tool === "run_command"
+      ? approval.network
+        ? "Run with internet access?"
+        : "Run this command?"
+      : approval.tool === "fetch_url"
+        ? "Fetch this page?"
+        : approval.tool === "mcp"
+          ? "Use this tool?"
+          : "Make this change?";
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -202,7 +217,7 @@ export function ApprovalCard({
   return (
     <div className="approval">
       <div className="ask">
-        <span>{approval.tool === "run_command" ? "Run this command?" : approval.tool === "fetch_url" ? "Fetch this page?" : "Make this change?"}</span>
+        <span>{question}</span>
         <span className="what">{approval.title}</span>
       </div>
 

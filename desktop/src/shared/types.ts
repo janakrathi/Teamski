@@ -56,6 +56,41 @@ export type Settings = {
   recentFolders: string[];
   // Show the model's reasoning when it streams one.
   showThinking: boolean;
+  // Run commands in the sandbox (no network, see
+  // main/sandbox.ts). On by default.
+  sandbox: boolean;
+};
+
+export type McpServerState = {
+  name: string;
+  status: "connecting" | "connected" | "error" | "disabled";
+  error?: string;
+  tools: number;
+};
+
+export type UpdateInfo = {
+  version: string;
+  notesUrl: string;
+  downloadUrl: string;
+  size: number;
+  // Windows installs it in place; a Mac opens the download.
+  canInstall: boolean;
+};
+
+export type UpdateState = UpdateInfo & {
+  // 0..1 while downloading, null otherwise.
+  progress: number | null;
+  error?: string;
+};
+
+export type Account = {
+  email: string;
+  name: string;
+};
+
+export type SandboxInfo = {
+  strong: boolean;
+  detail: string;
 };
 
 export type TodoItem = {
@@ -90,6 +125,9 @@ export type Approval = {
   detailKind: "diff" | "command" | "text";
   // The command's first words, offered as "always allow".
   commandPrefix?: string;
+  // A command that asked to run outside the sandbox,
+  // with the network.
+  network?: boolean;
 };
 
 export type ApprovalDecision =
@@ -111,6 +149,8 @@ export type SessionView = SessionSummary & {
   todos: TodoItem[];
   approval: Approval | null;
   usage: { input: number; output: number };
+  // Indexes of user messages that can be undone back to.
+  undoable: number[];
 };
 
 export type AppState = {
@@ -120,6 +160,12 @@ export type AppState = {
   providers: ProviderInfo[];
   sessions: SessionSummary[];
   workspaceUrl: string;
+  mcp: McpServerState[];
+  sandbox: SandboxInfo;
+  // Signed in to Teamski (in the Workspace tab), or null.
+  account: Account | null;
+  // A newer version, when there is one.
+  update: UpdateState | null;
 };
 
 export type ModelOption = {
@@ -143,6 +189,18 @@ export type DesktopApi = {
   stop(sessionId: string): Promise<void>;
   setSessionModel(sessionId: string, model: string): Promise<void>;
   respond(sessionId: string, requestId: string, decision: ApprovalDecision): Promise<void>;
+  // Undo everything from this user message on: files
+  // the agent changed go back, the conversation is cut
+  // there, and the message comes back to the composer.
+  rewind(sessionId: string, itemIndex: number): Promise<{ text: string; restored: number; view: SessionView } | null>;
+  openConfig(which: "mcp" | "hooks"): Promise<void>;
+  // Open the Workspace tab on teamski.in's sign-in page.
+  login(mode: "signin" | "signup"): Promise<void>;
+  checkAccount(): Promise<AppState>;
+  // Download and install the newer version (Windows), or
+  // open its download (Mac).
+  installUpdate(): Promise<void>;
+  reloadMcp(): Promise<AppState>;
   showView(view: "workspace" | "code"): Promise<void>;
   openExternal(url: string): Promise<void>;
   revealFolder(folder: string): Promise<void>;

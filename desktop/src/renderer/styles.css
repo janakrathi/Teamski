@@ -79,6 +79,12 @@ input, textarea, select { font: inherit; color: inherit; }
 .rail-button:hover { background: var(--bg-hover); color: var(--text); }
 .rail-button.active { background: var(--bg-raised); color: var(--text); }
 .rail-button.active svg { color: var(--accent); }
+.rail-button.update { position: relative; color: var(--accent); }
+.rail-button.update:hover { color: var(--accent); background: var(--accent-soft); }
+.update-dot { position: absolute; top: 5px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg-panel); }
+
+.update-banner { border: 1px solid var(--accent-soft); background: var(--bg-raised); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; display: flex; gap: 16px; align-items: center; }
+.update-banner p { margin: 3px 0 0; color: var(--text-muted); font-size: 13px; }
 
 /* ---------- main ---------- */
 
@@ -141,6 +147,12 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .callout p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
 
+.signin { border: 1px solid var(--border-strong); background: var(--bg-raised); border-radius: 14px; padding: 22px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.signin strong { font-size: 16px; }
+.signin p { margin: 0; color: var(--text-muted); font-size: 13.5px; max-width: 520px; }
+.signin-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 4px; }
+.signed-in { color: var(--text-faint); font-size: 12.5px; margin: -16px 0 22px; }
+
 .list { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .row {
   display: flex;
@@ -184,6 +196,13 @@ input, textarea, select { font: inherit; color: inherit; }
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+.user-wrap { align-self: flex-end; max-width: 85%; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.user-wrap .msg-user { max-width: 100%; }
+.undo { opacity: 0; border: 0; background: none; color: var(--text-faint); font-size: 11.5px; padding: 0 4px; transition: opacity 150ms var(--ease), color 150ms var(--ease); }
+.user-wrap:hover .undo { opacity: 1; }
+.undo:hover { color: var(--text); }
+.undo-confirm { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
 
 .msg-assistant { line-height: 1.65; word-wrap: break-word; }
 .msg-assistant > :first-child { margin-top: 0; }
@@ -352,7 +371,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .provider .msg.good { color: var(--green); }
 .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 13px; }
 .toggle-row .sub { color: var(--text-faint); font-size: 12px; }
-.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; }
+.seg { flex: none; display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: transparent; padding: 5px 10px; font-size: 12px; color: var(--text-muted); }
 .seg button.on { background: var(--bg-hover); color: var(--text); }
 .link { background: none; border: 0; color: var(--accent); padding: 0; font-size: 12px; }
