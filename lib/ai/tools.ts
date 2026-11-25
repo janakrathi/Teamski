@@ -1321,9 +1321,8 @@ export const TOOLS: ToolDefinition[] = [
         return "Images can be generated inside a project. Open a project channel and try again.";
       }
 
-      // The person's own Cloudflare key, if they
-      // connected one - their own image quota. Falls
-      // back to the shared account otherwise.
+      // The person's own Cloudflare key - images are
+      // only ever made on their own account.
       let creds:
         | { accountId: string; token: string }
         | undefined;
@@ -1358,7 +1357,7 @@ export const TOOLS: ToolDefinition[] = [
 
       if ("error" in result) {
         if (result.error === "no-key") {
-          return "Image generation is not set up on this server yet.";
+          return "Image generation needs your own free Cloudflare key, and none is connected yet. Tell the person to connect one (Settings, or the prompt that appears) - it takes a minute and is free - then ask again. Do not offer to describe or draw the image another way.";
         }
 
         return `The image could not be generated (${result.error}).`;

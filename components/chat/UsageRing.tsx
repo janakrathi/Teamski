@@ -188,12 +188,10 @@ export default function UsageRing({
 
   const onGemini = model.startsWith("google/");
 
-  // Both the machine's own models and the shared
-  // Groq key are answered on the built-in daily
-  // allowance (a Groq turn counts as "server"), so
-  // the ring reflects that allowance for either.
-  const usesAllowance =
-    local || model.startsWith("groq/");
+  // Only the machine's own models draw on the
+  // built-in daily allowance; a turn on a key is that
+  // key's own limit.
+  const usesAllowance = local;
 
   const context = contextTokens ? percentOf(contextTokens, contextWindow) : null;
 

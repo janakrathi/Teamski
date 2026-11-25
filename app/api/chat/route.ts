@@ -8,17 +8,9 @@ import {
   streamFor,
 } from "@/lib/ai/providers";
 
-import {
-  GROQ_DEFAULT_MODEL,
-  GROQ_VISION_MODEL,
-  groqKey,
-} from "@/lib/ai/providers/groq";
+import { GROQ_VISION_MODEL } from "@/lib/ai/providers/groq";
 
-import {
-  CEREBRAS_DEFAULT_MODEL,
-  CEREBRAS_VISION_MODEL,
-  cerebrasKey,
-} from "@/lib/ai/providers/cerebras";
+import { credentialsFor } from "@/lib/ai/providers/keys";
 
 import { adminClient } from "@/lib/supabase/admin";
 
@@ -513,37 +505,28 @@ export async function POST(request: Request) {
         | null) || null;
   }
 
-  // A turn with images has to be answered by a
-  // model that can see them - Cerebras's Qwen if the
-  // server has that key, else Groq's, whatever was
-  // otherwise chosen.
-  const needsVision = attachmentImages.length > 0;
-
-  const visionModel = groqKey()
-    ? GROQ_VISION_MODEL
-    : CEREBRAS_VISION_MODEL;
-
-  // With nothing chosen, the top of the shared free
-  // chain answers - Groq (reliable) first, then
-  // Cerebras, then the local machine.
-  const sharedDefault = groqKey()
-    ? GROQ_DEFAULT_MODEL
-    : cerebrasKey()
-      ? CEREBRAS_DEFAULT_MODEL
-      : DEFAULT_MODEL;
-
+  // With nothing chosen, the machine's own model
+  // answers. Teamski serves no hosted models of its
+  // own - anything else is on the person's own key.
   const chosenModel =
-    channelModel || personalModel || sharedDefault;
+    channelModel || personalModel || DEFAULT_MODEL;
 
-  // An image goes to the shared vision model only when
-  // the chosen model can't read images itself; a channel
-  // on Claude or GPT answers it directly.
-  const model =
-    needsVision &&
-    !canReadImages(chosenModel) &&
-    (cerebrasKey() || groqKey())
-      ? visionModel
-      : chosenModel;
+  // A turn with images has to be answered by a model
+  // that can see them. The machine's models can't, so
+  // when the chosen one can't either, Groq's Qwen reads
+  // them - on the person's own Groq key, if they have
+  // one. Without one the chosen model answers as usual.
+  const needsVision =
+    attachmentImages.length > 0 &&
+    !canReadImages(chosenModel);
+
+  const ownGroq = needsVision
+    ? (await credentialsFor(db, user.id)).some(
+        (entry) => entry.service === "groq"
+      )
+    : false;
+
+  const model = ownGroq ? GROQ_VISION_MODEL : chosenModel;
 
   const answersLocally = isLocal(model);
 

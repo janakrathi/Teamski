@@ -224,18 +224,20 @@ export default function SecurityPage() {
 
       <List>
         <li>
-          <strong>Free:</strong> GPT-OSS 120B - OpenAI&apos;s open-weight
-          model - served by Groq, with {DAILY_MESSAGES.free} built-in AI
-          messages per person per day.
+          <strong>Built in:</strong> an open model (Qwen3) that runs on
+          Teamski&apos;s own server - your chats don&apos;t reach any AI
+          provider - with {DAILY_MESSAGES.free} messages per person per day.
+          It&apos;s small, so it&apos;s best for quick questions.
         </li>
         <li>
-          When the shared free capacity is busy, it steps down to GPT-OSS 20B,
-          then Qwen3 27B, and the reply says when a different model answered.
-          If all of those are busy, a small model on our own server answers.
+          <strong>Free keys, on every plan:</strong> a free key from Groq,
+          Cerebras or Google takes about two minutes to get and unlocks
+          GPT-OSS 120B, Gemini and other fast models on your own daily limit.
+          Teamski walks you through it.
         </li>
         <li>
           <strong>Team:</strong> {DAILY_MESSAGES.team} built-in messages per
-          person per day, plus your own or a shared key for Claude, GPT,
+          person per day, plus your own or a project-shared key for Claude, GPT,
           Gemini and others. Messages on a key are billed by that provider and
           don&apos;t count toward the daily allowance.
         </li>

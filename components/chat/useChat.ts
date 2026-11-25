@@ -38,6 +38,7 @@ export type Usage = {
 };
 
 import type { Attachment } from "./Attachments";
+import { wantsImage } from "@/lib/ai/think";
 
 
 export type ChatMessage = {
@@ -295,6 +296,18 @@ export function useChat(options: {
       const history = options.skipUserMessage
         ? options.history
         : [...options.history, userMessage];
+
+      // Images are made only on the person's own
+      // Cloudflare key, so asking for one is the cue to
+      // offer it (the popup checks whether it is there).
+      if (
+        typeof window !== "undefined" &&
+        wantsImage(text)
+      ) {
+        window.dispatchEvent(
+          new Event("teamski:image-wanted")
+        );
+      }
 
       const key = conversationKey(
         projectId,
@@ -672,17 +685,6 @@ export function useChat(options: {
                 usage: event.usage as Usage,
               }));
 
-              // A reply carrying a generated image is
-              // the cue to offer the person their own
-              // image key.
-              if (
-                typeof window !== "undefined" &&
-                answer.includes("/api/images/")
-              ) {
-                window.dispatchEvent(
-                  new Event("teamski:image-made")
-                );
-              }
             }
 
             // ============================

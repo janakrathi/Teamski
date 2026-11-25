@@ -160,7 +160,7 @@ const FEATURES = [
   },
   {
     title: "Pick the model",
-    body: "Built-in AI on every plan, nothing to set up. Add a free Google Gemini key on any plan for faster answers, or on Team bring Claude, ChatGPT or Grok and share one key with the project.",
+    body: "Built-in AI on every plan, running on our own server. Add a free Groq or Gemini key on any plan for GPT-OSS 120B and faster answers, or on Team bring Claude, ChatGPT or Grok and share one key with the project.",
   },
 ];
 
@@ -766,6 +766,6 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How good is the free AI, really?",
-    a: `The free plan runs GPT-OSS 120B, OpenAI's open-weight model, served by Groq - ${DAILY_MESSAGES.free} messages per person per day. When shared capacity is busy it steps down to smaller models and tells you. Team raises that to ${DAILY_MESSAGES.team} a day and lets you use your own Claude, GPT or Gemini key.`,
+    a: `Built in, Teamski runs a small open model (Qwen3) on its own server - private, ${DAILY_MESSAGES.free} messages per person per day, best for quick questions. For real work, paste a free Groq, Cerebras or Gemini key (about two minutes, no card) and you get GPT-OSS 120B or Gemini on your own daily limit, on any plan. Team raises the built-in allowance to ${DAILY_MESSAGES.team} a day and adds your own Claude, GPT or Grok key.`,
   },
 ];

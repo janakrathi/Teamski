@@ -7,20 +7,18 @@ import { useEffect, useState } from "react";
 // CONNECT YOUR OWN IMAGE KEY (CLOUDFLARE)
 // ==========================================
 //
-// Images run on a shared Cloudflare account, which
-// has a daily limit shared by everyone. This offers a
-// person their own free Cloudflare account + token so
-// their images run on their own limit. Cloudflare
-// needs two things (an account id and a token), so it
-// is a step longer than the Groq one.
+// Teamski has no shared image key: images are made
+// only on a person's own free Cloudflare account +
+// token. Cloudflare needs two things (an account id
+// and a token), so it is a step longer than the Groq
+// one.
 //
-// Triggered the first time a person generates an
-// image (a window event the chat fires), and shown
-// only if they have not connected their own key or
-// dismissed it.
+// Triggered whenever a person asks for an image (a
+// window event the chat fires) without a key
+// connected. Skipping it once does not silence it:
+// without a key there is no image, so the next ask
+// offers it again.
 //
-
-const DISMISS_KEY = "cloudflareKeyPromptDismissed";
 
 const CF_DASH_URL = "https://dash.cloudflare.com/";
 
@@ -34,17 +32,7 @@ export default function ConnectCloudflare() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    async function onImageMade() {
-      try {
-        if (
-          localStorage.getItem(DISMISS_KEY) === "1"
-        ) {
-          return;
-        }
-      } catch {
-        // Fall through.
-      }
-
+    async function onImageWanted() {
       try {
         const response = await fetch(
           "/api/image-key",
@@ -62,25 +50,19 @@ export default function ConnectCloudflare() {
     }
 
     window.addEventListener(
-      "teamski:image-made",
-      onImageMade
+      "teamski:image-wanted",
+      onImageWanted
     );
 
     return () =>
       window.removeEventListener(
-        "teamski:image-made",
-        onImageMade
+        "teamski:image-wanted",
+        onImageWanted
       );
   }, []);
 
 
   function dismiss() {
-    try {
-      localStorage.setItem(DISMISS_KEY, "1");
-    } catch {
-      // Fine.
-    }
-
     setShow(false);
   }
 
@@ -116,12 +98,6 @@ export default function ConnectCloudflare() {
             "Those credentials did not work."
         );
         return;
-      }
-
-      try {
-        localStorage.setItem(DISMISS_KEY, "1");
-      } catch {
-        // Fine.
       }
 
       setDone(true);
@@ -165,14 +141,14 @@ export default function ConnectCloudflare() {
         ) : (
           <>
             <h2 className="text-[18px] font-semibold text-[var(--text)]">
-              Your own image key — free
+              Images need your own free key
             </h2>
 
             <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-              Images run on a shared key with a shared
-              daily limit. Connect your own free
-              Cloudflare account for your own — about
-              three minutes.
+              Teamski makes images on your own Cloudflare
+              account — free, no card, about 95 images a
+              day. Setting it up takes about three
+              minutes.
             </p>
 
             <ol className="mt-4 space-y-3">
@@ -272,7 +248,7 @@ export default function ConnectCloudflare() {
               onClick={dismiss}
               className="mt-2 w-full rounded-lg px-4 py-2 text-[12.5px] text-[var(--text-faint)] transition hover:text-[var(--text-muted)]"
             >
-              Maybe later — keep using the shared key
+              Not now — no images until it is connected
             </button>
           </>
         )}

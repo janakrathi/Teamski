@@ -7,16 +7,17 @@ import { useEffect, useState } from "react";
 // CONNECT YOUR OWN GROQ KEY
 // ==========================================
 //
-// Teamski works out of the box on a shared AI key,
-// but that key is finite and shared by everyone. A
-// person's own free Groq key gives them their own
-// daily limit and a faster experience - so this
-// walks a non-technical person through getting one
-// and pasting it, in two clicks.
+// Out of the box Teamski answers on the model this
+// machine runs - private, but small and slow. Teamski
+// hands out no hosted models of its own, so a
+// person's own free Groq key is how they get a fast,
+// capable one (GPT-OSS 120B) - this walks a
+// non-technical person through getting one and
+// pasting it, in two clicks.
 //
 // Shown once. Dismissing it (or connecting) means it
-// does not come back; the shared key keeps working
-// either way.
+// does not come back; the built-in model keeps
+// working either way.
 //
 
 const DISMISS_KEY = "groqKeyPromptDismissed";
@@ -192,10 +193,11 @@ export default function ConnectGroq({
             </h2>
 
             <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-muted)]">
-              Teamski works right now on a shared AI
-              key. Connect your own free Groq key for a
-              faster model on your own daily limit —
-              about two minutes.
+              Right now Teamski answers on a small model
+              it runs itself. Connect your own free Groq
+              key for GPT-OSS 120B — much faster and
+              smarter, on your own daily limit. About two
+              minutes, no card.
             </p>
 
             <p className="mt-1.5 text-[11.5px] leading-relaxed text-[var(--text-faint)]">
@@ -284,7 +286,7 @@ export default function ConnectGroq({
               onClick={dismiss}
               className="mt-2 w-full rounded-lg px-4 py-2 text-[12.5px] text-[var(--text-faint)] transition hover:text-[var(--text-muted)]"
             >
-              Maybe later — keep using the shared AI
+              Maybe later — keep the built-in model
             </button>
           </>
         )}

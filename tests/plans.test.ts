@@ -104,31 +104,21 @@ test("Team gets a better built-in model than Free", () => {
     false
   );
 
-  // Groq's shared free-tier models are the one
-  // hosted exception: basic, so the Free plan
-  // (and every plan) hands them out.
-  assert.equal(
-    builtinAllowed("free", "groq/openai/gpt-oss-120b"),
-    true
-  );
-  assert.equal(
-    builtinAllowed("free", "groq/openai/gpt-oss-20b"),
-    true
-  );
+  // Teamski serves no hosted models off keys of its
+  // own: Groq and Cerebras are on a person's own key
+  // only, so no plan hands them out built in.
+  for (const plan of ["free", "team"] as const) {
+    for (const model of [
+      "groq/openai/gpt-oss-120b",
+      "groq/qwen/qwen3.8-27b",
+      "cerebras/gpt-oss-120b",
+    ]) {
+      assert.equal(builtinAllowed(plan, model), false);
+    }
+  }
   assert.equal(
     planForModel("groq/openai/gpt-oss-120b"),
-    "free"
-  );
-
-  // Cerebras's shared free models are the same
-  // basic tier as Groq's.
-  assert.equal(
-    builtinAllowed("free", "cerebras/gpt-oss-120b"),
-    true
-  );
-  assert.equal(
-    builtinAllowed("free", "cerebras/qwen-3.8-27b"),
-    true
+    null
   );
 
   assert.equal(planForModel("qwen3:4b"), "team");

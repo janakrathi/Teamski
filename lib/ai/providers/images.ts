@@ -10,11 +10,9 @@
 // 512px tile of output). If it fails, FLUX.1 [schnell]
 // is tried, so an image still comes back.
 //
-// The workspace runs on a shared account (env
-// CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN), but
-// a person can bring their own account + token for
-// their own daily limit - passed in here, falling
-// back to the shared one when absent.
+// Always on the person's own Cloudflare account +
+// token (free to get, their own daily limit) -
+// Teamski has no shared image account.
 //
 // The provider is a detail: swapping to another
 // image API is this one file.
@@ -33,17 +31,6 @@ const SIZE = 1024;
 const API = "https://api.cloudflare.com/client/v4";
 
 
-// Whether the shared account can make images, so the
-// rest of the app can decide without the details.
-
-export function imageGenConfigured() {
-  return Boolean(
-    process.env.CLOUDFLARE_ACCOUNT_ID &&
-      process.env.CLOUDFLARE_API_TOKEN
-  );
-}
-
-
 export type GeneratedImage =
   | { bytes: Buffer; mime: string }
   | { error: string };
@@ -57,13 +44,11 @@ export async function generateImage(
     signal?: AbortSignal;
   }
 ): Promise<GeneratedImage> {
-  const accountId =
-    options?.accountId ||
-    process.env.CLOUDFLARE_ACCOUNT_ID;
+  // Only the person's own account: Teamski has no
+  // shared image key.
+  const accountId = options?.accountId;
 
-  const token =
-    options?.token ||
-    process.env.CLOUDFLARE_API_TOKEN;
+  const token = options?.token;
 
   if (!accountId || !token) {
     return { error: "no-key" };

@@ -143,6 +143,43 @@ function modelName(id: string | undefined) {
   return id ? id.slice(id.indexOf("/") + 1) : "The chosen model";
 }
 
+const SERVICE_NAMES: Record<string, string> = {
+  groq: "Groq",
+  cerebras: "Cerebras",
+  google: "Google",
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  openrouter: "OpenRouter",
+};
+
+// "cerebras/gpt-oss-120b" -> "Cerebras".
+function serviceName(id: string | undefined) {
+  const service = id?.split("/")[0] ?? "";
+
+  return SERVICE_NAMES[service] ?? service;
+}
+
+// The note above a reply another model wrote. The
+// same model on another service (Cerebras down, Groq
+// answered) reads as the service, not the model.
+function fallbackNote(from: string | undefined, to: string) {
+  const sameService =
+    serviceName(from) === serviceName(to);
+
+  if (sameService) {
+    return `${modelName(from)} hit its limit, so ${modelName(to)} answered on the same key.`;
+  }
+
+  // "openai/gpt-oss-120b" and "gpt-oss-120b" are the
+  // same model under two services' names.
+  const fromModel = modelName(from).split("/").pop();
+  const toModel = modelName(to).split("/").pop();
+
+  return fromModel === toModel
+    ? `${serviceName(from)} couldn't answer just now, so the same model (${toModel}) answered on ${serviceName(to)}.`
+    : `${serviceName(from)}'s ${fromModel} couldn't answer just now, so ${serviceName(to)}'s ${toModel} did.`;
+}
+
 
 function MessageRow({
   message,
@@ -468,11 +505,10 @@ function MessageRow({
 
         {message.fellBackTo && message.fellBackReason === "limit-model" ? (
           <p className="mb-2 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[11.5px] leading-relaxed text-[var(--text-muted)]">
-            {modelName(message.fellBackFrom)} hit its limit, so{" "}
-            <span className="text-[var(--text)]">
-              {modelName(message.fellBackTo)}
-            </span>{" "}
-            answered on the same key.
+            {fallbackNote(
+              message.fellBackFrom,
+              message.fellBackTo
+            )}
           </p>
         ) : message.fellBackTo && (
           <p className="mb-2 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-[11.5px] leading-relaxed text-amber-200">

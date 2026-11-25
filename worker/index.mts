@@ -82,8 +82,8 @@ const POLL_INTERVAL_MS = 2000;
 // whatever was ahead of it to finish, even while
 // that one sat waiting on a web page or a file.
 //
-// Most runs now answer on hosted models (Groq and
-// people's own keys), which take many requests at
+// Many runs answer on hosted models (people's own
+// Groq, Gemini and other keys), which take many requests at
 // once, so a busy project - or a hackathon full of
 // them - should not queue behind two runs. A run
 // that falls back to the machine's own model still

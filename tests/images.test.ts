@@ -82,19 +82,24 @@ test("when both fail, the newer model's reason is reported", async () => {
   }
 });
 
-test("no account means no attempt", async () => {
+test("no key of their own means no attempt, even with one in the env", async () => {
   const saved = [process.env.CLOUDFLARE_ACCOUNT_ID, process.env.CLOUDFLARE_API_TOKEN];
 
-  delete process.env.CLOUDFLARE_ACCOUNT_ID;
-  delete process.env.CLOUDFLARE_API_TOKEN;
+  // Teamski has no shared image account: a key in the
+  // server's environment is never used.
+  process.env.CLOUDFLARE_ACCOUNT_ID = "server-account";
+  process.env.CLOUDFLARE_API_TOKEN = "server-token";
 
   try {
     assert.deepEqual(await generateImage("x"), { error: "no-key" });
   } finally {
     if (saved[0]) process.env.CLOUDFLARE_ACCOUNT_ID = saved[0];
+    else delete process.env.CLOUDFLARE_ACCOUNT_ID;
     if (saved[1]) process.env.CLOUDFLARE_API_TOKEN = saved[1];
+    else delete process.env.CLOUDFLARE_API_TOKEN;
   }
 });
+
 
 test("the image type is read from its bytes", () => {
   assert.equal(imageMime(Buffer.from(PNG, "base64")), "image/png");

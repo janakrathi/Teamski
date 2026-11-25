@@ -389,21 +389,6 @@ const BEST = new Set([
   "openai/gpt-4o",
 ]);
 
-// Hosted models the platform hands out on the
-// Free plan, off a shared key it pays nothing for
-// (Groq's free tier). These are "basic" like the
-// machine's own models, so every plan includes
-// them; the daily message allowance rations them.
-
-const FREE_HOSTED = new Set([
-  "groq/openai/gpt-oss-120b",
-  "groq/openai/gpt-oss-20b",
-  "groq/qwen/qwen3.8-27b",
-  "cerebras/gpt-oss-120b",
-  "cerebras/qwen-3.8-27b",
-]);
-
-
 export function tierOf(modelId: string): Tier | null {
   if (BEST.has(modelId)) {
     return "best";
@@ -411,10 +396,6 @@ export function tierOf(modelId: string): Tier | null {
 
   if (STANDARD.has(modelId)) {
     return "standard";
-  }
-
-  if (FREE_HOSTED.has(modelId)) {
-    return "basic";
   }
 
   // No slash is the machine's own model.
@@ -473,9 +454,9 @@ export const OFFERS: Offer[] = [
     blurb: "Start a project and bring your whole team.",
     features: [
       "Create projects and invite as many people as you like",
-      "Built-in AI: GPT-OSS 120B, served fast by Groq",
+      "Built-in AI that runs on Teamski's own server, nothing to set up",
       `${DAILY_MESSAGES.free} built-in AI messages a day per person`,
-      "Bring a free Google Gemini key for faster answers",
+      "Bring a free Groq, Cerebras or Gemini key for GPT-OSS 120B and other fast models",
       "Agents, files and connections",
     ],
   },

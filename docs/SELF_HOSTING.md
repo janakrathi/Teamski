@@ -99,15 +99,12 @@ changing it.
 
 ## 5. A model
 
-Pick at least one.
-
-**Groq or Cerebras (simplest).** Put a free key from
-[console.groq.com](https://console.groq.com/keys) in
-`GROQ_API_KEY` (or `CEREBRAS_API_KEY`). GPT-OSS 120B
-becomes the default for everyone, rationed by each
-plan's daily message allowance (`lib/plans.ts`).
-Free tiers have per-minute token limits; when one is
-hit, chat falls back to the next model available.
+The built-in model is whatever this server runs
+through Ollama - there is no shared hosted key.
+Groq, Cerebras and Gemini give free keys; each person
+pastes their own in Settings (the app walks them
+through Groq at sign-in) for GPT-OSS 120B and other
+fast models on their own daily limit.
 
 **Ollama (fully local).**
 
@@ -212,7 +209,6 @@ Each one switches on when its variables in
 | Connect GitHub | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Callback: `<site>/api/connections/github`. GitHub allows one callback per app, so use separate apps for localhost and production. |
 | Google's own sign-in button | `GOOGLE_SIGNIN_CLIENT_ID` | Defaults to `GOOGLE_CLIENT_ID`; list your site as an authorized JavaScript origin |
 | Email (invites, reminders, alerts) | `RESEND_API_KEY`, `EMAIL_FROM` | Verify your domain in Resend first. Without email, invite links are shown to copy instead. |
-| Image generation | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Cloudflare Workers AI |
 | Better web search | `SERPER_API_KEY`, `BRAVE_API_KEY`, `TAVILY_API_KEY` | DuckDuckGo (no key) is tried first; these are only used, in that order, when it fails. A source that fails is rested for a few minutes, and repeat searches are remembered for half an hour. Serper gives real Google rankings, best for SEO |
 | Payments | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Webhook: `<site>/api/webhooks/razorpay`. Without payments, set a project's plan by hand in the `project_subscriptions` table. |
 | Usage dashboard at `/admin` | `ADMIN_EMAILS` | Anyone else gets a 404 |

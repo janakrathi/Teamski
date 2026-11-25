@@ -1,15 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 
-import {
-  GROQ_DEFAULT_MODEL,
-  groqKey,
-} from "@/lib/ai/providers/groq";
-
-import {
-  CEREBRAS_DEFAULT_MODEL,
-  cerebrasKey,
-} from "@/lib/ai/providers/cerebras";
-
 export const dynamic = "force-dynamic";
 
 
@@ -73,20 +63,11 @@ export async function GET(request: Request) {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Nobody has chosen: hand new chats the shared
-  // Groq model when the server has a key for it,
-  // since it is faster and abler than the machine.
-  // With no key the empty answer stands and the
-  // local model takes over, exactly as before.
-
-  const fallback = groqKey()
-    ? GROQ_DEFAULT_MODEL
-    : cerebrasKey()
-      ? CEREBRAS_DEFAULT_MODEL
-      : "";
+  // Nobody has chosen: the empty answer stands and
+  // the machine's own model takes over.
 
   return Response.json({
-    model: profile?.default_model || fallback,
+    model: profile?.default_model || "",
     shared: false,
   });
 }

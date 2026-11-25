@@ -21,21 +21,6 @@ import {
   openaiProvider,
 } from "./openai.ts";
 
-import {
-  GROQ_BASE_URL,
-  GROQ_DEFAULT_MODEL,
-  GROQ_MODELS,
-  groqKey,
-} from "./groq.ts";
-
-import {
-  // Cerebras is out of the shared chain and the
-  // picker for now - the account returns 402 on
-  // every request. Only the key check is kept, so a
-  // stale Cerebras default still recovers to Groq.
-  cerebrasKey,
-} from "./cerebras.ts";
-
 import { PRESETS, presetById } from "./compatible.ts";
 
 import {
@@ -111,43 +96,6 @@ export {
 // default and the one everybody had before there
 // was a choice.
 //
-
-
-// The order the shared free models are tried, best
-// first. Each has its own daily bucket, so a spike
-// that drains one keeps landing on a strong model
-// before the local machine: Groq's 120B, then its
-// 20B, then its 27B.
-//
-// Cerebras used to sit in here for its far larger
-// daily limits, but the account is returning 402 on
-// every request, so it is pulled out until that is
-// sorted - add the two entries back once it answers.
-const SHARED_CHAIN: {
-  service: string;
-  id: string;
-  keyFn: () => string | null;
-  baseUrl: string;
-}[] = [
-  {
-    service: "groq",
-    id: "openai/gpt-oss-120b",
-    keyFn: groqKey,
-    baseUrl: GROQ_BASE_URL,
-  },
-  {
-    service: "groq",
-    id: "openai/gpt-oss-20b",
-    keyFn: groqKey,
-    baseUrl: GROQ_BASE_URL,
-  },
-  {
-    service: "groq",
-    id: "qwen/qwen3.8-27b",
-    keyFn: groqKey,
-    baseUrl: GROQ_BASE_URL,
-  },
-];
 
 
 export const LOCAL_MODELS: ModelInfo[] = [
@@ -340,31 +288,12 @@ export async function modelsFor(
         builtinAllowed(plan, model.id)
       );
 
-  // Groq's shared key is the Free plan's fast,
-  // capable model - offered to everyone the moment
-  // the server has a key, no setup, unless the
-  // person brought their own Groq key.
-
-  const groqBuiltin = builtin("groq", GROQ_MODELS);
-
-  if (
-    !has("groq") &&
-    groqKey() &&
-    groqBuiltin.length > 0
-  ) {
-    groups.push({
-      service: "groq",
-      label: "Groq (built-in · fast, free)",
-      local: false,
-      models: groqBuiltin,
-    });
-  }
-
-  // Cerebras's built-in group is withheld while the
-  // account 402s - offering a model that fails on
-  // click is the pattern the login page taught us not
-  // to repeat. Restore this block (and the two
-  // SHARED_CHAIN entries) once the account answers.
+  // Teamski hands out no hosted models of its own:
+  // the only built-in models are the ones this
+  // machine runs. Groq, Cerebras, Gemini and the rest
+  // are on the person's own key. (Anthropic and
+  // OpenAI below only appear on a server somebody
+  // runs for themselves with those keys in its env.)
 
   const anthropicBuiltin = builtin(
     "anthropic",
@@ -690,7 +619,7 @@ async function rotateKeys(
   // of the plan's allowance like any built-in answer.
   return streamFor(db, userId, {
     ...options,
-    model: groqKey() ? qualify("groq", GROQ_DEFAULT_MODEL) : DEFAULT_MODEL,
+    model: DEFAULT_MODEL,
     prefer: undefined,
     noFallback: false,
   });
@@ -861,11 +790,7 @@ export async function streamFor(
       ? anthropicKey()
       : service === "openai"
         ? openaiKey()
-        : service === "groq"
-          ? groqKey()
-          : service === "cerebras"
-            ? cerebrasKey()
-            : null;
+        : null;
 
   const preset = presetById(service);
 
@@ -1119,79 +1044,11 @@ export async function streamFor(
     };
   }
 
-  const viaSharedChain =
-    paidBy === "server" &&
-    (service === "groq" || service === "cerebras");
-
-  // A shared provider that fails - rate limited, an
-  // account that needs billing (402), or briefly down
-  // - should not sink the turn; it falls to the next
-  // in the chain. So for the shared chain any error is
-  // a miss, not a throw. A person's own key still
-  // throws, so a bad key is reported to them.
-  const attempt = async (
-    gen: AsyncGenerator<ChatChunk>
-  ): Promise<AsyncGenerator<ChatChunk> | null> => {
-    if (!viaSharedChain) {
-      return watch(gen);
-    }
-
-    try {
-      return await watch(gen);
-    } catch {
-      return null;
-    }
-  };
-
-  const checked = await attempt(
+  const checked = await watch(
     openaiProvider.stream(call)
   );
 
   if (!checked) {
-    // The shared free chain, in priority order: each
-    // model has its own daily bucket, so a spike (or a
-    // provider that needs billing) keeps landing on a
-    // strong model before the local machine.
-    if (viaSharedChain) {
-      for (const step of SHARED_CHAIN) {
-        // Skip the model that just failed.
-        if (
-          step.service === service &&
-          step.id === model
-        ) {
-          continue;
-        }
-
-        const keyValue = step.keyFn();
-
-        if (!keyValue) {
-          continue;
-        }
-
-        const stream = await attempt(
-          openaiProvider.stream({
-            ...call,
-            model: step.id,
-            credential: {
-              key: keyValue,
-              baseUrl: step.baseUrl,
-            },
-          })
-        );
-
-        if (stream) {
-          return {
-            stream,
-            model: qualify(step.service, step.id),
-            fellBack: true,
-            reason: "limit-model",
-            from: options.model,
-            paidBy,
-          };
-        }
-      }
-    }
-
     return (
       (await onAnotherModel((next) =>
         openaiProvider.stream({ ...call, model: next })
