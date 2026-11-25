@@ -124,6 +124,7 @@ export default function DownloadPage() {
       </List>
 
 
+      <span id="new" className="block scroll-mt-24" />
       <H2>New in 0.2</H2>
 
       <List>

@@ -362,9 +362,16 @@ export function winbackEmail(options: {
 // ------------------------------------------
 //
 // A one-off product update to everyone with an account
-// (scripts/send-desktop-launch.mts). Plain and specific,
-// with the honest catch - it's an early, unsigned build -
-// stated up front.
+// (scripts/send-desktop-launch.mts), in the website's own
+// look rather than the plain layout the transactional
+// emails use: the dark ground, the #c96442 accent, the
+// white logo and the Teamski Code demo. Tables and inline
+// styles only, so Gmail, Outlook and Apple Mail agree.
+// The honest catch - an early, unsigned build - stays.
+
+// Public files in the GitHub repo, so the email doesn't
+// depend on a site deploy.
+const EMAIL_ASSETS = "https://raw.githubusercontent.com/janakrathi/Teamski/main";
 
 export function desktopLaunchEmail(options: {
   to: string;
@@ -373,32 +380,139 @@ export function desktopLaunchEmail(options: {
 }): Email {
   const name = options.name?.trim() ? tidy(options.name, 40) : "";
 
-  const heading = "Teamski can write code now";
+  const url = `${options.site}/download`;
+  const news = `${options.site}/download#new`;
 
-  const lead = [
-    name ? `Hi ${name},` : "Hi,",
-    "We just shipped Teamski for Windows and Mac. It has your workspace, plus Teamski Code: open a folder on your computer and the agent finds its way around the code, makes the change you asked for, and runs your tests until they pass.",
-    "Every edit shows up as a diff you approve before anything changes, commands run in a sandbox, and you can undo any step. It runs on your own key - a free Groq or Gemini key is enough - or on models on your own computer, so your code never passes through our servers.",
-    "It's free, and you sign in with the same Teamski account. It's an early build and isn't code-signed yet, so Windows or macOS will be cautious the first time; the download page has the one-step fix.",
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
+
+  const font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+
+  const features: [string, string][] = [
+    ["Finds its way around your code", "Searches and reads the repo, and follows your AGENTS.md."],
+    ["Every edit is a diff you approve", "Nothing changes until you say so, and any step can be undone."],
+    ["Runs your tests until they pass", "Builds, git and dev servers too - in a sandbox, offline by default."],
+    ["Your keys, not ours", "A free Groq or Gemini key is enough, or run models on your own machine. Your code never touches our servers."],
   ];
 
-  const footer =
-    "You're getting this one-off product update because you have a Teamski account.";
+  const featureRows = features
+    .map(
+      ([title, body]) => `
+              <tr>
+                <td width="34" valign="top" style="padding:0 0 18px">
+                  <div style="width:24px;height:24px;border-radius:8px;background:#3a241c;color:#e08a66;font-size:13px;font-weight:700;line-height:24px;text-align:center">&#10003;</div>
+                </td>
+                <td valign="top" style="padding:0 0 18px">
+                  <div style="font-size:15px;font-weight:600;color:#f2efea;line-height:1.4">${escapeHtml(title)}</div>
+                  <div style="font-size:13.5px;color:#a8a49e;line-height:1.55;padding-top:2px">${escapeHtml(body)}</div>
+                </td>
+              </tr>`
+    )
+    .join("");
 
-  const url = `${options.site}/download`;
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
+  </head>
+  <body style="margin:0;padding:0;background:#0a0a09;font-family:${font};color:#f2efea">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0">Open a folder, ask for a fix, approve the diff. Free for Windows and Mac.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a09;padding:32px 14px">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
+
+            <tr>
+              <td style="padding:0 6px 20px">
+                <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+                  <td valign="middle"><img src="${EMAIL_ASSETS}/public/logo-white-128.png" width="28" height="28" alt="" style="display:block;border:0"></td>
+                  <td valign="middle" style="padding-left:10px;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.3px">Teamski</td>
+                </tr></table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background:#121210;border:1px solid #2a2a26;border-radius:20px;overflow:hidden">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:34px 32px 8px">
+                      <span style="display:inline-block;background:#3a241c;color:#f0a383;font-size:11px;font-weight:700;letter-spacing:1.4px;padding:6px 11px;border-radius:999px">NEW &middot; WINDOWS &amp; MAC</span>
+                      <div style="font-size:32px;line-height:1.15;font-weight:800;letter-spacing:-1px;color:#ffffff;padding-top:18px">Teamski can<br><span style="color:#c96442">write code</span> now.</div>
+                      <div style="font-size:15px;line-height:1.65;color:#a8a49e;padding-top:14px">${greeting} Teamski Code is a coding agent in our new desktop app. Open a folder, tell it what's broken, and it does the work - it just asks you before changing anything.</div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:22px 20px 6px">
+                      <a href="${url}" style="text-decoration:none">
+                        <img src="${EMAIL_ASSETS}/docs/assets/teamski-code-email.gif" width="520" alt="Teamski Code fixing a failing test: it searches the code, shows the fix as a diff to approve, and runs the tests until they pass" style="display:block;width:100%;max-width:520px;height:auto;border:1px solid #2a2a26;border-radius:14px">
+                      </a>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:26px 32px 6px">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${featureRows}
+                      </table>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td align="center" style="padding:6px 32px 10px">
+                      <a href="${url}" style="display:inline-block;background:#c96442;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 26px;border-radius:12px">Download for Windows or Mac &rarr;</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding:4px 32px 26px;font-size:13px;color:#7a7671">
+                      Free &middot; sign in with your Teamski account &middot; <a href="${news}" style="color:#e08a66;text-decoration:none">what's new</a>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:0 32px 30px">
+                      <div style="background:#181815;border:1px solid #2a2a26;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.6;color:#a8a49e">
+                        <span style="color:#f2efea;font-weight:600">Heads up:</span> it's an early build and isn't code-signed yet, so Windows or macOS will be a little cautious the first time you open it. The download page has the one-step fix.
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td align="center" style="padding:22px 20px 0;font-size:12px;line-height:1.6;color:#5c5a56">
+                You're getting this one-off product update because you have a Teamski account.<br>
+                <a href="${options.site}" style="color:#7a7671;text-decoration:none">teamski.in</a> &middot; <a href="https://github.com/janakrathi/Teamski" style="color:#7a7671;text-decoration:none">open source on GitHub</a>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = [
+    "Teamski can write code now.",
+    "",
+    `${name ? `Hi ${name},` : "Hi,"} Teamski Code is a coding agent in our new desktop app for Windows and Mac. Open a folder, tell it what's broken, and it does the work - it just asks you before changing anything.`,
+    "",
+    ...features.map(([title, body]) => `- ${title}: ${body}`),
+    "",
+    `Download for Windows or Mac: ${url}`,
+    "Free, and you sign in with your Teamski account.",
+    "",
+    "Heads up: it's an early build and isn't code-signed yet, so Windows or macOS will be a little cautious the first time. The download page has the one-step fix.",
+    "",
+    "You're getting this one-off product update because you have a Teamski account.",
+  ].join("\n");
 
   return {
     to: options.to,
     subject: "Teamski can write code now",
-
-    html: layout({
-      heading: escapeHtml(heading),
-      body: lead.map((line) => `<p style="margin:0 0 10px">${escapeHtml(line)}</p>`).join(""),
-      button: { label: "Download for Windows or Mac", url },
-      footer: escapeHtml(footer),
-    }),
-
-    text: [heading, "", ...lead, "", `Download: ${url}`, "", footer].join("\n"),
+    html,
+    text,
   };
 }
 
