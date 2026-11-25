@@ -142,6 +142,8 @@ tests**. The code explains *why* as well as *what*.
 Teamski for **Windows and Mac**: your team's workspace, plus **Teamski Code**, a coding
 agent that works in folders on your own computer, like Claude Code or Codex.
 
+<img src="docs/assets/teamski-code.gif" width="100%" alt="Teamski Code in 20 seconds: in the Teamski desktop app, a folder called my-app is opened and the agent is asked to fix the failing login test. It makes a three-step task list, searches the code for the token expiry check and reads src/auth.ts, then shows its one-line fix as a red and green diff that is approved with Allow. It asks to run npm test, which is allowed, and all 42 tests pass."/>
+
 <div align="center">
 
 [![Download for Windows](https://img.shields.io/badge/Windows-Download_.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/janakrathi/Teamski/releases/latest/download/Teamski-Setup.exe)
