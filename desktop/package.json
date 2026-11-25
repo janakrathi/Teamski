@@ -1,0 +1,33 @@
+{
+  "name": "teamski-desktop",
+  "productName": "Teamski",
+  "version": "0.1.0",
+  "description": "Teamski for Windows and Mac: your team's AI workspace, plus a coding agent that works in your own folders.",
+  "author": "Teamski",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && electron .",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "dist": "node scripts/build.mjs && electron-builder --publish never",
+    "dist:win": "node scripts/build.mjs && electron-builder --win --publish never",
+    "dist:mac": "node scripts/build.mjs && electron-builder --mac --publish never"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "electron": "45.5.0",
+    "electron-builder": "26.18.0",
+    "esbuild": "0.28.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "typescript": "^5.6.0"
+  }
+}

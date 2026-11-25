@@ -58,6 +58,7 @@ const NAV = [
   { href: "/welcome#plans", label: "Plans" },
   { href: "/blog", label: "Blog" },
   { href: "/hackathons", label: "Hackathons" },
+  { href: "/download", label: "Download" },
 ];
 
 
@@ -149,6 +150,10 @@ export function SiteFooter() {
 
         <Link href="/hackathons" className="transition-colors duration-150 hover:text-white/70">
           Hackathons
+        </Link>
+
+        <Link href="/download" className="transition-colors duration-150 hover:text-white/70">
+          Download
         </Link>
 
         <Link href="/privacy" className="transition-colors duration-150 hover:text-white/70">

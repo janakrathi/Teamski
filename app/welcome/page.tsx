@@ -510,6 +510,89 @@ export default function Welcome() {
 
 
       {/* ------------------------------ */}
+      {/* DESKTOP APP + TEAMSKI CODE     */}
+      {/* ------------------------------ */}
+
+      <section id="desktop" className="scroll-mt-6 lp-section">
+        <span aria-hidden="true" className="lp-ambient" style={{ top: "40%" }} />
+
+        <div className={`${CONTAINER} grid items-center gap-12 py-20 sm:py-28 lg:grid-cols-[1fr_1fr]`}>
+          <Reveal className="grid gap-5">
+            <p className="t-reveal-item text-[11px] tracking-[0.12em] text-white/40 uppercase">
+              New · Windows and Mac
+            </p>
+
+            <h2 style={at(1)} className={`t-reveal-item ${H2}`}>
+              A coding agent{" "}
+              <span className="text-white/60">on your own computer.</span>
+            </h2>
+
+            <p style={at(2)} className="t-reveal-item max-w-[560px] text-[15px] leading-[1.65] text-white/60">
+              The Teamski desktop app brings your workspace and{" "}
+              <span className="text-white/85">Teamski Code</span>: open a
+              folder and the agent reads your code, makes changes, runs your
+              tests and commands - and shows you every edit as a diff to
+              approve first. It runs on your own keys or local models, so
+              your code never passes through our servers.
+            </p>
+
+            <ul style={at(3)} className="t-reveal-item grid gap-2 text-[14px] text-white/70 sm:grid-cols-2">
+              {[
+                "Searches and reads your whole codebase",
+                "Edits with a diff you approve",
+                "Runs tests, builds, git and dev servers",
+                "Free Groq or Gemini keys, or Ollama",
+              ].map((line) => (
+                <li key={line} className="flex gap-2">
+                  <span aria-hidden="true" className="text-[#c96442]">✓</span>
+                  {line}
+                </li>
+              ))}
+            </ul>
+
+            <div style={at(4)} className="t-reveal-item flex flex-wrap gap-3 pt-2">
+              <Link href="/download" className={PRIMARY}>
+                Download for Windows or Mac
+              </Link>
+            </div>
+          </Reveal>
+
+          <Reveal clear>
+            <div className="t-reveal-card lp-card rounded-2xl border border-white/10 bg-[#050505] p-5 font-mono text-[12.5px] leading-[1.6]">
+              <p className="mb-4 font-sans text-[13.5px]">
+                <span className="font-medium text-[#ededed]">my-app</span>
+                <span className="ml-3 text-white/35">Teamski Code</span>
+              </p>
+
+              <p className="mb-3 text-white/55">
+                <span className="text-[#7fb77e]">✓</span> Search &quot;expiry&quot;{" "}
+                <span className="text-white/30">· 3 matches</span>
+              </p>
+
+              <p className="mb-4 text-white/55">
+                <span className="text-[#7fb77e]">✓</span> Read src/auth.ts
+              </p>
+
+              <div className="rounded-xl border border-[#c96442]/60 bg-white/[0.03] p-4">
+                <p className="mb-2 font-sans text-[13px] text-[#ededed]">
+                  Make this change? <span className="text-white/45">Edit src/auth.ts</span>
+                </p>
+
+                <p className="text-[#e07a6f]">-  if (exp &lt; Date.now())</p>
+                <p className="text-[#7fb77e]">+  if (exp * 1000 &lt; Date.now())</p>
+
+                <div className="mt-3 flex gap-2 font-sans text-[12.5px]">
+                  <span className="rounded-md bg-[#c96442] px-3 py-1 text-white">Allow</span>
+                  <span className="rounded-md border border-white/15 px-3 py-1 text-white/60">Deny</span>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+
+      {/* ------------------------------ */}
       {/* PLANS                          */}
       {/* ------------------------------ */}
       {/*                                */}
@@ -755,6 +838,10 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "What does it connect to?",
     a: "On every plan: web search, project files, Google Sheets, GitHub and image generation. On Team: Notion, Linear, Jira & Confluence, Asana, Sentry, Stripe, Canva, Hugging Face and any other MCP server - plus your own keys for Claude, OpenAI, Gemini, Grok and more.",
+  },
+  {
+    q: "Is there a desktop app?",
+    a: "Yes - Teamski for Windows and Mac, free from teamski.in/download. It has your workspace plus Teamski Code, a coding agent that works in folders on your own computer: it searches and edits your code, runs tests and commands, and asks before anything risky. It runs on your own keys (free Groq or Gemini work) or local models through Ollama, so your code never goes through our servers.",
   },
   {
     q: "Can agents handle long tasks?",

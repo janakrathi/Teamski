@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The desktop app is its own package.
+    "desktop/**",
   ]),
 ]);
 

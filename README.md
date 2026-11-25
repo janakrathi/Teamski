@@ -16,6 +16,7 @@ Open source, self-hostable, and free to start at **[teamski.in](https://teamski.
 <br/>
 
 [![Try it free](https://img.shields.io/badge/Try_it_free-teamski.in-000000?style=for-the-badge&logo=googlechrome&logoColor=white)](https://teamski.in)
+[![Download](https://img.shields.io/badge/Download-Windows_·_Mac-c96442?style=for-the-badge&logo=electron&logoColor=white)](#%EF%B8%8F-desktop-app--teamski-code)
 [![Self-host](https://img.shields.io/badge/Self--host-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-quick-start)
 [![Stars](https://img.shields.io/github/stars/janakrathi/Teamski?style=for-the-badge&logo=github&color=181717)](https://github.com/janakrathi/Teamski/stargazers)
 
@@ -27,7 +28,7 @@ Open source, self-hostable, and free to start at **[teamski.in](https://teamski.
 
 <br/>
 
-**[✨ Features](#-what-teamski-does)** · **[🚀 Quick start](#-quick-start)** · **[🧠 How it works](#-how-it-works)** · **[🔒 Security](#-security)** · **[🗺️ Roadmap](#%EF%B8%8F-roadmap)** · **[🤝 Contributing](#-contributing)**
+**[✨ Features](#-what-teamski-does)** · **[🖥️ Desktop app](#%EF%B8%8F-desktop-app--teamski-code)** · **[🚀 Quick start](#-quick-start)** · **[🧠 How it works](#-how-it-works)** · **[🔒 Security](#-security)** · **[🗺️ Roadmap](#%EF%B8%8F-roadmap)** · **[🤝 Contributing](#-contributing)**
 
 <br/>
 
@@ -110,9 +111,9 @@ in the channel. Schedules too.
 <td valign="top">
 
 ### 🤖 Any model
-Built-in **GPT-OSS 120B** on Groq or Cerebras (fast and free), a fully local model
-through **Ollama**, or a team's own Claude, ChatGPT, Gemini, Grok or other keys, with
-monthly caps and a spend report.
+A private built-in model (**Qwen3** on Teamski's own server, through **Ollama**), free
+keys from **Groq**, **Cerebras** or **Gemini** on any plan, or a team's own Claude,
+ChatGPT, Grok or other keys, with monthly caps and a spend report.
 
 </td>
 </tr>
@@ -127,12 +128,38 @@ dashboard · error alerts by email · per-person rate limits · full project exp
 <td valign="top">
 
 ### 🛠️ Built to be read
-TypeScript end to end, one route per resource, one shared error handler, and **124
+TypeScript end to end, one route per resource, one shared error handler, and **200+
 tests**. The code explains *why* as well as *what*.
 
 </td>
 </tr>
 </table>
+
+<br/>
+
+## 🖥️ Desktop app & Teamski Code
+
+Teamski for **Windows and Mac**: your team's workspace, plus **Teamski Code**, a coding
+agent that works in folders on your own computer, like Claude Code or Codex.
+
+<div align="center">
+
+[![Download for Windows](https://img.shields.io/badge/Windows-Download_.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/janakrathi/Teamski/releases/latest/download/Teamski-Setup.exe)
+[![Download for Mac (Apple Silicon)](https://img.shields.io/badge/Mac_(M1+)-Download_.dmg-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/janakrathi/Teamski/releases/latest/download/Teamski-mac-arm64.dmg)
+[![Download for Mac (Intel)](https://img.shields.io/badge/Mac_(Intel)-Download_.dmg-555555?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/janakrathi/Teamski/releases/latest/download/Teamski-mac-x64.dmg)
+
+</div>
+
+- **Knows your codebase**: file and code search (ripgrep, respects `.gitignore`), and it follows your `AGENTS.md` / `CLAUDE.md`
+- **Edits with a diff you approve**: it must read a file before editing it, and an edit fails if the file changed since it was read
+- **Runs your tools**: tests, builds, linters, git, package managers, and dev servers in the background
+- **Plans out loud**: a visible task list for multi-step work, and it can read docs from the web
+- **Three modes**: ask before every change, auto-edit, or full auto. `git push`, `rm -rf`, `sudo` and `curl | sh` always ask
+- **Your models**: your own Groq, Gemini, Cerebras, Mistral, Claude, OpenAI, DeepSeek, xAI or OpenRouter key, or Ollama on your machine. Keys are encrypted in the OS keychain, and your code never passes through Teamski's servers
+
+The beta isn't code-signed yet. On Windows, click *More info* → *Run anyway*. On a Mac,
+run `xattr -cr /Applications/Teamski.app` once after installing. Source and build
+steps: [`desktop/`](desktop/README.md).
 
 <br/>
 
@@ -222,6 +249,8 @@ Please use the **Contact us** form at [teamski.in](https://teamski.in) (bottom o
 - [ ] Stream AI replies word by word to everyone in the channel, not just the person who asked
 - [ ] Presence and typing indicators
 - [ ] Per-channel permissions and an audit log
+- [x] Desktop app for Windows and Mac with a coding agent (beta)
+- [ ] Sign in to the desktop app with your Teamski account (synced keys and memory)
 - [ ] Prebuilt Docker image on a registry
 - [ ] More one-click connections
 

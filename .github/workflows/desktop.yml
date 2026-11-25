@@ -1,0 +1,79 @@
+# Builds the Teamski desktop app for Windows and Mac.
+#
+# Push a tag like desktop-v0.1.0 to build both installers
+# and publish them as a GitHub release; the website's
+# /download page links to the latest one. "Run workflow"
+# by hand builds them as downloadable artifacts only.
+#
+# Unsigned beta: no certificates needed. Mac builds get
+# an ad-hoc signature (scripts/adhoc-sign.cjs).
+
+name: Desktop app
+
+on:
+  push:
+    tags: ["desktop-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      - name: Build installers
+        run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: teamski-${{ matrix.os }}
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.dmg
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Teamski Desktop ${{ github.ref_name }}
+          make_latest: true
+          files: installers/*
+          body: |
+            Teamski for Windows and Mac: your team's workspace plus Teamski Code, a coding agent that works in your own folders.
+
+            **Windows:** download `Teamski-Setup.exe`. Windows may warn that the app is unrecognised (it isn't code-signed yet) - click *More info*, then *Run anyway*.
+
+            **Mac:** download `Teamski-mac-arm64.dmg` (Apple Silicon, M1 and later) or `Teamski-mac-x64.dmg` (Intel), and drag Teamski to Applications. It isn't notarised yet, so the first time, run this in Terminal: `xattr -cr /Applications/Teamski.app` - then open it normally.

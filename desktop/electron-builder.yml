@@ -1,0 +1,53 @@
+appId: in.teamski.desktop
+productName: Teamski
+copyright: Copyright © 2026 Teamski
+
+directories:
+  output: release
+  buildResources: build
+
+# Everything the app runs is bundled into dist/.
+files:
+  - dist/**/*
+  - package.json
+
+asar: true
+
+# Fixed names, so the website can link to
+# releases/latest/download/<name> without knowing
+# the version.
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: Teamski-Setup.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: Teamski
+
+mac:
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  icon: build/icon.png
+  category: public.app-category.developer-tools
+  # Unsigned beta: no Apple Developer identity yet.
+  # scripts/adhoc-sign.cjs gives the app an ad-hoc
+  # signature so it runs on Apple Silicon.
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  artifactName: Teamski-mac-${arch}.${ext}
+
+afterPack: scripts/adhoc-sign.cjs
+
+dmg:
+  title: Teamski
+
+publish: null

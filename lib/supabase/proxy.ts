@@ -160,6 +160,9 @@ export async function updateSession(
     path === "/security" ||
     path === "/hackathons" ||
 
+    // The desktop app's download page.
+    path === "/download" ||
+
     // Shows a visitor only their own tracking status.
     path === "/meta-check" ||
     path === "/welcome" ||
