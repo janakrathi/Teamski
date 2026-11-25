@@ -12,6 +12,7 @@
     "seal-secrets": "node --experimental-strip-types scripts/seal-secrets.mts",
     "seal-memory": "node --experimental-strip-types scripts/seal-memory.mts",
     "winback-test": "node --experimental-strip-types scripts/send-winback.mts",
+    "launch-email": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/send-desktop-launch.mts",
     "meta:test": "node --experimental-strip-types scripts/send-meta-test-event.mts",
     "alert:test": "node --env-file=.env.local --experimental-strip-types scripts/send-test-alert.mts",
     "memory:backfill": "node --env-file=.env.local --experimental-strip-types scripts/backfill-fact-embeddings.mts"

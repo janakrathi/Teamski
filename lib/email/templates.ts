@@ -358,6 +358,52 @@ export function winbackEmail(options: {
 
 
 // ------------------------------------------
+// THE DESKTOP APP AND TEAMSKI CODE
+// ------------------------------------------
+//
+// A one-off product update to everyone with an account
+// (scripts/send-desktop-launch.mts). Plain and specific,
+// with the honest catch - it's an early, unsigned build -
+// stated up front.
+
+export function desktopLaunchEmail(options: {
+  to: string;
+  site: string;
+  name?: string | null;
+}): Email {
+  const name = options.name?.trim() ? tidy(options.name, 40) : "";
+
+  const heading = "Teamski can write code now";
+
+  const lead = [
+    name ? `Hi ${name},` : "Hi,",
+    "We just shipped Teamski for Windows and Mac. It has your workspace, plus Teamski Code: open a folder on your computer and the agent finds its way around the code, makes the change you asked for, and runs your tests until they pass.",
+    "Every edit shows up as a diff you approve before anything changes, commands run in a sandbox, and you can undo any step. It runs on your own key - a free Groq or Gemini key is enough - or on models on your own computer, so your code never passes through our servers.",
+    "It's free, and you sign in with the same Teamski account. It's an early build and isn't code-signed yet, so Windows or macOS will be cautious the first time; the download page has the one-step fix.",
+  ];
+
+  const footer =
+    "You're getting this one-off product update because you have a Teamski account.";
+
+  const url = `${options.site}/download`;
+
+  return {
+    to: options.to,
+    subject: "Teamski can write code now",
+
+    html: layout({
+      heading: escapeHtml(heading),
+      body: lead.map((line) => `<p style="margin:0 0 10px">${escapeHtml(line)}</p>`).join(""),
+      button: { label: "Download for Windows or Mac", url },
+      footer: escapeHtml(footer),
+    }),
+
+    text: [heading, "", ...lead, "", `Download: ${url}`, "", footer].join("\n"),
+  };
+}
+
+
+// ------------------------------------------
 // NEW ENTERPRISE ENQUIRY
 // ------------------------------------------
 //
