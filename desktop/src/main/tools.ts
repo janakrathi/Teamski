@@ -633,7 +633,7 @@ export const TOOLS: Tool[] = [
           const offline =
             sandboxed &&
             result.exitCode !== 0 &&
-            /ENOTFOUND|EAI_AGAIN|ECONNREFUSED|getaddrinfo|127\.0\.0\.1:9|Could not resolve host|network|offline|Operation not permitted|proxy/i.test(result.output);
+            /ENOTFOUND|EAI_AGAIN|ECONNREFUSED|getaddrinfo|127\.0\.0\.1(:| port )9\b|Could not resolve host|Couldn.t connect|Failed to connect|network|offline|Operation not permitted|proxy/i.test(result.output);
 
           return {
             output: `${result.output.trim() || "(no output)"}\n\n${status}${offline ? `\n\n${NETWORK_HINT}` : ""}`,
